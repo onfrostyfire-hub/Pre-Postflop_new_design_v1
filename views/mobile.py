@@ -6,16 +6,82 @@ import utils
 def show():
     st.markdown("""
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;800&display=swap');
+
         .block-container { padding-top: 2rem !important; padding-bottom: 5rem !important; }
-        .mobile-controls { display: flex; gap: 8px; margin-top: 8px; width: 100%; }
-        .mobile-controls div[data-testid="column"] { flex: 1; min-width: 0; }
-        .mobile-controls button { width: 100%; height: 65px; font-weight: 800; font-size: 18px; border-radius: 12px; border: none; text-transform: uppercase; }
-        .fold-btn button { background: #495057; color: #adb5bd; border: 1px solid #6c757d; }
-        .call-btn button { background: #28a745; color: white; box-shadow: 0 4px 0 #1e7e34; }
-        .raise-btn button { background: #d63384; color: white; box-shadow: 0 4px 0 #a02561; }
-        .open-raise-btn button { background: #2e7d32; color: white; box-shadow: 0 4px 0 #1b5e20; }
         
-        .mobile-game-area { position: relative; width: 100%; height: 280px; margin: 0 auto; background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); border: 6px solid #3e2723; border-radius: 140px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); transition: box-shadow 0.3s, border-color 0.3s; }
+        /* Принудительно выстраиваем колонки в ряд на мобилках */
+        [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 8px; }
+        [data-testid="column"] { width: auto !important; flex: 1 1 0% !important; min-width: 0 !important; }
+
+        /* Общий 3D стиль для всех кнопок */
+        div.stButton > button {
+            width: 100%; 
+            height: 60px !important; 
+            font-family: 'Roboto', sans-serif;
+            font-weight: 800 !important; 
+            font-size: 14px !important; 
+            border-radius: 12px !important; 
+            border: none !important; 
+            text-transform: uppercase; 
+            transition: all 0.1s ease;
+            position: relative;
+            top: 0;
+            padding: 0;
+        }
+        div.stButton > button:active {
+            top: 4px;
+            box-shadow: 0 2px 0 transparent !important;
+        }
+
+        /* --- ПАЛИТРА ИГРОВЫХ ДЕЙСТВИЙ --- */
+        .fold-btn button { 
+            background: linear-gradient(180deg, #495057, #343a40) !important; 
+            color: #adb5bd !important; 
+            box-shadow: 0 6px 0 #1d2124, 0 8px 15px rgba(0,0,0,0.3) !important; 
+        }
+        .call-btn button { 
+            background: linear-gradient(180deg, #20c997, #198754) !important; 
+            color: #fff !important; 
+            box-shadow: 0 6px 0 #0f5132, 0 8px 15px rgba(0,0,0,0.3) !important; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+        .raise-btn button, .open-raise-btn button { 
+            background: linear-gradient(180deg, #e83e8c, #d63384) !important; 
+            color: #fff !important; 
+            box-shadow: 0 6px 0 #a02561, 0 8px 15px rgba(0,0,0,0.3) !important; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+
+        /* --- ПАЛИТРА ОЦЕНКИ (SRS) --- */
+        .srs-hard button { 
+            background: linear-gradient(180deg, #fd7e14, #e85d04) !important; 
+            color: #fff !important; 
+            box-shadow: 0 6px 0 #a13d00, 0 8px 15px rgba(0,0,0,0.3) !important; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+        .srs-norm button { 
+            background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; 
+            color: #fff !important; 
+            box-shadow: 0 6px 0 #057085, 0 8px 15px rgba(0,0,0,0.3) !important; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+        .srs-easy button { 
+            background: linear-gradient(180deg, #6f42c1, #59339d) !important; 
+            color: #fff !important; 
+            box-shadow: 0 6px 0 #3a1e6d, 0 8px 15px rgba(0,0,0,0.3) !important; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+
+        /* Игровой стол */
+        .mobile-game-area { 
+            position: relative; width: 100%; height: 280px; 
+            margin: 0 auto 40px auto; /* Увеличен отступ снизу для текста */
+            background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); 
+            border: 6px solid #3e2723; border-radius: 140px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
+            transition: box-shadow 0.3s, border-color 0.3s; 
+        }
         
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
@@ -45,8 +111,18 @@ def show():
         .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; }
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
-        .rng-hint { text-align: center; color: #888; font-size: 11px; margin-bottom: 5px; font-family: monospace; }
-        .srs-container button { height: 50px; font-size: 13px; background: #343a40; color: #aaa; border: 1px solid #555; }
+        
+        /* Читаемая подсказка RNG под столом */
+        .rng-hint { 
+            text-align: center; 
+            color: #adb5bd; 
+            font-size: 13px; 
+            font-family: 'Roboto', sans-serif; 
+            font-weight: 500; 
+            margin-top: -20px; 
+            margin-bottom: 15px; 
+            letter-spacing: 0.5px; 
+        }
         
         .dailies-box { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:5px; font-size:10px; }
         .daily-item { background:#1e1e1e; border:1px solid #444; padding:3px 6px; border-radius:4px; color:#aaa; }
@@ -155,7 +231,6 @@ def show():
     c1 = "suit-red" if s1 == '♥' else "suit-blue" if s1 == '♦' else "suit-green" if s1 == '♣' else "suit-black"
     c2 = "suit-red" if s2 == '♥' else "suit-blue" if s2 == '♦' else "suit-green" if s2 == '♣' else "suit-black"
 
-    # --- GAMIFICATION HEADER MOB ---
     stats_data = utils.load_user_stats()
     rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
     c = st.session_state.combo
@@ -277,7 +352,7 @@ def show():
     st.markdown(html, unsafe_allow_html=True)
 
     if is_defense:
-        st.markdown('<div class="rng-hint">📉 0..Freq → Action | 📈 Freq..100 → Fold</div>', unsafe_allow_html=True)
+        st.markdown('<div class="rng-hint">RNG 0-Freq: ACTION &nbsp;|&nbsp; Freq-100: FOLD</div>', unsafe_allow_html=True)
 
     def handle_action(action):
         corr = (correct_act == action)
@@ -301,28 +376,26 @@ def show():
         st.session_state.srs_mode = True
         st.rerun()
 
-    st.markdown('<div class="mobile-controls">', unsafe_allow_html=True)
     if not st.session_state.srs_mode:
         if is_defense:
             c1, c2, c3 = st.columns(3)
             with c1:
                 if st.button("FOLD", key="f", use_container_width=True): handle_action("FOLD")
-                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"] button')[0].classList.add("fold-btn");</script>""", unsafe_allow_html=True)
+                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[0].classList.add("fold-btn");</script>""", unsafe_allow_html=True)
             with c2:
                 if st.button("CALL", key="c", use_container_width=True): handle_action("CALL")
-                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"] button')[1].classList.add("call-btn");</script>""", unsafe_allow_html=True)
+                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[1].classList.add("call-btn");</script>""", unsafe_allow_html=True)
             with c3:
                 if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
-                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"] button')[2].classList.add("raise-btn");</script>""", unsafe_allow_html=True)
+                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[2].classList.add("raise-btn");</script>""", unsafe_allow_html=True)
         else:
             c1, c2 = st.columns(2)
             with c1:
                 if st.button("FOLD", key="f", use_container_width=True): handle_action("FOLD")
-                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"] button')[0].classList.add("fold-btn");</script>""", unsafe_allow_html=True)
+                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[0].classList.add("fold-btn");</script>""", unsafe_allow_html=True)
             with c2:
                 if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
-                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"] button')[1].classList.add("open-raise-btn");</script>""", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[1].classList.add("open-raise-btn");</script>""", unsafe_allow_html=True)
 
     if st.session_state.srs_mode:
         if st.session_state.last_error:
@@ -334,10 +407,17 @@ def show():
             with st.expander(f"🔍 View Range ({correct_act})", expanded=False):
                 st.markdown(utils.render_range_matrix(data, st.session_state.hand), unsafe_allow_html=True)
         
-        st.markdown('<div class="mobile-controls srs-container">', unsafe_allow_html=True)
         s1, s2, s3 = st.columns(3)
         k = f"{src}_{sc}_{sp}".replace(" ","_")
-        if s1.button("HARD", use_container_width=True): utils.update_srs_smart(k, st.session_state.hand, 'hard'); st.session_state.hand = None; st.rerun()
-        if s2.button("NORM", use_container_width=True): utils.update_srs_smart(k, st.session_state.hand, 'normal'); st.session_state.hand = None; st.rerun()
-        if s3.button("EASY", use_container_width=True): utils.update_srs_smart(k, st.session_state.hand, 'easy'); st.session_state.hand = None; st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+        with s1:
+            if st.button("HARD", use_container_width=True): 
+                utils.update_srs_smart(k, st.session_state.hand, 'hard'); st.session_state.hand = None; st.rerun()
+            st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[0].classList.add("srs-hard");</script>""", unsafe_allow_html=True)
+        with s2:
+            if st.button("NORM", use_container_width=True): 
+                utils.update_srs_smart(k, st.session_state.hand, 'normal'); st.session_state.hand = None; st.rerun()
+            st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[1].classList.add("srs-norm");</script>""", unsafe_allow_html=True)
+        with s3:
+            if st.button("EASY", use_container_width=True): 
+                utils.update_srs_smart(k, st.session_state.hand, 'easy'); st.session_state.hand = None; st.rerun()
+            st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[2].classList.add("srs-easy");</script>""", unsafe_allow_html=True)
