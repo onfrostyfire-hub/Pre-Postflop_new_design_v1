@@ -3,7 +3,7 @@
   "scenario": "BB def vs PFR",
   "spots": {
      "BBvsCO x2.5 nl500": {
-      "setup": { "hero_pos": "BB", "villain_pos": "CO", "btn_pos": "BTN", "active_players": ["CO", "BB"], "table_bets": {"CO": 2.5}, "hero_bet": 1.0, "is_3bet_pot": false },
+      "setup": { "hero_pos": "BB", "villain_pos": "CO", "btn_pos": "BTN", "active_players": ["CO", "BB"], "table_bets": {"CO": 2.5, "SB": 0.5}, "hero_bet": 1.0, "is_3bet_pot": false },
       "stats": { "3bet": "8%", "Call": "24%", "Fold": "68%" },
       "ranges": {
         "source": "ALL",
