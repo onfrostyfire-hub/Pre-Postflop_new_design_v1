@@ -9,30 +9,40 @@ def show():
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
         /* Убиваем лишние отступы Streamlit для мобилок */
-        .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden; }
+        .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; max-width: 100% !important; }
         
-        /* Принудительно ставим кнопки в один ряд */
-        [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 8px !important; }
-        [data-testid="column"] { width: auto !important; flex: 1 1 0% !important; min-width: 0 !important; }
+        /* ЖЕСТКИЙ ФИКС КОЛОНОК ДЛЯ АЙФОНА: всегда в ряд, равная ширина */
+        div[data-testid="stHorizontalBlock"] { 
+            flex-direction: row !important; 
+            flex-wrap: nowrap !important; 
+            gap: 6px !important; 
+        }
+        div[data-testid="column"] { 
+            width: 33% !important; 
+            flex: 1 1 0% !important; 
+            min-width: 0 !important; 
+            padding: 0 !important; 
+        }
 
-        /* Базовый 3D стиль для кнопок */
+        /* Компактный 3D стиль для кнопок, чтобы влезали в узкий экран */
         div.stButton > button {
             width: 100%; 
-            height: 55px !important; 
+            height: 50px !important; 
             font-family: 'Roboto', sans-serif;
             font-weight: 900 !important; 
-            font-size: 15px !important; 
-            border-radius: 12px !important; 
+            font-size: 13px !important; 
+            border-radius: 10px !important; 
             border: none !important; 
             text-transform: uppercase; 
             transition: all 0.1s ease;
             position: relative;
             top: 0;
-            padding: 0;
+            padding: 0 4px !important;
+            letter-spacing: 0.5px;
         }
         div.stButton > button:active { top: 4px; box-shadow: 0 2px 0 transparent !important; }
 
-        /* Игровой стол (чуть сжат для айфона) */
+        /* Игровой стол */
         .mobile-game-area { 
             position: relative; width: 100%; height: 250px; 
             margin: 0 auto 10px auto; 
@@ -328,11 +338,10 @@ def show():
     # БЛОК РЕНДЕРИНГА КНОПОК И CSS
     if not st.session_state.srs_mode:
         if is_defense:
-            # 3 кнопки: Fold (Серый), Call (Зеленый), Raise (Розовый)
             st.markdown("""<style>
-                div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 6px 0 #1d2124, 0 8px 15px rgba(0,0,0,0.3) !important; }
-                div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #20c997, #198754) !important; color: #fff !important; box-shadow: 0 6px 0 #0f5132, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-                div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 6px 0 #a02561, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+                div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 4px 0 #1d2124, 0 6px 10px rgba(0,0,0,0.3) !important; }
+                div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #20c997, #198754) !important; color: #fff !important; box-shadow: 0 4px 0 #0f5132, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+                div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 4px 0 #a02561, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
             </style>""", unsafe_allow_html=True)
             c1, c2, c3 = st.columns(3)
             with c1:
@@ -342,10 +351,9 @@ def show():
             with c3:
                 if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
         else:
-            # 2 кнопки: Fold (Серый), Raise (Розовый)
             st.markdown("""<style>
-                div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 6px 0 #1d2124, 0 8px 15px rgba(0,0,0,0.3) !important; }
-                div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 6px 0 #a02561, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+                div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 4px 0 #1d2124, 0 6px 10px rgba(0,0,0,0.3) !important; }
+                div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 4px 0 #a02561, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
             </style>""", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
             with c1:
@@ -353,14 +361,12 @@ def show():
             with c2:
                 if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
     else:
-        # 3 кнопки оценки SRS: Hard (Оранжевый), Norm (Голубой), Easy (Фиолетовый)
         st.markdown("""<style>
-            div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #fd7e14, #e85d04) !important; color: #fff !important; box-shadow: 0 6px 0 #a13d00, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-            div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; color: #fff !important; box-shadow: 0 6px 0 #057085, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-            div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #6f42c1, #59339d) !important; color: #fff !important; box-shadow: 0 6px 0 #3a1e6d, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+            div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #fd7e14, #e85d04) !important; color: #fff !important; box-shadow: 0 4px 0 #a13d00, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+            div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; color: #fff !important; box-shadow: 0 4px 0 #057085, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+            div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #6f42c1, #59339d) !important; color: #fff !important; box-shadow: 0 4px 0 #3a1e6d, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
         </style>""", unsafe_allow_html=True)
         
-        # Компактные кастомные алерты вместо дефолтных
         if st.session_state.last_error:
             st.markdown(f'<div style="background:#dc3545; color:white; padding:8px; border-radius:8px; text-align:center; font-weight:bold; margin-bottom:8px; font-size:14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">{st.session_state.msg}</div>', unsafe_allow_html=True)
         else:
