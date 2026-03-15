@@ -10,7 +10,6 @@ from google.oauth2.service_account import Credentials
 SPOTS_DIR = 'spots_data'
 RANKS = 'AKQJT98765432'
 
-# --- GOOGLE SHEETS CORE ---
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
@@ -57,10 +56,27 @@ def init_cloud_data():
         st.session_state["app_initialized"] = True
 
 # --- GAMIFICATION CORE ---
+ACHIEVEMENTS_DB = {
+    "first_blood": {"name": "Первая кровь", "desc": "Отыграл первую раздачу. Неужели?", "icon": "🩸"},
+    "hands_1000": {"name": "Мозоль на пальце", "desc": "1000 раздач. А винрейт всё еще как у макаки?", "icon": "🖱️"},
+    "hands_5000": {"name": "Ноулайфер", "desc": "5000 раздач. Ты вообще спишь, чудовище?", "icon": "🧟"},
+    "combo_50": {"name": "Мамкин киберспортсмен", "desc": "Комбо x50. Наверное, просто повезло.", "icon": "🎯"},
+    "combo_100": {"name": "Аимбот", "desc": "Комбо x100. Окей, признаю, ты умеешь тыкать кнопки.", "icon": "🤖"},
+    "session_500": {"name": "Железная жопа", "desc": "500 рук за сессию. Иди потрогай траву.", "icon": "🪑"}
+}
+
 def load_user_stats():
     init_cloud_data()
     sets = st.session_state.get("user_settings", {})
-    return sets.get("stats", {"xp": 0, "streak": 0, "last_date": "", "max_combo": 0})
+    stats = sets.get("stats", {})
+    if "xp" not in stats: stats["xp"] = 0
+    if "streak" not in stats: stats["streak"] = 0
+    if "last_date" not in stats: stats["last_date"] = ""
+    if "max_combo" not in stats: stats["max_combo"] = 0
+    if "total_hands" not in stats: stats["total_hands"] = 0
+    if "achievements" not in stats: stats["achievements"] = []
+    if "dailies" not in stats: stats["dailies"] = {"date": "", "quests": []}
+    return stats
 
 def save_user_stats(stats):
     sets = st.session_state.get("user_settings", {})
@@ -69,9 +85,9 @@ def save_user_stats(stats):
 
 def get_rank_info(xp):
     tiers = [
-        (0, "🐟 Fish"), (500, "🪨 Nit"), (1500, "🚶 Reg"),
-        (3000, "⚔️ Grinder"), (6000, "🦈 Shark"), (12000, "🎩 High Roller"),
-        (25000, "👑 Boss"), (50000, "🤖 GTO Machine")
+        (0, "🐟 Fish"), (2000, "🪨 Nit"), (7500, "🚶 Reg"),
+        (20000, "⚔️ Grinder"), (50000, "🦈 Shark"), (100000, "🎩 High Roller"),
+        (250000, "👑 Boss"), (500000, "🤖 GTO Machine")
     ]
     current_rank = tiers[0][1]
     next_xp = tiers[1][0]
@@ -81,27 +97,67 @@ def get_rank_info(xp):
             next_xp = tiers[i+1][0] if i+1 < len(tiers) else "MAX"
     return current_rank, next_xp
 
-def process_gamification(is_correct, combo):
+def generate_dailies():
+    return [
+        {"id": "play", "desc": "Сыграть 100 рук", "target": 100, "progress": 0, "done": False, "xp": 500},
+        {"id": "correct", "desc": "50 верных ответов", "target": 50, "progress": 0, "done": False, "xp": 500},
+        {"id": "combo", "desc": "Комбо x15", "target": 15, "progress": 0, "done": False, "xp": 1000}
+    ]
+
+def process_gamification(is_correct, combo, session_total_hands):
     stats = load_user_stats()
     now_date = datetime.now().date()
-    last_date_str = stats.get("last_date", "")
+    now_date_str = now_date.strftime("%Y-%m-%d")
+    alerts = []
     
-    if last_date_str:
+    # Стрик дней
+    if stats["last_date"]:
         try:
-            last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
+            last_date = datetime.strptime(stats["last_date"], "%Y-%m-%d").date()
             delta = (now_date - last_date).days
             if delta == 1: stats["streak"] += 1
             elif delta > 1: stats["streak"] = 1
         except: stats["streak"] = 1
-    else:
-        stats["streak"] = 1
-        
-    stats["last_date"] = now_date.strftime("%Y-%m-%d")
+    else: stats["streak"] = 1
+    stats["last_date"] = now_date_str
     
-    if is_correct: stats["xp"] = stats.get("xp", 0) + 10
+    # Базовая стата
+    stats["total_hands"] += 1
+    if is_correct: stats["xp"] += 10
     if combo > stats.get("max_combo", 0): stats["max_combo"] = combo
+    
+    # Дейлики
+    if stats["dailies"].get("date") != now_date_str:
+        stats["dailies"] = {"date": now_date_str, "quests": generate_dailies()}
         
+    for q in stats["dailies"]["quests"]:
+        if not q["done"]:
+            old_prog = q["progress"]
+            if q["id"] == "play": q["progress"] += 1
+            elif q["id"] == "correct" and is_correct: q["progress"] += 1
+            elif q["id"] == "combo" and combo > q["progress"]: q["progress"] = combo
+            
+            if q["progress"] >= q["target"]:
+                q["progress"] = q["target"]
+                q["done"] = True
+                stats["xp"] += q["xp"]
+                alerts.append(f"🎯 Дейлик выполнен: {q['desc']} (+{q['xp']} XP)")
+
+    # Ачивки
+    def unlock(ach_id):
+        if ach_id not in stats["achievements"]:
+            stats["achievements"].append(ach_id)
+            alerts.append(f"🏆 Ачивка: {ACHIEVEMENTS_DB[ach_id]['name']}! {ACHIEVEMENTS_DB[ach_id]['desc']}")
+
+    if stats["total_hands"] >= 1: unlock("first_blood")
+    if stats["total_hands"] >= 1000: unlock("hands_1000")
+    if stats["total_hands"] >= 5000: unlock("hands_5000")
+    if combo >= 50: unlock("combo_50")
+    if combo >= 100: unlock("combo_100")
+    if session_total_hands >= 500: unlock("session_500")
+
     save_user_stats(stats)
+    return alerts
 
 # --- SAVE & SYNC ---
 def load_srs_data():
