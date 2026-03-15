@@ -152,8 +152,13 @@ def show():
         src, sc, sp = chosen.split('|')
         data = ranges_db[src][sc][sp]
         r_data = data.get("ranges", data)
-        t_range = r_data.get("training", r_data.get("source", r_data.get("full", "")))
-        poss = utils.parse_range_to_list(t_range)
+        
+        if is_leak_mode:
+            poss = st.session_state.get("leak_hands", [])
+        else:
+            t_range = r_data.get("training", r_data.get("source", r_data.get("full", "")))
+            poss = utils.parse_range_to_list(t_range)
+            
         srs = utils.load_srs_data()
         w = [srs.get(f"{src}_{sc}_{sp}_{h}".replace(" ","_"), 100) for h in poss]
         
@@ -176,6 +181,7 @@ def show():
     cards_in_play = setup.get("active_players", [])
     bets_on_table = setup.get("table_bets", {})
     display_hero_bet = setup.get("hero_bet")
+    display_villain_bet = setup.get("villain_bet")
     is_3bet_pot = setup.get("is_3bet_pot", False)
 
     is_defense = bool(villain_pos is not None or "call" in r_data or "Call" in r_data)
@@ -199,7 +205,6 @@ def show():
     c1 = "suit-red" if s1 == '♥' else "suit-blue" if s1 == '♦' else "suit-green" if s1 == '♣' else "suit-black"
     c2 = "suit-red" if s2 == '♥' else "suit-blue" if s2 == '♦' else "suit-green" if s2 == '♣' else "suit-black"
 
-    # --- HEADER & GAMIFICATION ---
     stats_data = utils.load_user_stats()
     rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
     c = st.session_state.combo
@@ -212,6 +217,14 @@ def show():
     wr = int((scorr / sh * 100)) if sh > 0 else 0
     wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
 
+    dailies_html = '<div class="dailies-box">'
+    for q in stats_data.get("dailies", {}).get("quests", []):
+        cls = "daily-done" if q["done"] else ""
+        icon = "✅" if q["done"] else "🎯"
+        text = "Выполнено" if q["done"] else f"{q['progress']}/{q['target']}"
+        dailies_html += f'<div class="daily-item {cls}">{icon} {q["desc"]}: {text}</div>'
+    dailies_html += '</div>'
+
     header_html = f"""
     <div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;">
         <div style="height: 4px; width: 100%; background: #222;">
@@ -219,17 +232,22 @@ def show():
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;">
             <div style="flex:1;">
-                <div style="font-size:12px; font-weight:bold; color:#aaa;">Винрейт</div>
-                <div style="font-size:16px; font-weight:bold; color:{wr_color};">{wr}%</div>
+                <div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div>
+                <div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;">
+                    <div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div>
+                </div>
+                <div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data['xp']} / {next_xp} XP</div>
             </div>
             <div style="flex:1; text-align:center; font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">
                 🔥 x{c}
             </div>
             <div style="flex:1; text-align:right;">
-                <div style="font-size:12px; font-weight:bold; color:#aaa;">Раздачи</div>
-                <div style="font-size:16px; font-weight:bold; color:#fff;">{sh}</div>
+                <div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get('streak', 1)} Дней</div>
+                <div style="font-size:11px; color:#aaa;">Winrate: {wr}%</div>
             </div>
         </div>
+        {dailies_html}
+        <div style="height:10px;"></div>
     </div>
     """
     st.markdown(header_html, unsafe_allow_html=True)
@@ -268,71 +286,72 @@ def show():
 
         for i in range(1, 6):
             p = rot[i]
-            
-            has_cards = (p in cards_in_play)
+            has_cards = False
+            if is_defense:
+                if p == villain_pos: has_cards = True
+            else:
+                if order.index(p) > order.index(hero_pos): has_cards = True
+                
             cls = "seat-active" if has_cards else "seat-folded"
             cards = '<div class="opp-cards"></div>' if has_cards else ""
             ss = get_seat_style(i)
             opp_html += f'<div class="seat {cls}" style="{ss}">{cards}<span class="seat-label">{p}</span></div>'
             
             cs = get_chip_style(i)
-            bet_amount = bets_on_table.get(p)
-            
-            if bet_amount is not None:
-                bet_txt = f'<div class="bet-txt">{bet_amount}bb</div>'
-                if bet_amount <= 1.0:
-                    if is_3bet_pot: chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div>{bet_txt}</div>'
-                    else: chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div>{bet_txt}</div>'
+            if is_defense and p == villain_pos and display_villain_bet:
+                bet_txt = f'<div class="bet-txt">{display_villain_bet}bb</div>'
+                if is_3bet_pot:
+                    chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div><div class="chip-3bet" style="margin-top:-15px;"></div>{bet_txt}</div>'
                 else:
-                    if is_3bet_pot: chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div><div class="chip-3bet" style="margin-top:-15px;"></div>{bet_txt}</div>'
-                    else: chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div><div class="poker-chip" style="margin-top:-10px;"></div>{bet_txt}</div>'
+                    chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div><div class="poker-chip" style="margin-top:-10px;"></div>{bet_txt}</div>'
+            elif p in ["SB", "BB"]:
+                if not (is_defense and p == villain_pos):
+                    chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div></div>'
             
             if p == btn_pos:
                 bs = get_btn_style(i)
                 chips_html += f'<div class="dealer-button" style="{bs}">D</div>'
 
         hero_cs = get_chip_style(0)
-        if display_hero_bet is not None: 
+        if is_defense and display_hero_bet: 
             bet_txt = f'<div class="bet-txt">{display_hero_bet}bb</div>'
-            if display_hero_bet <= 1.0:
+            if display_hero_bet == 1.0:
                 chips_html += f'<div class="chip-container" style="{hero_cs}"><div class="poker-chip"></div>{bet_txt}</div>'
             else:
                 chips_html += f'<div class="chip-container" style="{hero_cs}"><div class="poker-chip"></div><div class="poker-chip" style="margin-top:-10px"></div>{bet_txt}</div>'
+        else:
+            if hero_pos in ["SB", "BB"]: 
+                chips_html += f'<div class="chip-container" style="{hero_cs}"><div class="poker-chip"></div></div>'
             
         if rot[0] == btn_pos:
             hero_bs = get_btn_style(0)
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
-        # Получаем данные по мастерству спота и векторные гербы
         mast = utils.get_spot_mastery_info(st.session_state.current_spot_key)
         crest_l, crest_r = utils.get_mastery_svg(mast["tier_name"])
 
         mastery_html = ""
         if mast["tier_name"] != "Sandbox":
-            mastery_html = f"""
-            <div style="font-size:10px; color:{'#adb5bd' if mast['rusty'] else '#ffc107'}; font-weight:bold; margin-top:6px; letter-spacing:1px; text-transform:uppercase;">
-                {mast['tier_name']} {'(Ржавчина)' if mast['rusty'] else ''}
-            </div>
-            <div style="background:#222; height:4px; width:70px; margin: 4px auto 0 auto; border-radius:2px; overflow:hidden; border: 1px solid #444;">
-                <div style="background:{'#adb5bd' if mast['rusty'] else '#28a745'}; height:100%; width:{mast['progress']}%;"></div>
-            </div>
-            """
+            rusty_text = "(Ржавчина)" if mast["rusty"] else ""
+            color_text = "#adb5bd" if mast["rusty"] else "#ffc107"
+            color_bar = "#adb5bd" if mast["rusty"] else "#28a745"
+            mastery_html = f"<div style='font-size:10px; color:{color_text}; font-weight:bold; margin-top:6px; letter-spacing:1px; text-transform:uppercase;'>{mast['tier_name']} {rusty_text}</div><div style='background:#222; height:4px; width:70px; margin: 4px auto 0 auto; border-radius:2px; overflow:hidden; border: 1px solid #444;'><div style='background:{color_bar}; height:100%; width:{mast['progress']}%;'></div></div>"
 
-        html = f"""
-        <div class="game-area {combo_cls}">
-            {crest_l}
-            {crest_r}
-            <div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div>{mastery_html}</div>
-            {opp_html} {chips_html}
-            <div class="hero-panel">
-                <div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div>
-                <div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div>
-                <div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div>
-                <div class="rng-desktop">{rng}</div>
-            </div>
-        </div>
-        """
+        # Сплющенный HTML без переносов строк, чтобы Markdown не ломался
+        html = (
+            f'<div class="game-area {combo_cls}">'
+            f'{crest_l}{crest_r}'
+            f'<div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div>{mastery_html}</div>'
+            f'{opp_html}{chips_html}'
+            f'<div class="hero-panel">'
+            f'<div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div>'
+            f'<div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div>'
+            f'<div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div>'
+            f'<div class="rng-desktop">{rng}</div>'
+            f'</div></div>'
+        )
         st.markdown(html, unsafe_allow_html=True)
+        
         if is_defense: st.markdown('<div class="rng-hint-box">📉 0..Freq → Action | 📈 Freq..100 → Fold</div>', unsafe_allow_html=True)
         else: st.markdown("<div style='height:30px;'></div>", unsafe_allow_html=True)
 
@@ -370,7 +389,6 @@ def show():
             st.session_state.srs_mode = True
             st.rerun()
 
-        # БЛОК РЕНДЕРИНГА КНОПОК ЧЕРЕЗ CSS
         if not st.session_state.srs_mode:
             if is_defense:
                 st.markdown("""<style>
