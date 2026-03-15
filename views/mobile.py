@@ -42,12 +42,6 @@ def show():
             transition: box-shadow 0.3s, border-color 0.3s; 
         }
         
-        .mastery-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; z-index: 1; transition: box-shadow 0.5s ease; }
-        .mastery-badge { font-size: 9px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 8px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); }
-        .rusty-True { filter: grayscale(100%) opacity(0.6); }
-        .mastery-bar-bg { width: 80px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
-        .mastery-bar-fill { height: 100%; transition: width 0.3s; }
-        
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-slow 2s infinite; }
@@ -64,9 +58,9 @@ def show():
         @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
         @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
 
-        .mob-info { position: absolute; top: 18%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
+        .mob-info { position: absolute; top: 25%; width: 100%; text-align: center; pointer-events: none; z-index:30; }
         .mob-info-src { font-size: 10px; color: #888; text-transform: uppercase; }
-        .mob-info-spot { font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.15); line-height: 1; }
+        .mob-info-spot { font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.15); }
         .seat { position: absolute; width: 44px; height: 44px; background: #222; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
         .seat-label { font-size: 9px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 2px; }
         .seat-active { border-color: #ffc107; background: #2a2a2a; }
@@ -203,14 +197,6 @@ def show():
     wr = int((scorr / sh * 100)) if sh > 0 else 0
     wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
 
-    # MASTERY FETCH
-    try:
-        mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(st.session_state.current_spot_key, {}))
-    except Exception:
-        mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "transparent", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100}
-        
-    m_color = mastery['color'] if mastery['color'] != 'transparent' else '#6c757d'
-
     header_html = f"""
     <div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
         <div style="height: 3px; width: 100%; background: #222;">
@@ -297,19 +283,26 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
+    # Получаем данные по мастерству спота и векторные гербы
+    mast = utils.get_spot_mastery_info(st.session_state.current_spot_key)
+    crest_l, crest_r = utils.get_mastery_svg(mast["tier_name"])
+
+    mastery_html = ""
+    if mast["tier_name"] != "Sandbox":
+        mastery_html = f"""
+        <div style="font-size:10px; color:{'#adb5bd' if mast['rusty'] else '#ffc107'}; font-weight:bold; margin-top:6px; letter-spacing:1px; text-transform:uppercase;">
+            {mast['tier_name']} {'(Ржавчина)' if mast['rusty'] else ''}
+        </div>
+        <div style="background:#222; height:4px; width:70px; margin: 4px auto 0 auto; border-radius:2px; overflow:hidden; border: 1px solid #444;">
+            <div style="background:{'#adb5bd' if mast['rusty'] else '#28a745'}; height:100%; width:{mast['progress']}%;"></div>
+        </div>
+        """
+
     html = f"""
     <div class="mobile-game-area {combo_cls}">
-        <div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery['color']};"></div>
-        <div class="mob-info">
-            <div class="mob-info-src">{sc}</div>
-            <div class="mob-info-spot">{sp}</div>
-            <div class="mastery-badge rusty-{mastery['is_rusty']}" style="color: {m_color}">
-                {mastery['icon']} {mastery['name']}
-            </div>
-            <div class="mastery-bar-bg">
-                <div class="mastery-bar-fill" style="width: {mastery['prog_pct']}%; background: {m_color};"></div>
-            </div>
-        </div>
+        {crest_l}
+        {crest_r}
+        <div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div>{mastery_html}</div>
         {opp_html} {chips_html}
         <div class="hero-mob">
             <div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div>
@@ -328,12 +321,13 @@ def show():
         st.session_state.last_error = not corr
         st.session_state.session_hands += 1
         
+        utils.update_spot_mastery(st.session_state.current_spot_key, corr)
+        
         if corr:
             st.session_state.session_correct += 1
             st.session_state.combo += 1
             st.session_state.msg = f"✅ Верно!"
             
-            # НОВЫЕ ТЕКСТЫ ДЛЯ СТРИКОВ
             if st.session_state.combo in [10, 25, 50, 100, 200, 500, 1000]:
                 msgs = {
                     10: "Комбо x10! Разогрев.",
@@ -349,10 +343,8 @@ def show():
             st.session_state.combo = 0
             st.session_state.msg = f"❌ Ошибка! Нужно: {correct_act}"
             
-        try:
-            alerts = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key)
-            if alerts: st.session_state.toast_msgs.extend(alerts)
-        except Exception: pass
+        alerts = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands)
+        if alerts: st.session_state.toast_msgs.extend(alerts)
             
         utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
         st.session_state.srs_mode = True
