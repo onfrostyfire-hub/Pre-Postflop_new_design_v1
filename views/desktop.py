@@ -102,6 +102,7 @@ def show():
     data = ranges_db[src][sc][sp]
     r_data = data.get("ranges", data)
     
+    # Идеально чистое чтение JSON
     setup = data.get("setup", {})
     hero_pos = setup.get("hero_pos", "EP")
     villain_pos = setup.get("villain_pos")
@@ -157,7 +158,7 @@ def show():
         for i in range(1, 6):
             p = rot[i]
             
-            has_cards = p in cards_in_play
+            has_cards = (p in cards_in_play)
             cls = "seat-active" if has_cards else "seat-folded"
             cards = '<div class="opp-cards"></div>' if has_cards else ""
             ss = get_seat_style(i)
@@ -165,19 +166,26 @@ def show():
             
             cs = get_chip_style(i)
             bet_amount = bets_on_table.get(p)
-            if bet_amount:
+            
+            if bet_amount is not None:
                 bet_txt = f'<div class="bet-txt">{bet_amount}bb</div>'
-                if is_3bet_pot:
-                    chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div><div class="chip-3bet" style="margin-top:-15px;"></div>{bet_txt}</div>'
+                if bet_amount <= 1.0:
+                    if is_3bet_pot:
+                        chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div>{bet_txt}</div>'
+                    else:
+                        chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div>{bet_txt}</div>'
                 else:
-                    chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div><div class="poker-chip" style="margin-top:-10px;"></div>{bet_txt}</div>'
+                    if is_3bet_pot:
+                        chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div><div class="chip-3bet" style="margin-top:-15px;"></div>{bet_txt}</div>'
+                    else:
+                        chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div><div class="poker-chip" style="margin-top:-10px;"></div>{bet_txt}</div>'
             
             if p == btn_pos:
                 bs = get_btn_style(i)
                 chips_html += f'<div class="dealer-button" style="{bs}">D</div>'
 
         hero_cs = get_chip_style(0)
-        if display_hero_bet: 
+        if display_hero_bet is not None: 
             bet_txt = f'<div class="bet-txt">{display_hero_bet}bb</div>'
             if display_hero_bet <= 1.0:
                 chips_html += f'<div class="chip-container" style="{hero_cs}"><div class="poker-chip"></div>{bet_txt}</div>'
