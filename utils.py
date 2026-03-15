@@ -10,6 +10,7 @@ from google.oauth2.service_account import Credentials
 SPOTS_DIR = 'spots_data'
 RANKS = 'AKQJT98765432'
 
+# --- GOOGLE SHEETS CORE ---
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
@@ -20,7 +21,6 @@ SPREADSHEET_ID = '15ouWJYZuQET1-sy7k5Wrn1fAzNUX6ssk5K8SOM9uYOc'
 def get_gspread_client():
     try:
         creds_dict = json.loads(st.secrets["GOOGLE_JSON"])
-        # Принудительно чиним съехавшие переносы строк в ключе
         creds_dict["private_key"] = creds_dict["private_key"].replace('\\n', '\n')
         credentials = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         return gspread.authorize(credentials)
@@ -44,18 +44,66 @@ def init_cloud_data():
         try:
             srs_vals = sheets["SRS"].get_all_values()
             st.session_state["srs_data"] = {str(r[0]): int(r[1]) for r in srs_vals[1:]} if len(srs_vals) > 1 else {}
-        except:
-            st.session_state["srs_data"] = {}
+        except: st.session_state["srs_data"] = {}
+        
         try:
             set_val = sheets["Settings"].acell('A1').value
             st.session_state["user_settings"] = json.loads(set_val) if set_val else {}
-        except:
-            st.session_state["user_settings"] = {}
+        except: st.session_state["user_settings"] = {}
             
         st.session_state["history_buffer"] = []
         st.session_state["unsaved_count"] = 0
+        st.session_state["settings_changed"] = False
         st.session_state["app_initialized"] = True
 
+# --- GAMIFICATION CORE ---
+def load_user_stats():
+    init_cloud_data()
+    sets = st.session_state.get("user_settings", {})
+    return sets.get("stats", {"xp": 0, "streak": 0, "last_date": "", "max_combo": 0})
+
+def save_user_stats(stats):
+    sets = st.session_state.get("user_settings", {})
+    sets["stats"] = stats
+    save_user_settings(sets)
+
+def get_rank_info(xp):
+    tiers = [
+        (0, "🐟 Fish"), (500, "🪨 Nit"), (1500, "🚶 Reg"),
+        (3000, "⚔️ Grinder"), (6000, "🦈 Shark"), (12000, "🎩 High Roller"),
+        (25000, "👑 Boss"), (50000, "🤖 GTO Machine")
+    ]
+    current_rank = tiers[0][1]
+    next_xp = tiers[1][0]
+    for i, (req_xp, name) in enumerate(tiers):
+        if xp >= req_xp:
+            current_rank = name
+            next_xp = tiers[i+1][0] if i+1 < len(tiers) else "MAX"
+    return current_rank, next_xp
+
+def process_gamification(is_correct, combo):
+    stats = load_user_stats()
+    now_date = datetime.now().date()
+    last_date_str = stats.get("last_date", "")
+    
+    if last_date_str:
+        try:
+            last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
+            delta = (now_date - last_date).days
+            if delta == 1: stats["streak"] += 1
+            elif delta > 1: stats["streak"] = 1
+        except: stats["streak"] = 1
+    else:
+        stats["streak"] = 1
+        
+    stats["last_date"] = now_date.strftime("%Y-%m-%d")
+    
+    if is_correct: stats["xp"] = stats.get("xp", 0) + 10
+    if combo > stats.get("max_combo", 0): stats["max_combo"] = combo
+        
+    save_user_stats(stats)
+
+# --- SAVE & SYNC ---
 def load_srs_data():
     init_cloud_data()
     return st.session_state.get("srs_data", {})
@@ -81,9 +129,9 @@ def load_user_settings():
 def save_user_settings(settings):
     init_cloud_data()
     st.session_state["user_settings"] = settings
-    try:
-        get_worksheets()["Settings"].update_acell('A1', json.dumps(settings))
-    except: pass
+    st.session_state["settings_changed"] = True
+    st.session_state["unsaved_count"] += 1
+    check_auto_sync()
 
 def save_to_history(record):
     init_cloud_data()
@@ -105,6 +153,10 @@ def force_sync():
         if "history_buffer" in st.session_state and st.session_state["history_buffer"]:
             sheets["History"].append_rows(st.session_state["history_buffer"])
             st.session_state["history_buffer"] = []
+        if st.session_state.get("settings_changed"):
+            sheets["Settings"].update_acell('A1', json.dumps(st.session_state["user_settings"]))
+            st.session_state["settings_changed"] = False
+            
         st.session_state["unsaved_count"] = 0
     except: pass
 
@@ -242,7 +294,7 @@ def render_range_matrix(spot_data, target_hand=None):
             
             style += f"background:{bg};"
             if target_hand and h == target_hand: style += "border:1.5px solid #ffc107;z-index:10;box-shadow: 0 0 4px #ffc107;"
-            grid_html += f'<div style="{style}">{h}</div>'
+            grid_html += f'<div style="{style}" title="{h} | Raise: {raise_w:.0f}%, Call: {call_w:.0f}%">{h}</div>'
     grid_html += '</div>'
 
     stats = spot_data.get("stats", {})
