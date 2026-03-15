@@ -58,7 +58,7 @@ def show():
         @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
         @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
 
-        .mob-info { position: absolute; top: 25%; width: 100%; text-align: center; pointer-events: none; z-index:30; }
+        .mob-info { position: absolute; top: 25%; width: 100%; text-align: center; pointer-events: none; z-index: 30; }
         .mob-info-src { font-size: 10px; color: #888; text-transform: uppercase; }
         .mob-info-spot { font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.15); }
         .seat { position: absolute; width: 44px; height: 44px; background: #222; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
@@ -85,38 +85,70 @@ def show():
     ranges_db = utils.load_ranges()
     if not ranges_db: st.error("База ренджей пуста."); return
 
-    scenario_map = {}
-    for src, sc_dict in ranges_db.items():
-        for sc, sp_dict in sc_dict.items():
-            if sc not in scenario_map: scenario_map[sc] = []
-            for sp in sp_dict.keys():
-                scenario_map[sc].append((sp, f"{src}|{sc}|{sp}"))
+    is_leak_mode = st.session_state.get("leak_mode_active", False)
+
+    if is_leak_mode:
+        st.markdown('<div style="background:#dc3545; color:white; padding:15px; border-radius:10px; text-align:center; font-weight:bold; margin-bottom:15px; box-shadow: 0 4px 10px rgba(220,53,69,0.4); border:2px solid #ffc107;">🔥 АКТИВЕН РЕЖИМ ОТРАБОТКИ ХРОНИЧЕСКИХ ОШИБОК 🔥</div>', unsafe_allow_html=True)
+        if st.button("❌ ВЫЙТИ ИЗ РЕЖИМА ДЫР", use_container_width=True):
+            st.session_state.leak_mode_active = False
+            st.session_state.hand = None
+            st.rerun()
+            
+        target_spot = st.session_state.get("leak_spot")
+        full_key = None
+        for src, sc_dict in ranges_db.items():
+            for sc, sp_dict in sc_dict.items():
+                if target_spot in sp_dict:
+                    full_key = f"{src}|{sc}|{target_spot}"
+                    break
+        
+        if not full_key:
+            st.error("Спот не найден.")
+            st.session_state.leak_mode_active = False
+            st.stop()
+            
+        pool = [full_key]
+        
+    else:
+        scenario_map = {}
+        for src, sc_dict in ranges_db.items():
+            for sc, sp_dict in sc_dict.items():
+                mapped_sc = sc
+                sc_lower = sc.lower()
+                if "3bet" in sc_lower: mapped_sc = "Def vs 3bet"
+                elif "pfr" in sc_lower or "bbvsbu" in sc_lower or "bb def" in sc_lower: mapped_sc = "BB def vs PFR"
+                elif "open raise" in sc_lower: mapped_sc = "Open Raise"
                 
-    all_scenarios = sorted(list(scenario_map.keys()))
+                if mapped_sc not in scenario_map: scenario_map[mapped_sc] = []
+                for sp in sp_dict.keys():
+                    scenario_map[mapped_sc].append((sp, f"{src}|{sc}|{sp}"))
+                    
+        all_scenarios = ["Open Raise", "BB def vs PFR", "Def vs 3bet"]
+        all_scenarios = [s for s in all_scenarios if s in scenario_map]
 
-    with st.expander("⚙️ Настройки Фильтров", expanded=False):
-        saved = utils.load_user_settings()
-        sel_sc = st.multiselect("Сценарий", all_scenarios, default=[s for s in saved.get("scenarios", []) if s in all_scenarios])
-        
-        sel_spots_keys = []
-        if sel_sc:
-            st.markdown("**Споты для тренировки:**")
-            saved_spots = saved.get("spots", [])
-            for sc in sel_sc:
-                st.markdown(f"<div style='color:#ffc107; font-size:14px; font-weight:bold; margin-top:8px;'>{sc}</div>", unsafe_allow_html=True)
-                for sp_name, sp_key in scenario_map[sc]:
-                    is_checked = (sp_key in saved_spots) if "spots" in saved else True
-                    if st.checkbox(sp_name, value=is_checked, key=f"m_chk_{sp_key}"):
-                        sel_spots_keys.append(sp_key)
-        
-        if st.button("🚀 Применить", use_container_width=True):
-            utils.save_user_settings({"scenarios": sel_sc, "spots": sel_spots_keys})
-            st.session_state.hand = None; st.rerun()
+        with st.expander("⚙️ Настройки Фильтров", expanded=False):
+            saved = utils.load_user_settings()
+            sel_sc = st.multiselect("Сценарий", all_scenarios, default=[s for s in saved.get("scenarios", []) if s in all_scenarios])
+            
+            sel_spots_keys = []
+            if sel_sc:
+                st.markdown("**Споты для тренировки:**")
+                saved_spots = saved.get("spots", [])
+                for sc in sel_sc:
+                    st.markdown(f"<div style='color:#ffc107; font-size:14px; font-weight:bold; margin-top:8px;'>{sc}</div>", unsafe_allow_html=True)
+                    for sp_name, sp_key in scenario_map[sc]:
+                        is_checked = (sp_key in saved_spots) if "spots" in saved else True
+                        if st.checkbox(sp_name, value=is_checked, key=f"m_chk_{sp_key}"):
+                            sel_spots_keys.append(sp_key)
+            
+            if st.button("🚀 Применить", use_container_width=True):
+                utils.save_user_settings({"scenarios": sel_sc, "spots": sel_spots_keys})
+                st.session_state.hand = None; st.rerun()
 
-    pool = sel_spots_keys
-    if not pool:
-        st.warning("⚠️ Не выбран ни один спот.")
-        st.stop()
+        pool = sel_spots_keys
+        if not pool:
+            st.warning("⚠️ Не выбран ни один спот.")
+            st.stop()
 
     if 'combo' not in st.session_state: st.session_state.combo = 0
     if 'session_hands' not in st.session_state: st.session_state.session_hands = 0
@@ -140,8 +172,13 @@ def show():
         src, sc, sp = chosen.split('|')
         data = ranges_db[src][sc][sp]
         r_data = data.get("ranges", data)
-        t_range = r_data.get("training", r_data.get("source", r_data.get("full", "")))
-        poss = utils.parse_range_to_list(t_range)
+        
+        if is_leak_mode:
+            poss = st.session_state.get("leak_hands", [])
+        else:
+            t_range = r_data.get("training", r_data.get("source", r_data.get("full", "")))
+            poss = utils.parse_range_to_list(t_range)
+            
         srs = utils.load_srs_data()
         w = [srs.get(f"{src}_{sc}_{sp}_{h}".replace(" ","_"), 100) for h in poss]
         if sum(w) == 0: w = [100]*len(poss)
@@ -204,15 +241,17 @@ def show():
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px;">
             <div style="flex:1;">
-                <div style="font-size:12px; font-weight:bold; color:#aaa;">Винрейт</div>
-                <div style="font-size:14px; font-weight:bold; color:{wr_color};">{wr}%</div>
+                <div style="font-size:12px; font-weight:bold; color:#ffc107;">{rank_name}</div>
+                <div style="background:#333; height:4px; border-radius:2px; margin-top:3px; width:90%;">
+                    <div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div>
+                </div>
             </div>
             <div style="flex:1; text-align:center; font-size:18px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">
                 🔥 x{c}
             </div>
             <div style="flex:1; text-align:right;">
-                <div style="font-size:12px; font-weight:bold; color:#aaa;">Раздачи</div>
-                <div style="font-size:14px; font-weight:bold; color:#fff;">{sh}</div>
+                <div style="font-size:13px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get('streak', 1)} Дней</div>
+                <div style="font-size:9px; color:#aaa;">WR: {wr}%</div>
             </div>
         </div>
     </div>
@@ -283,34 +322,28 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    # Получаем данные по мастерству спота и векторные гербы
     mast = utils.get_spot_mastery_info(st.session_state.current_spot_key)
     crest_l, crest_r = utils.get_mastery_svg(mast["tier_name"])
 
     mastery_html = ""
     if mast["tier_name"] != "Sandbox":
-        mastery_html = f"""
-        <div style="font-size:10px; color:{'#adb5bd' if mast['rusty'] else '#ffc107'}; font-weight:bold; margin-top:6px; letter-spacing:1px; text-transform:uppercase;">
-            {mast['tier_name']} {'(Ржавчина)' if mast['rusty'] else ''}
-        </div>
-        <div style="background:#222; height:4px; width:70px; margin: 4px auto 0 auto; border-radius:2px; overflow:hidden; border: 1px solid #444;">
-            <div style="background:{'#adb5bd' if mast['rusty'] else '#28a745'}; height:100%; width:{mast['progress']}%;"></div>
-        </div>
-        """
+        rusty_text = "(Ржавчина)" if mast["rusty"] else ""
+        color_text = "#adb5bd" if mast["rusty"] else "#ffc107"
+        color_bar = "#adb5bd" if mast["rusty"] else "#28a745"
+        mastery_html = f"<div style='font-size:10px; color:{color_text}; font-weight:bold; margin-top:6px; letter-spacing:1px; text-transform:uppercase;'>{mast['tier_name']} {rusty_text}</div><div style='background:#222; height:4px; width:70px; margin: 4px auto 0 auto; border-radius:2px; overflow:hidden; border: 1px solid #444;'><div style='background:{color_bar}; height:100%; width:{mast['progress']}%;'></div></div>"
 
-    html = f"""
-    <div class="mobile-game-area {combo_cls}">
-        {crest_l}
-        {crest_r}
-        <div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div>{mastery_html}</div>
-        {opp_html} {chips_html}
-        <div class="hero-mob">
-            <div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div>
-            <div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div>
-            <div class="rng-badge">{rng}</div>
-        </div>
-    </div>
-    """
+    # Сплющенный HTML без переносов строк, чтобы Markdown не ломался
+    html = (
+        f'<div class="mobile-game-area {combo_cls}">'
+        f'{crest_l}{crest_r}'
+        f'<div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div>{mastery_html}</div>'
+        f'{opp_html}{chips_html}'
+        f'<div class="hero-mob">'
+        f'<div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div>'
+        f'<div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div>'
+        f'<div class="rng-badge">{rng}</div>'
+        f'</div></div>'
+    )
     st.markdown(html, unsafe_allow_html=True)
 
     if is_defense:
