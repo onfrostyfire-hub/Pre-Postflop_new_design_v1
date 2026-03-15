@@ -7,8 +7,15 @@ def show():
     st.markdown("""
     <style>
         .stApp { background-color: #212529; color: #e9ecef; }
-        .block-container { padding-top: 4rem; }
-        .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto; background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%); border: 15px solid #4a1c1c; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .block-container { padding-top: 3rem; }
+        .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto; background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%); border: 15px solid #4a1c1c; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: box-shadow 0.3s, border-color 0.3s; }
+        
+        .combo-glow-3 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.4), 0 10px 30px rgba(0,0,0,0.5) !important; }
+        .combo-glow-10 { border-color: #fd7e14 !important; box-shadow: 0 0 25px rgba(253, 126, 20, 0.6), 0 10px 30px rgba(0,0,0,0.5) !important; animation: pulse-med 1.5s infinite; }
+        .combo-glow-25 { border-color: #dc3545 !important; box-shadow: 0 0 40px rgba(220, 53, 69, 0.8), 0 10px 30px rgba(0,0,0,0.5) !important; animation: pulse-fast 0.8s infinite; }
+        @keyframes pulse-med { 0% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.5); } 50% { box-shadow: 0 0 35px rgba(253, 126, 20, 0.8); } 100% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.5); } }
+        @keyframes pulse-fast { 0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.6); } 50% { box-shadow: 0 0 50px rgba(220, 53, 69, 1.0); } 100% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.6); } }
+        
         .table-info { position: absolute; top: 20%; width: 100%; text-align: center; pointer-events: none; }
         .info-spot { font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); }
         .seat { position: absolute; width: 65px; height: 65px; background: #343a40; border: 2px solid #495057; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
@@ -76,6 +83,14 @@ def show():
         st.warning("⚠️ Не выбран ни один спот. Отметь галочки в меню слева.")
         st.stop()
 
+    # Стейт для геймификации
+    if 'combo' not in st.session_state: st.session_state.combo = 0
+    if 'show_balloons' not in st.session_state: st.session_state.show_balloons = False
+    
+    if st.session_state.show_balloons:
+        st.balloons()
+        st.session_state.show_balloons = False
+
     if 'hand' not in st.session_state: st.session_state.hand = None
     if 'rng' not in st.session_state: st.session_state.rng = 0
     if 'suits' not in st.session_state: st.session_state.suits = None
@@ -102,7 +117,6 @@ def show():
     data = ranges_db[src][sc][sp]
     r_data = data.get("ranges", data)
     
-    # Идеально чистое чтение JSON
     setup = data.get("setup", {})
     hero_pos = setup.get("hero_pos", "EP")
     villain_pos = setup.get("villain_pos")
@@ -132,6 +146,38 @@ def show():
     h_val = st.session_state.hand; s1, s2 = st.session_state.suits
     c1 = "suit-red" if s1 in '♥' else "suit-blue" if s1 in '♦' else "suit-black"
     c2 = "suit-red" if s2 in '♥' else "suit-blue" if s2 in '♦' else "suit-black"
+
+    # --- GAMIFICATION HEADER ---
+    stats_data = utils.load_user_stats()
+    rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
+    c = st.session_state.combo
+    progress_pct = int((stats_data["xp"] / next_xp) * 100) if next_xp != "MAX" else 100
+    glow_color = '#dc3545' if c >= 25 else '#fd7e14' if c >= 10 else '#ffc107' if c >= 3 else '#888'
+    
+    header_html = f"""
+    <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px 20px; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto;">
+        <div style="flex:1;">
+            <div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div>
+            <div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;">
+                <div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div>
+            </div>
+            <div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data['xp']} / {next_xp} XP</div>
+        </div>
+        <div style="flex:1; text-align:center; font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {15 if c >=3 else 0}px {glow_color};">
+            🔥 x{c}
+        </div>
+        <div style="flex:1; text-align:right;">
+            <div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get('streak', 1)} Дней</div>
+            <div style="font-size:11px; color:#aaa;">Max: {stats_data.get('max_combo', 0)}</div>
+        </div>
+    </div>
+    """
+    st.markdown(header_html, unsafe_allow_html=True)
+    
+    combo_cls = ""
+    if c >= 25: combo_cls = "combo-glow-25"
+    elif c >= 10: combo_cls = "combo-glow-10"
+    elif c >= 3: combo_cls = "combo-glow-3"
 
     col_center, col_right = st.columns([2, 1])
     
@@ -170,15 +216,11 @@ def show():
             if bet_amount is not None:
                 bet_txt = f'<div class="bet-txt">{bet_amount}bb</div>'
                 if bet_amount <= 1.0:
-                    if is_3bet_pot:
-                        chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div>{bet_txt}</div>'
-                    else:
-                        chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div>{bet_txt}</div>'
+                    if is_3bet_pot: chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div>{bet_txt}</div>'
+                    else: chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div>{bet_txt}</div>'
                 else:
-                    if is_3bet_pot:
-                        chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div><div class="chip-3bet" style="margin-top:-15px;"></div>{bet_txt}</div>'
-                    else:
-                        chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div><div class="poker-chip" style="margin-top:-10px;"></div>{bet_txt}</div>'
+                    if is_3bet_pot: chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div><div class="chip-3bet" style="margin-top:-15px;"></div>{bet_txt}</div>'
+                    else: chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div><div class="poker-chip" style="margin-top:-10px;"></div>{bet_txt}</div>'
             
             if p == btn_pos:
                 bs = get_btn_style(i)
@@ -197,7 +239,7 @@ def show():
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
         html = f"""
-        <div class="game-area">
+        <div class="game-area {combo_cls}">
             <div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div></div>
             {opp_html} {chips_html}
             <div class="hero-panel">
@@ -212,53 +254,47 @@ def show():
         if is_defense: st.markdown('<div class="rng-hint-box">📉 0..Freq → Action | 📈 Freq..100 → Fold</div>', unsafe_allow_html=True)
         else: st.markdown("<div style='height:30px;'></div>", unsafe_allow_html=True)
 
+        def handle_action(action):
+            corr = (correct_act == action)
+            st.session_state.last_error = not corr
+            if corr:
+                st.session_state.combo += 1
+                if st.session_state.combo in [10, 25, 50, 100]: st.session_state.show_balloons = True
+                utils.process_gamification(True, st.session_state.combo)
+                st.session_state.msg = f"✅ Отлично!"
+            else:
+                st.session_state.combo = 0
+                utils.process_gamification(False, 0)
+                st.session_state.msg = f"❌ Ошибка! Нужно: {correct_act}"
+                
+            utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
+            st.session_state.srs_mode = True
+            st.rerun()
+
         if not st.session_state.srs_mode:
             if is_defense:
                 c1, c2, c3 = st.columns(3)
                 with c1:
-                    if st.button("FOLD"):
-                        corr = (correct_act == "FOLD")
-                        st.session_state.last_error = not corr
-                        st.session_state.msg = f"✅ Correct" if corr else f"❌ Err! RNG {rng} -> {correct_act}"
-                        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
-                        st.session_state.srs_mode = True; st.rerun()
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\'column\']")[0].classList.add("fold-btn");</script>', unsafe_allow_html=True)
+                    if st.button("FOLD"): handle_action("FOLD")
+                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[0].classList.add("fold-btn");</script>', unsafe_allow_html=True)
                 with c2:
-                    if st.button("CALL"):
-                        corr = (correct_act == "CALL")
-                        st.session_state.last_error = not corr
-                        st.session_state.msg = f"✅ Correct" if corr else f"❌ Err! RNG {rng} -> {correct_act}"
-                        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
-                        st.session_state.srs_mode = True; st.rerun()
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\'column\']")[1].classList.add("call-btn");</script>', unsafe_allow_html=True)
+                    if st.button("CALL"): handle_action("CALL")
+                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[1].classList.add("call-btn");</script>', unsafe_allow_html=True)
                 with c3:
-                    if st.button("RAISE"):
-                        corr = (correct_act == "RAISE")
-                        st.session_state.last_error = not corr
-                        st.session_state.msg = f"✅ Correct" if corr else f"❌ Err! RNG {rng} -> {correct_act}"
-                        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
-                        st.session_state.srs_mode = True; st.rerun()
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\'column\']")[2].classList.add("raise-btn");</script>', unsafe_allow_html=True)
+                    if st.button("RAISE"): handle_action("RAISE")
+                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[2].classList.add("raise-btn");</script>', unsafe_allow_html=True)
             else:
                 c1, c2 = st.columns(2)
                 with c1:
-                    if st.button("FOLD"):
-                        corr = (correct_act == "FOLD")
-                        st.session_state.last_error = not corr
-                        st.session_state.msg = "✅ Correct" if corr else "❌ Err"
-                        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
-                        st.session_state.srs_mode = True; st.rerun()
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\'column\']")[0].classList.add("fold-btn");</script>', unsafe_allow_html=True)
+                    if st.button("FOLD"): handle_action("FOLD")
+                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[0].classList.add("fold-btn");</script>', unsafe_allow_html=True)
                 with c2:
-                    if st.button("RAISE"):
-                        corr = (correct_act == "RAISE")
-                        st.session_state.last_error = not corr
-                        st.session_state.msg = "✅ Correct" if corr else "❌ Err"
-                        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
-                        st.session_state.srs_mode = True; st.rerun()
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\'column\']")[1].classList.add("open-raise-btn");</script>', unsafe_allow_html=True)
+                    if st.button("RAISE"): handle_action("RAISE")
+                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[1].classList.add("open-raise-btn");</script>', unsafe_allow_html=True)
         else:
-            st.info(st.session_state.msg)
+            if st.session_state.last_error: st.error(st.session_state.msg)
+            else: st.success(st.session_state.msg)
+            
             s1, s2, s3 = st.columns(3)
             k = f"{src}_{sc}_{sp}".replace(" ","_")
             if s1.button("HARD", use_container_width=True): utils.update_srs_smart(k, st.session_state.hand, 'hard'); st.session_state.hand = None; st.rerun()
