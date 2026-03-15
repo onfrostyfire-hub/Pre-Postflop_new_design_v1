@@ -3,7 +3,7 @@
   "scenario": "Def vs 3bet",
   "spots": {
     "CO def vs 3bet BU": {
-      "setup": { "hero_pos": "CO", "villain_pos": "BTN", "btn_pos": "BTN", "active_players": ["CO", "BTN"], "table_bets": {"BTN": 7.5}, "hero_bet": 2.5, "is_3bet_pot": true },
+      "setup": { "hero_pos": "CO", "villain_pos": "BTN", "btn_pos": "BTN", "active_players": ["CO", "BTN"], "table_bets": {"BTN": 7.5, "SB": 0.5, "BB": 1}, "hero_bet": 2.5, "is_3bet_pot": true },
       "stats": { "4bet": "4.6%", "Call": "7%", "Fold": "58%" },
       "ranges": {
         "source": "AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22,AK,AQ,AJ,AT,A9,A8,A7s,A6s,A5s,A4s,A3s,A2s,KQ,KJ,KT,K9s,K8s,K7s,K6s,K5s,K4s,QJ,QT,Q9s,Q8s,Q7s,Q6s,JT,J9s,J8s,T9s,T8s,98s,97s,87s,86s,76s,65s,54s",
