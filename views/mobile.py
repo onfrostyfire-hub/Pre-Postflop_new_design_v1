@@ -54,6 +54,7 @@ def show():
 
     with st.expander("⚙️ Настройки Фильтров", expanded=False):
         saved = utils.load_user_settings()
+        
         saved_sc = [s for s in saved.get("scenarios", []) if s in all_scenarios]
         sel_sc = st.multiselect("Сценарий", all_scenarios, default=saved_sc if saved_sc else (all_scenarios[:1] if all_scenarios else []))
         
@@ -157,7 +158,7 @@ def show():
     for i in range(1, 6):
         p = rot[i]
         
-        has_cards = p in cards_in_play
+        has_cards = (p in cards_in_play)
         cls = "seat-active" if has_cards else "seat-folded"
         cards = '<div class="opp-cards-mob"></div>' if has_cards else ""
         ss = get_seat_style(i)
@@ -165,19 +166,26 @@ def show():
         
         cs = get_chip_style(i)
         bet_amount = bets_on_table.get(p)
-        if bet_amount:
+        
+        if bet_amount is not None:
             bet_txt = f'<div class="bet-txt">{bet_amount}bb</div>'
-            if is_3bet_pot:
-                chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div><div class="chip-3bet" style="margin-top:-12px;"></div>{bet_txt}</div>'
+            if bet_amount <= 1.0:
+                if is_3bet_pot:
+                    chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div>{bet_txt}</div>'
+                else:
+                    chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-mob"></div>{bet_txt}</div>'
             else:
-                chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-mob"></div><div class="chip-mob" style="margin-top:-5px;"></div>{bet_txt}</div>'
+                if is_3bet_pot:
+                    chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div><div class="chip-3bet" style="margin-top:-12px;"></div>{bet_txt}</div>'
+                else:
+                    chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-mob"></div><div class="chip-mob" style="margin-top:-5px;"></div>{bet_txt}</div>'
         
         if p == btn_pos:
             bs = get_btn_style(i)
             chips_html += f'<div class="dealer-mob" style="{bs}">D</div>'
 
     hero_cs = get_chip_style(0)
-    if display_hero_bet: 
+    if display_hero_bet is not None: 
         bet_txt = f'<div class="bet-txt">{display_hero_bet}bb</div>'
         if display_hero_bet <= 1.0:
             chips_html += f'<div class="chip-container" style="{hero_cs}"><div class="chip-mob"></div>{bet_txt}</div>'
