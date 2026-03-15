@@ -8,7 +8,24 @@ def show():
     <style>
         .stApp { background-color: #212529; color: #e9ecef; }
         .block-container { padding-top: 4rem; }
-        .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto; background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%); border: 15px solid #4a1c1c; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto; background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%); border: 15px solid #4a1c1c; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: box-shadow 0.3s, border-color 0.3s; }
+        
+        .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
+        .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
+        .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-slow 2s infinite; }
+        .combo-glow-50 { border-color: #dc3545 !important; box-shadow: 0 0 30px rgba(220, 53, 69, 0.7), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-menace 1.5s infinite; }
+        .combo-glow-100 { border-color: #6f42c1 !important; box-shadow: 0 0 40px rgba(111, 66, 193, 0.8), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-neon 1s infinite; }
+        .combo-glow-200 { border-color: #00e5ff !important; box-shadow: 0 0 50px rgba(0, 229, 255, 0.8), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-plasma 1s infinite alternate; }
+        .combo-glow-500 { border-color: #ff00ff !important; box-shadow: 0 0 60px rgba(255, 0, 255, 0.9), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-matrix 0.8s infinite alternate; }
+        .combo-glow-1000 { border-color: #00ff00 !important; box-shadow: 0 0 80px rgba(0, 255, 0, 1.0), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-god 0.5s infinite alternate; }
+        
+        @keyframes pulse-slow { 0% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } 50% { box-shadow: 0 0 25px rgba(253, 126, 20, 0.7); } 100% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } }
+        @keyframes pulse-menace { 0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } 50% { box-shadow: 0 0 40px rgba(220, 53, 69, 0.9); } 100% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } }
+        @keyframes pulse-neon { 0% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } 50% { box-shadow: 0 0 60px rgba(111, 66, 193, 1.0); } 100% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } }
+        @keyframes pulse-plasma { 0% { box-shadow: 0 0 30px rgba(0, 229, 255, 0.6); } 100% { box-shadow: 0 0 70px rgba(0, 229, 255, 1.0); } }
+        @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
+        @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
+        
         .table-info { position: absolute; top: 20%; width: 100%; text-align: center; pointer-events: none; }
         .info-spot { font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); }
         .seat { position: absolute; width: 65px; height: 65px; background: #343a40; border: 2px solid #495057; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
@@ -39,74 +56,59 @@ def show():
     ranges_db = utils.load_ranges()
     if not ranges_db: st.error("База ренджей пуста. Проверь папку spots_data."); return
     
-    is_leak_mode = st.session_state.get("leak_mode_active", False)
+    scenario_map = {}
+    for src, sc_dict in ranges_db.items():
+        for sc, sp_dict in sc_dict.items():
+            mapped_sc = sc
+            sc_lower = sc.lower()
+            if "3bet" in sc_lower: mapped_sc = "Def vs 3bet"
+            elif "pfr" in sc_lower or "bbvsbu" in sc_lower or "bb def" in sc_lower: mapped_sc = "BB def vs PFR"
+            elif "open raise" in sc_lower: mapped_sc = "Open Raise"
+            
+            if mapped_sc not in scenario_map: scenario_map[mapped_sc] = []
+            for sp in sp_dict.keys():
+                scenario_map[mapped_sc].append((sp, f"{src}|{sc}|{sp}"))
+    
+    all_scenarios = ["Open Raise", "BB def vs PFR", "Def vs 3bet"]
+    all_scenarios = [s for s in all_scenarios if s in scenario_map]
 
-    if is_leak_mode:
-        st.markdown('<div style="background:#dc3545; color:white; padding:15px; border-radius:10px; text-align:center; font-weight:bold; margin-bottom:15px; box-shadow: 0 4px 10px rgba(220,53,69,0.4); border:2px solid #ffc107;">🔥 АКТИВЕН РЕЖИМ ОТРАБОТКИ ХРОНИЧЕСКИХ ОШИБОК 🔥</div>', unsafe_allow_html=True)
-        if st.button("❌ ВЫЙТИ ИЗ РЕЖИМА ДЫР", use_container_width=True):
-            st.session_state.leak_mode_active = False
+    with st.sidebar:
+        st.header("⚙️ Фильтры")
+        saved = utils.load_user_settings()
+        
+        saved_sc = [s for s in saved.get("scenarios", []) if s in all_scenarios]
+        sel_sc = st.multiselect("Сценарий", all_scenarios, default=saved_sc if saved_sc else (all_scenarios[:1] if all_scenarios else []))
+        
+        sel_spots_keys = []
+        if sel_sc:
+            st.markdown("**Споты для тренировки:**")
+            saved_spots = saved.get("spots", [])
+            for sc in sel_sc:
+                st.markdown(f"<div style='color:#ffc107; font-size:14px; font-weight:bold; margin-top:8px;'>{sc}</div>", unsafe_allow_html=True)
+                for sp_name, sp_key in scenario_map[sc]:
+                    is_checked = (sp_key in saved_spots) if "spots" in saved else True
+                    if st.checkbox(sp_name, value=is_checked, key=f"d_chk_{sp_key}"):
+                        sel_spots_keys.append(sp_key)
+        
+        if st.button("🚀 Применить настройки", use_container_width=True):
+            utils.save_user_settings({"scenarios": sel_sc, "spots": sel_spots_keys})
             st.session_state.hand = None
             st.rerun()
-            
-        target_spot = st.session_state.get("leak_spot")
-        full_key = None
-        for src, sc_dict in ranges_db.items():
-            for sc, sp_dict in sc_dict.items():
-                if target_spot in sp_dict:
-                    full_key = f"{src}|{sc}|{target_spot}"
-                    break
-        
-        if not full_key:
-            st.error("Спот не найден. Отключение режима.")
-            st.session_state.leak_mode_active = False
-            st.stop()
-            
-        pool = [full_key]
-        
-    else:
-        scenario_map = {}
-        for src, sc_dict in ranges_db.items():
-            for sc, sp_dict in sc_dict.items():
-                mapped_sc = sc
-                sc_lower = sc.lower()
-                if "3bet" in sc_lower: mapped_sc = "Def vs 3bet"
-                elif "pfr" in sc_lower or "bbvsbu" in sc_lower or "bb def" in sc_lower: mapped_sc = "BB def vs PFR"
-                elif "open raise" in sc_lower: mapped_sc = "Open Raise"
-                
-                if mapped_sc not in scenario_map: scenario_map[mapped_sc] = []
-                for sp in sp_dict.keys():
-                    scenario_map[mapped_sc].append((sp, f"{src}|{sc}|{sp}"))
-        
-        all_scenarios = ["Open Raise", "BB def vs PFR", "Def vs 3bet"]
-        all_scenarios = [s for s in all_scenarios if s in scenario_map]
 
-        with st.sidebar:
-            st.header("⚙️ Фильтры")
-            saved = utils.load_user_settings()
-            
-            saved_sc = [s for s in saved.get("scenarios", []) if s in all_scenarios]
-            sel_sc = st.multiselect("Сценарий", all_scenarios, default=saved_sc if saved_sc else (all_scenarios[:1] if all_scenarios else []))
-            
-            sel_spots_keys = []
-            if sel_sc:
-                st.markdown("**Споты для тренировки:**")
-                saved_spots = saved.get("spots", [])
-                for sc in sel_sc:
-                    st.markdown(f"<div style='color:#ffc107; font-size:14px; font-weight:bold; margin-top:8px;'>{sc}</div>", unsafe_allow_html=True)
-                    for sp_name, sp_key in scenario_map[sc]:
-                        is_checked = (sp_key in saved_spots) if "spots" in saved else True
-                        if st.checkbox(sp_name, value=is_checked, key=f"d_chk_{sp_key}"):
-                            sel_spots_keys.append(sp_key)
-            
-            if st.button("🚀 Применить настройки", use_container_width=True):
-                utils.save_user_settings({"scenarios": sel_sc, "spots": sel_spots_keys})
-                st.session_state.hand = None
-                st.rerun()
+    pool = sel_spots_keys
+    if not pool:
+        st.warning("⚠️ Не выбран ни один спот. Отметь галочки в меню слева.")
+        st.stop()
 
-        pool = sel_spots_keys
-        if not pool:
-            st.warning("⚠️ Не выбран ни один спот. Отметь галочки в меню слева.")
-            st.stop()
+    if 'combo' not in st.session_state: st.session_state.combo = 0
+    if 'session_hands' not in st.session_state: st.session_state.session_hands = 0
+    if 'session_correct' not in st.session_state: st.session_state.session_correct = 0
+    if 'toast_msgs' not in st.session_state: st.session_state.toast_msgs = []
+
+    if st.session_state.toast_msgs:
+        for msg in st.session_state.toast_msgs:
+            st.toast(msg, icon="🔥" if "Комбо" in msg else "🎯")
+        st.session_state.toast_msgs = []
 
     if 'hand' not in st.session_state: st.session_state.hand = None
     if 'rng' not in st.session_state: st.session_state.rng = 0
@@ -120,19 +122,10 @@ def show():
         src, sc, sp = chosen.split('|')
         data = ranges_db[src][sc][sp]
         r_data = data.get("ranges", data)
-        
-        if is_leak_mode:
-            poss = st.session_state.get("leak_hands", [])
-        else:
-            t_range = r_data.get("training", r_data.get("source", r_data.get("full", "")))
-            poss = utils.parse_range_to_list(t_range)
-            
+        t_range = r_data.get("training", r_data.get("source", r_data.get("full", "")))
+        poss = utils.parse_range_to_list(t_range)
         srs = utils.load_srs_data()
         w = [srs.get(f"{src}_{sc}_{sp}_{h}".replace(" ","_"), 100) for h in poss]
-        
-        # Если веса сломались из-за пустого списка
-        if sum(w) == 0: w = [100]*len(poss)
-            
         st.session_state.hand = random.choices(poss, weights=w, k=1)[0]
         st.session_state.rng = random.randint(0, 99)
         ps = ['♠','♥','♦','♣']; s1 = random.choice(ps)
@@ -147,8 +140,9 @@ def show():
     hero_pos = setup.get("hero_pos", "EP")
     villain_pos = setup.get("villain_pos")
     btn_pos = setup.get("btn_pos", "BTN")
+    cards_in_play = setup.get("active_players", [])
+    bets_on_table = setup.get("table_bets", {})
     display_hero_bet = setup.get("hero_bet")
-    display_villain_bet = setup.get("villain_bet")
     is_3bet_pot = setup.get("is_3bet_pot", False)
 
     is_defense = bool(villain_pos is not None or "call" in r_data or "Call" in r_data)
@@ -169,8 +163,48 @@ def show():
         if w > 0: correct_act = "RAISE"
 
     h_val = st.session_state.hand; s1, s2 = st.session_state.suits
-    c1 = "suit-red" if s1 in '♥' else "suit-blue" if s1 in '♦' else "suit-green" if s1 in '♣' else "suit-black"
-    c2 = "suit-red" if s2 in '♥' else "suit-blue" if s2 in '♦' else "suit-green" if s2 in '♣' else "suit-black"
+    c1 = "suit-red" if s1 == '♥' else "suit-blue" if s1 == '♦' else "suit-green" if s1 == '♣' else "suit-black"
+    c2 = "suit-red" if s2 == '♥' else "suit-blue" if s2 == '♦' else "suit-green" if s2 == '♣' else "suit-black"
+
+    c = st.session_state.combo
+    glow_color = '#00ff00' if c >= 1000 else '#ff00ff' if c >= 500 else '#00e5ff' if c >= 200 else '#6f42c1' if c >= 100 else '#dc3545' if c >= 50 else '#fd7e14' if c >= 25 else '#ffc107' if c >= 10 else '#0dcaf0' if c >= 5 else '#888'
+    
+    sh = st.session_state.session_hands
+    scorr = st.session_state.session_correct
+    wr = int((scorr / sh * 100)) if sh > 0 else 0
+    wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
+
+    header_html = f"""
+    <div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;">
+        <div style="height: 4px; width: 100%; background: #222;">
+            <div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else '#444'}; transition: width 0.3s;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;">
+            <div style="flex:1;">
+                <div style="font-size:12px; font-weight:bold; color:#aaa;">Винрейт</div>
+                <div style="font-size:16px; font-weight:bold; color:{wr_color};">{wr}%</div>
+            </div>
+            <div style="flex:1; text-align:center; font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">
+                🔥 x{c}
+            </div>
+            <div style="flex:1; text-align:right;">
+                <div style="font-size:12px; font-weight:bold; color:#aaa;">Раздачи</div>
+                <div style="font-size:16px; font-weight:bold; color:#fff;">{sh}</div>
+            </div>
+        </div>
+    </div>
+    """
+    st.markdown(header_html, unsafe_allow_html=True)
+    
+    combo_cls = ""
+    if c >= 1000: combo_cls = "combo-glow-1000"
+    elif c >= 500: combo_cls = "combo-glow-500"
+    elif c >= 200: combo_cls = "combo-glow-200"
+    elif c >= 100: combo_cls = "combo-glow-100"
+    elif c >= 50: combo_cls = "combo-glow-50"
+    elif c >= 25: combo_cls = "combo-glow-25"
+    elif c >= 10: combo_cls = "combo-glow-10"
+    elif c >= 5: combo_cls = "combo-glow-5"
 
     col_center, col_right = st.columns([2, 1])
     
@@ -196,6 +230,7 @@ def show():
 
         for i in range(1, 6):
             p = rot[i]
+            
             has_cards = False
             if is_defense:
                 if p == villain_pos: has_cards = True
@@ -238,7 +273,7 @@ def show():
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
         html = f"""
-        <div class="game-area">
+        <div class="game-area {combo_cls}">
             <div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div></div>
             {opp_html} {chips_html}
             <div class="hero-panel">
@@ -253,53 +288,59 @@ def show():
         if is_defense: st.markdown('<div class="rng-hint-box">📉 0..Freq → Action | 📈 Freq..100 → Fold</div>', unsafe_allow_html=True)
         else: st.markdown("<div style='height:30px;'></div>", unsafe_allow_html=True)
 
+        def handle_action(action):
+            corr = (correct_act == action)
+            st.session_state.last_error = not corr
+            st.session_state.session_hands += 1
+            
+            if corr:
+                st.session_state.session_correct += 1
+                st.session_state.combo += 1
+                st.session_state.msg = f"✅ Отлично!"
+                
+                if st.session_state.combo in [10, 25, 50, 100, 200, 500, 1000]:
+                    msgs = {
+                        10: "Комбо x10! Разогрев.",
+                        25: "Комбо x25! Читаешь как открытую книгу.",
+                        50: "Комбо x50! Снайпер.",
+                        100: "Комбо x100! Машина.",
+                        200: "Комбо x200! Ты вообще человек?",
+                        500: "Комбо x500! Режим Бога активирован.",
+                        1000: "Комбо x1000! GTO-солвер курит в сторонке."
+                    }
+                    st.session_state.toast_msgs.append(msgs[st.session_state.combo])
+            else:
+                st.session_state.combo = 0
+                st.session_state.msg = f"❌ Ошибка! Нужно: {correct_act}"
+                
+            utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
+            st.session_state.srs_mode = True
+            st.rerun()
+
         if not st.session_state.srs_mode:
             if is_defense:
                 c1, c2, c3 = st.columns(3)
                 with c1:
-                    if st.button("FOLD"):
-                        corr = (correct_act == "FOLD")
-                        st.session_state.last_error = not corr
-                        st.session_state.msg = f"✅ Correct" if corr else f"❌ Err! RNG {rng} -> {correct_act}"
-                        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
-                        st.session_state.srs_mode = True; st.rerun()
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\'column\']")[0].classList.add("fold-btn");</script>', unsafe_allow_html=True)
+                    if st.button("FOLD"): handle_action("FOLD")
+                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[0].classList.add("fold-btn");</script>', unsafe_allow_html=True)
                 with c2:
-                    if st.button("CALL"):
-                        corr = (correct_act == "CALL")
-                        st.session_state.last_error = not corr
-                        st.session_state.msg = f"✅ Correct" if corr else f"❌ Err! RNG {rng} -> {correct_act}"
-                        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
-                        st.session_state.srs_mode = True; st.rerun()
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\'column\']")[1].classList.add("call-btn");</script>', unsafe_allow_html=True)
+                    if st.button("CALL"): handle_action("CALL")
+                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[1].classList.add("call-btn");</script>', unsafe_allow_html=True)
                 with c3:
-                    if st.button("RAISE"):
-                        corr = (correct_act == "RAISE")
-                        st.session_state.last_error = not corr
-                        st.session_state.msg = f"✅ Correct" if corr else f"❌ Err! RNG {rng} -> {correct_act}"
-                        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
-                        st.session_state.srs_mode = True; st.rerun()
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\'column\']")[2].classList.add("raise-btn");</script>', unsafe_allow_html=True)
+                    if st.button("RAISE"): handle_action("RAISE")
+                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[2].classList.add("raise-btn");</script>', unsafe_allow_html=True)
             else:
                 c1, c2 = st.columns(2)
                 with c1:
-                    if st.button("FOLD"):
-                        corr = (correct_act == "FOLD")
-                        st.session_state.last_error = not corr
-                        st.session_state.msg = "✅ Correct" if corr else "❌ Err"
-                        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
-                        st.session_state.srs_mode = True; st.rerun()
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\'column\']")[0].classList.add("fold-btn");</script>', unsafe_allow_html=True)
+                    if st.button("FOLD"): handle_action("FOLD")
+                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[0].classList.add("fold-btn");</script>', unsafe_allow_html=True)
                 with c2:
-                    if st.button("RAISE"):
-                        corr = (correct_act == "RAISE")
-                        st.session_state.last_error = not corr
-                        st.session_state.msg = "✅ Correct" if corr else "❌ Err"
-                        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
-                        st.session_state.srs_mode = True; st.rerun()
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\'column\']")[1].classList.add("open-raise-btn");</script>', unsafe_allow_html=True)
+                    if st.button("RAISE"): handle_action("RAISE")
+                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[1].classList.add("open-raise-btn");</script>', unsafe_allow_html=True)
         else:
-            st.info(st.session_state.msg)
+            if st.session_state.last_error: st.error(st.session_state.msg)
+            else: st.success(st.session_state.msg)
+            
             s1, s2, s3 = st.columns(3)
             k = f"{src}_{sc}_{sp}".replace(" ","_")
             if s1.button("HARD", use_container_width=True): utils.update_srs_smart(k, st.session_state.hand, 'hard'); st.session_state.hand = None; st.rerun()
