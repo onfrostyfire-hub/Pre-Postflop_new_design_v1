@@ -67,6 +67,7 @@ def load_user_stats():
     if "max_combo" not in stats: stats["max_combo"] = 0
     if "total_hands" not in stats: stats["total_hands"] = 0
     if "dailies" not in stats: stats["dailies"] = {"date": "", "quests": []}
+    if "spot_mastery" not in stats: stats["spot_mastery"] = {}
     return stats
 
 def save_user_stats(stats):
@@ -95,7 +96,60 @@ def generate_dailies():
         {"id": "combo", "desc": "Комбо x15", "target": 15, "progress": 0, "done": False, "xp": 1000}
     ]
 
-def process_gamification(is_correct, combo, session_total_hands):
+def get_spot_mastery_info(spot_data_dict):
+    total = spot_data_dict.get("t", 0)
+    hist = spot_data_dict.get("h", "")
+    last_date_str = spot_data_dict.get("d", "")
+
+    days_missed = 0
+    if last_date_str:
+        try:
+            last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
+            days_missed = (datetime.now().date() - last_date).days
+        except: pass
+
+    is_rusty = days_missed >= 14
+
+    def calc_wr(window):
+        if not hist: return 0.0
+        rel_hist = hist[-window:]
+        return (rel_hist.count('1') / len(rel_hist)) * 100
+
+    rank = 0
+    prog_val = total
+    
+    if total >= 5000 and calc_wr(500) >= 95: rank = 5
+    elif total >= 3000 and calc_wr(300) >= 92: rank = 4
+    elif total >= 1500 and calc_wr(200) >= 88: rank = 3
+    elif total >= 500 and calc_wr(150) >= 82: rank = 2
+    elif total >= 100 and calc_wr(100) >= 75: rank = 1
+    else: rank = 0
+
+    # Штраф за простой (>30 дней)
+    penalty = 0
+    if days_missed >= 30:
+        penalty = (days_missed - 16) // 14
+        rank = max(0, rank - penalty)
+
+    ranks_info = [
+        {"n": "Sandbox", "i": "⚪", "c": "transparent", "nt": 100},
+        {"n": "Basic", "i": "🟢", "c": "#28a745", "nt": 500},
+        {"n": "Solid", "i": "🔵", "c": "#0dcaf0", "nt": 1500},
+        {"n": "Unexploitable", "i": "🟣", "c": "#6f42c1", "nt": 3000},
+        {"n": "Elite", "i": "🔴", "c": "#dc3545", "nt": 5000},
+        {"n": "Solver", "i": "☢️", "c": "#ffc107", "nt": 5000},
+    ]
+    info = ranks_info[rank]
+
+    prog_pct = int((prog_val / info["nt"]) * 100) if info["nt"] > 0 else 100
+    if prog_pct > 100: prog_pct = 100
+
+    return {
+        "rank": rank, "name": info["n"], "icon": info["i"], "color": info["c"],
+        "is_rusty": is_rusty, "prog_pct": prog_pct, "total": total, "next": info["nt"]
+    }
+
+def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
     stats = load_user_stats()
     now_date = datetime.now().date()
     now_date_str = now_date.strftime("%Y-%m-%d")
@@ -129,6 +183,17 @@ def process_gamification(is_correct, combo, session_total_hands):
                 q["done"] = True
                 stats["xp"] += q["xp"]
                 alerts.append(f"🎯 Дейлик: {q['desc']} (+{q['xp']} XP)")
+
+    if spot_key:
+        if "spot_mastery" not in stats: stats["spot_mastery"] = {}
+        s_data = stats["spot_mastery"].get(spot_key, {"h": "", "t": 0, "d": ""})
+        
+        s_data["t"] += 1
+        s_data["d"] = now_date_str
+        s_data["h"] += "1" if is_correct else "0"
+        
+        if len(s_data["h"]) > 500: s_data["h"] = s_data["h"][-500:]
+        stats["spot_mastery"][spot_key] = s_data
 
     save_user_stats(stats)
     return alerts
