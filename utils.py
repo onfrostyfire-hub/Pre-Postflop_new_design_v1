@@ -138,21 +138,24 @@ def update_spot_mastery(spot_key, is_correct):
     stats = load_user_stats()
     if "spot_mastery" not in stats: stats["spot_mastery"] = {}
     
-    sm = stats["spot_mastery"].get(spot_key, {"total": 0, "hist": "", "last": ""})
-    sm["total"] += 1
-    sm["hist"] += "1" if is_correct else "0"
-    if len(sm["hist"]) > 100: sm["hist"] = sm["hist"][-100:]
-    sm["last"] = datetime.now().strftime("%Y-%m-%d")
+    sm = stats["spot_mastery"].get(spot_key, {})
+    total = sm.get("total", 0)
+    hist = sm.get("hist", "")
     
-    stats["spot_mastery"][spot_key] = sm
+    total += 1
+    hist += "1" if is_correct else "0"
+    if len(hist) > 100: hist = hist[-100:]
+    last = datetime.now().strftime("%Y-%m-%d")
+    
+    stats["spot_mastery"][spot_key] = {"total": total, "hist": hist, "last": last}
     save_user_stats(stats)
 
 def get_spot_mastery_info(spot_key):
     stats = load_user_stats()
-    sm = stats.get("spot_mastery", {}).get(spot_key, {"total": 0, "hist": "", "last": ""})
-    total = sm["total"]
-    hist = sm["hist"]
-    last = sm["last"]
+    sm = stats.get("spot_mastery", {}).get(spot_key, {})
+    total = sm.get("total", 0)
+    hist = sm.get("hist", "")
+    last = sm.get("last", "")
 
     form = hist.count("1") / len(hist) * 100 if hist else 0.0
 
@@ -186,7 +189,7 @@ def get_spot_mastery_info(spot_key):
     if current_idx < len(tiers) - 1:
         next_total = tiers[current_idx + 1][0]
         next_form = tiers[current_idx + 1][1]
-        progress = min(100, int((total / next_total) * 100))
+        progress = min(100, int((total / next_total) * 100)) if next_total else 100
         if total >= next_total and form < next_form:
             progress = 99
     else:
@@ -198,7 +201,6 @@ def get_spot_mastery_info(spot_key):
     }
 
 def get_mastery_svg(tier_name):
-    # Встраиваем SVG под фишки. Opacity 0.08 для благородного водяного знака.
     base = "position:absolute; width:120px; height:120px; top:50%; transform:translateY(-50%); opacity:0.08; color:rgba(255,255,255,1); pointer-events:none; z-index:1;"
     svg_l = f'<svg style="{base} left:10%;" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
     svg_r = f'<svg style="{base} right:10%;" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
