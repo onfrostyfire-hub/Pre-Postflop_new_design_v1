@@ -11,34 +11,24 @@ def show():
         /* Убиваем лишние отступы Streamlit для мобилок */
         .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; max-width: 100% !important; }
         
-        /* ЖЕСТКИЙ ФИКС КОЛОНОК ДЛЯ АЙФОНА: всегда в ряд, равная ширина */
-        div[data-testid="stHorizontalBlock"] { 
-            flex-direction: row !important; 
-            flex-wrap: nowrap !important; 
-            gap: 6px !important; 
-        }
-        div[data-testid="column"] { 
-            width: 33% !important; 
-            flex: 1 1 0% !important; 
-            min-width: 0 !important; 
-            padding: 0 !important; 
-        }
+        /* Спрессовываем стопку колонок, чтобы кнопки не расползались по экрану */
+        [data-testid="column"] { margin-bottom: -12px !important; }
 
-        /* Компактный 3D стиль для кнопок, чтобы влезали в узкий экран */
+        /* Компактный 3D стиль для кнопок в стопке */
         div.stButton > button {
             width: 100%; 
-            height: 50px !important; 
+            height: 55px !important; 
             font-family: 'Roboto', sans-serif;
             font-weight: 900 !important; 
-            font-size: 13px !important; 
-            border-radius: 10px !important; 
+            font-size: 16px !important; 
+            border-radius: 12px !important; 
             border: none !important; 
             text-transform: uppercase; 
             transition: all 0.1s ease;
             position: relative;
             top: 0;
             padding: 0 4px !important;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
         div.stButton > button:active { top: 4px; box-shadow: 0 2px 0 transparent !important; }
 
@@ -82,7 +72,7 @@ def show():
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         
-        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 12px; letter-spacing: 0.5px; }
         .dailies-box { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:5px; font-size:10px; }
         .daily-item { background:#1e1e1e; border:1px solid #444; padding:3px 6px; border-radius:4px; color:#aaa; }
         .daily-done { border-color:#28a745; color:#28a745; }
@@ -335,13 +325,13 @@ def show():
         st.session_state.srs_mode = True
         st.rerun()
 
-    # БЛОК РЕНДЕРИНГА КНОПОК И CSS
+    # БЛОК РЕНДЕРИНГА КНОПОК В СТОПКУ С ЦВЕТАМИ
     if not st.session_state.srs_mode:
         if is_defense:
             st.markdown("""<style>
-                div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 4px 0 #1d2124, 0 6px 10px rgba(0,0,0,0.3) !important; }
-                div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #20c997, #198754) !important; color: #fff !important; box-shadow: 0 4px 0 #0f5132, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-                div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 4px 0 #a02561, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+                div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 5px 0 #1d2124, 0 6px 10px rgba(0,0,0,0.3) !important; }
+                div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #20c997, #198754) !important; color: #fff !important; box-shadow: 0 5px 0 #0f5132, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+                div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 5px 0 #a02561, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
             </style>""", unsafe_allow_html=True)
             c1, c2, c3 = st.columns(3)
             with c1:
@@ -352,8 +342,8 @@ def show():
                 if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
         else:
             st.markdown("""<style>
-                div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 4px 0 #1d2124, 0 6px 10px rgba(0,0,0,0.3) !important; }
-                div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 4px 0 #a02561, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+                div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 5px 0 #1d2124, 0 6px 10px rgba(0,0,0,0.3) !important; }
+                div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 5px 0 #a02561, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
             </style>""", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
             with c1:
@@ -362,9 +352,9 @@ def show():
                 if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
     else:
         st.markdown("""<style>
-            div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #fd7e14, #e85d04) !important; color: #fff !important; box-shadow: 0 4px 0 #a13d00, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-            div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; color: #fff !important; box-shadow: 0 4px 0 #057085, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-            div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #6f42c1, #59339d) !important; color: #fff !important; box-shadow: 0 4px 0 #3a1e6d, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+            div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #fd7e14, #e85d04) !important; color: #fff !important; box-shadow: 0 5px 0 #a13d00, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+            div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; color: #fff !important; box-shadow: 0 5px 0 #057085, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+            div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #6f42c1, #59339d) !important; color: #fff !important; box-shadow: 0 5px 0 #3a1e6d, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
         </style>""", unsafe_allow_html=True)
         
         if st.session_state.last_error:
