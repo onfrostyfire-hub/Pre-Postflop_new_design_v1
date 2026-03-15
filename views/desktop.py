@@ -10,12 +10,6 @@ def show():
         .block-container { padding-top: 4rem; }
         .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto; background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%); border: 15px solid #4a1c1c; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: box-shadow 0.3s, border-color 0.3s; }
         
-        .mastery-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; z-index: 1; transition: box-shadow 0.5s ease; }
-        .mastery-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); }
-        .rusty-True { filter: grayscale(100%) opacity(0.6); }
-        .mastery-bar-bg { width: 100px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
-        .mastery-bar-fill { height: 100%; transition: width 0.3s; }
-        
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-slow 2s infinite; }
@@ -32,7 +26,7 @@ def show():
         @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
         @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
         
-        .table-info { position: absolute; top: 18%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
+        .table-info { position: absolute; top: 20%; width: 100%; text-align: center; pointer-events: none; z-index: 30; }
         .info-spot { font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); }
         .seat { position: absolute; width: 65px; height: 65px; background: #343a40; border: 2px solid #495057; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
         .seat-label { font-size: 11px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 4px; }
@@ -53,48 +47,88 @@ def show():
         .rng-hint-box { text-align: center; color: #888; font-size: 13px; font-family: monospace; margin-top: 60px; margin-bottom: 10px; background: #2b2b2b; padding: 5px; border-radius: 6px; border: 1px solid #444; width: 100%; }
         
         div.stButton > button { width: 100%; height: 60px !important; font-size: 18px !important; font-weight: 700; border-radius: 8px; text-transform: uppercase; transition: all 0.2s; }
+        .fold-btn button { background: #495057 !important; color: #adb5bd !important; border: 1px solid #6c757d !important; }
+        .call-btn button { background: #28a745 !important; color: white !important; box-shadow: 0 4px 0 #1e7e34 !important; }
+        .raise-btn button { background: #d63384 !important; color: white !important; box-shadow: 0 4px 0 #a02561 !important; }
+        .open-raise-btn button { background: #2e7d32 !important; color: white !important; box-shadow: 0 4px 0 #1b5e20 !important; }
+        
+        .dailies-box { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px; font-size:12px; }
+        .daily-item { background:#1e1e1e; border:1px solid #444; padding:4px 10px; border-radius:6px; color:#aaa; }
+        .daily-done { border-color:#28a745; color:#28a745; }
     </style>
     """, unsafe_allow_html=True)
 
     ranges_db = utils.load_ranges()
-    if not ranges_db: st.error("База ренджей пуста."); return
+    if not ranges_db: st.error("База ренджей пуста. Проверь папку spots_data."); return
     
-    scenario_map = {}
-    for src, sc_dict in ranges_db.items():
-        for sc, sp_dict in sc_dict.items():
-            if sc not in scenario_map: scenario_map[sc] = []
-            for sp in sp_dict.keys():
-                scenario_map[sc].append((sp, f"{src}|{sc}|{sp}"))
-    
-    all_scenarios = sorted(list(scenario_map.keys()))
+    is_leak_mode = st.session_state.get("leak_mode_active", False)
 
-    with st.sidebar:
-        st.header("⚙️ Фильтры")
-        saved = utils.load_user_settings()
-        
-        saved_sc = [s for s in saved.get("scenarios", []) if s in all_scenarios]
-        sel_sc = st.multiselect("Сценарий", all_scenarios, default=saved_sc if saved_sc else (all_scenarios[:1] if all_scenarios else []))
-        
-        sel_spots_keys = []
-        if sel_sc:
-            st.markdown("**Споты для тренировки:**")
-            saved_spots = saved.get("spots", [])
-            for sc in sel_sc:
-                st.markdown(f"<div style='color:#ffc107; font-size:14px; font-weight:bold; margin-top:8px;'>{sc}</div>", unsafe_allow_html=True)
-                for sp_name, sp_key in scenario_map[sc]:
-                    is_checked = (sp_key in saved_spots) if "spots" in saved else True
-                    if st.checkbox(sp_name, value=is_checked, key=f"d_chk_{sp_key}"):
-                        sel_spots_keys.append(sp_key)
-        
-        if st.button("🚀 Применить настройки", use_container_width=True):
-            utils.save_user_settings({"scenarios": sel_sc, "spots": sel_spots_keys})
+    if is_leak_mode:
+        st.markdown('<div style="background:#dc3545; color:white; padding:15px; border-radius:10px; text-align:center; font-weight:bold; margin-bottom:15px; box-shadow: 0 4px 10px rgba(220,53,69,0.4); border:2px solid #ffc107;">🔥 АКТИВЕН РЕЖИМ ОТРАБОТКИ ХРОНИЧЕСКИХ ОШИБОК 🔥</div>', unsafe_allow_html=True)
+        if st.button("❌ ВЫЙТИ ИЗ РЕЖИМА ДЫР", use_container_width=True):
+            st.session_state.leak_mode_active = False
             st.session_state.hand = None
             st.rerun()
+            
+        target_spot = st.session_state.get("leak_spot")
+        full_key = None
+        for src, sc_dict in ranges_db.items():
+            for sc, sp_dict in sc_dict.items():
+                if target_spot in sp_dict:
+                    full_key = f"{src}|{sc}|{target_spot}"
+                    break
+        
+        if not full_key:
+            st.error("Спот не найден. Отключение режима.")
+            st.session_state.leak_mode_active = False
+            st.stop()
+            
+        pool = [full_key]
+        
+    else:
+        scenario_map = {}
+        for src, sc_dict in ranges_db.items():
+            for sc, sp_dict in sc_dict.items():
+                mapped_sc = sc
+                sc_lower = sc.lower()
+                if "3bet" in sc_lower: mapped_sc = "Def vs 3bet"
+                elif "pfr" in sc_lower or "bbvsbu" in sc_lower or "bb def" in sc_lower: mapped_sc = "BB def vs PFR"
+                elif "open raise" in sc_lower: mapped_sc = "Open Raise"
+                
+                if mapped_sc not in scenario_map: scenario_map[mapped_sc] = []
+                for sp in sp_dict.keys():
+                    scenario_map[mapped_sc].append((sp, f"{src}|{sc}|{sp}"))
+        
+        all_scenarios = ["Open Raise", "BB def vs PFR", "Def vs 3bet"]
+        all_scenarios = [s for s in all_scenarios if s in scenario_map]
 
-    pool = sel_spots_keys
-    if not pool:
-        st.warning("⚠️ Не выбран ни один спот. Отметь галочки в меню слева.")
-        st.stop()
+        with st.sidebar:
+            st.header("⚙️ Фильтры")
+            saved = utils.load_user_settings()
+            
+            saved_sc = [s for s in saved.get("scenarios", []) if s in all_scenarios]
+            sel_sc = st.multiselect("Сценарий", all_scenarios, default=saved_sc if saved_sc else (all_scenarios[:1] if all_scenarios else []))
+            
+            sel_spots_keys = []
+            if sel_sc:
+                st.markdown("**Споты для тренировки:**")
+                saved_spots = saved.get("spots", [])
+                for sc in sel_sc:
+                    st.markdown(f"<div style='color:#ffc107; font-size:14px; font-weight:bold; margin-top:8px;'>{sc}</div>", unsafe_allow_html=True)
+                    for sp_name, sp_key in scenario_map[sc]:
+                        is_checked = (sp_key in saved_spots) if "spots" in saved else True
+                        if st.checkbox(sp_name, value=is_checked, key=f"d_chk_{sp_key}"):
+                            sel_spots_keys.append(sp_key)
+            
+            if st.button("🚀 Применить настройки", use_container_width=True):
+                utils.save_user_settings({"scenarios": sel_sc, "spots": sel_spots_keys})
+                st.session_state.hand = None
+                st.rerun()
+
+        pool = sel_spots_keys
+        if not pool:
+            st.warning("⚠️ Не выбран ни один спот. Отметь галочки в меню слева.")
+            st.stop()
 
     if 'combo' not in st.session_state: st.session_state.combo = 0
     if 'session_hands' not in st.session_state: st.session_state.session_hands = 0
@@ -178,14 +212,6 @@ def show():
     wr = int((scorr / sh * 100)) if sh > 0 else 0
     wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
 
-    # MASTERY FETCH
-    try:
-        mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(st.session_state.current_spot_key, {}))
-    except Exception:
-        mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "transparent", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100}
-        
-    m_color = mastery['color'] if mastery['color'] != 'transparent' else '#6c757d'
-
     header_html = f"""
     <div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;">
         <div style="height: 4px; width: 100%; background: #222;">
@@ -193,18 +219,15 @@ def show():
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;">
             <div style="flex:1;">
-                <div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div>
-                <div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;">
-                    <div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div>
-                </div>
-                <div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data['xp']} / {next_xp} XP</div>
+                <div style="font-size:12px; font-weight:bold; color:#aaa;">Винрейт</div>
+                <div style="font-size:16px; font-weight:bold; color:{wr_color};">{wr}%</div>
             </div>
             <div style="flex:1; text-align:center; font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">
                 🔥 x{c}
             </div>
             <div style="flex:1; text-align:right;">
-                <div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get('streak', 1)} Дней</div>
-                <div style="font-size:11px; color:#aaa;">Winrate: {wr}%</div>
+                <div style="font-size:12px; font-weight:bold; color:#aaa;">Раздачи</div>
+                <div style="font-size:16px; font-weight:bold; color:#fff;">{sh}</div>
             </div>
         </div>
     </div>
@@ -280,19 +303,26 @@ def show():
             hero_bs = get_btn_style(0)
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
+        # Получаем данные по мастерству спота и векторные гербы
+        mast = utils.get_spot_mastery_info(st.session_state.current_spot_key)
+        crest_l, crest_r = utils.get_mastery_svg(mast["tier_name"])
+
+        mastery_html = ""
+        if mast["tier_name"] != "Sandbox":
+            mastery_html = f"""
+            <div style="font-size:10px; color:{'#adb5bd' if mast['rusty'] else '#ffc107'}; font-weight:bold; margin-top:6px; letter-spacing:1px; text-transform:uppercase;">
+                {mast['tier_name']} {'(Ржавчина)' if mast['rusty'] else ''}
+            </div>
+            <div style="background:#222; height:4px; width:70px; margin: 4px auto 0 auto; border-radius:2px; overflow:hidden; border: 1px solid #444;">
+                <div style="background:{'#adb5bd' if mast['rusty'] else '#28a745'}; height:100%; width:{mast['progress']}%;"></div>
+            </div>
+            """
+
         html = f"""
         <div class="game-area {combo_cls}">
-            <div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery['color']};"></div>
-            <div class="table-info">
-                <div class="info-src">{sc}</div>
-                <div class="info-spot">{sp}</div>
-                <div class="mastery-badge rusty-{mastery['is_rusty']}" style="color: {m_color}">
-                    {mastery['icon']} {mastery['name']}
-                </div>
-                <div class="mastery-bar-bg">
-                    <div class="mastery-bar-fill" style="width: {mastery['prog_pct']}%; background: {m_color};"></div>
-                </div>
-            </div>
+            {crest_l}
+            {crest_r}
+            <div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div>{mastery_html}</div>
             {opp_html} {chips_html}
             <div class="hero-panel">
                 <div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div>
@@ -310,6 +340,8 @@ def show():
             corr = (correct_act == action)
             st.session_state.last_error = not corr
             st.session_state.session_hands += 1
+            
+            utils.update_spot_mastery(st.session_state.current_spot_key, corr)
             
             if corr:
                 st.session_state.session_correct += 1
@@ -331,10 +363,8 @@ def show():
                 st.session_state.combo = 0
                 st.session_state.msg = f"❌ Ошибка! Нужно: {correct_act}"
                 
-            try:
-                alerts = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key)
-                if alerts: st.session_state.toast_msgs.extend(alerts)
-            except Exception: pass
+            alerts = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands)
+            if alerts: st.session_state.toast_msgs.extend(alerts)
                 
             utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
             st.session_state.srs_mode = True
