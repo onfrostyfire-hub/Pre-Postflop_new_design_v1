@@ -8,26 +8,49 @@ def show():
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
-        /* Отодвигаем контент от челки Айфона */
-        .block-container { padding-top: 3.5rem !important; padding-bottom: 1rem !important; max-width: 100% !important; }
+        /* Убиваем лишние отступы Streamlit для мобилок */
+        .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; max-width: 100% !important; }
         
-        /* Спрессовываем стопку колонок */
+        /* Спрессовываем стопку колонок, чтобы кнопки не расползались по экрану */
         [data-testid="column"] { margin-bottom: -12px !important; }
 
         /* Компактный 3D стиль для кнопок в стопке */
         div.stButton > button {
-            width: 100%; height: 55px !important; font-family: 'Roboto', sans-serif; font-weight: 900 !important; font-size: 16px !important; 
-            border-radius: 12px !important; border: none !important; text-transform: uppercase; transition: all 0.1s ease;
-            position: relative; top: 0; padding: 0 4px !important; letter-spacing: 1px;
+            width: 100%; 
+            height: 55px !important; 
+            font-family: 'Roboto', sans-serif;
+            font-weight: 900 !important; 
+            font-size: 16px !important; 
+            border-radius: 12px !important; 
+            border: none !important; 
+            text-transform: uppercase; 
+            transition: all 0.1s ease;
+            position: relative;
+            top: 0;
+            padding: 0 4px !important;
+            letter-spacing: 1px;
         }
         div.stButton > button:active { top: 4px; box-shadow: 0 2px 0 transparent !important; }
 
+        /* Игровой стол */
         .mobile-game-area { 
-            position: relative; width: 100%; height: 250px; margin: 0 auto 10px auto; 
+            position: relative; width: 100%; height: 250px; 
+            margin: 0 auto 10px auto; 
             background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); 
-            border: 6px solid #3e2723; border-radius: 125px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
+            border: 6px solid #3e2723; border-radius: 125px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
             transition: box-shadow 0.3s, border-color 0.3s; 
         }
+        
+        .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
+        .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
+        .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-slow 2s infinite; }
+        .combo-glow-50 { border-color: #dc3545 !important; box-shadow: 0 0 30px rgba(220, 53, 69, 0.7), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-menace 1.5s infinite; }
+        .combo-glow-100 { border-color: #6f42c1 !important; box-shadow: 0 0 40px rgba(111, 66, 193, 0.8), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-neon 1s infinite; }
+        
+        @keyframes pulse-slow { 0% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } 50% { box-shadow: 0 0 25px rgba(253, 126, 20, 0.7); } 100% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } }
+        @keyframes pulse-menace { 0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } 50% { box-shadow: 0 0 40px rgba(220, 53, 69, 0.9); } 100% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } }
+        @keyframes pulse-neon { 0% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } 50% { box-shadow: 0 0 60px rgba(111, 66, 193, 1.0); } 100% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } }
 
         .mob-info { position: absolute; top: 25%; width: 100%; text-align: center; pointer-events: none; }
         .mob-info-src { font-size: 10px; color: #888; text-transform: uppercase; }
@@ -50,94 +73,47 @@ def show():
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         
         .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 12px; letter-spacing: 0.5px; }
-        
-        /* СВЕЧЕНИЯ СТРИКОВ */
-        .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
-        .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
-        .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-slow 2s infinite; }
-        .combo-glow-50 { border-color: #dc3545 !important; box-shadow: 0 0 30px rgba(220, 53, 69, 0.7), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-menace 1.5s infinite; }
-        .combo-glow-100 { border-color: #6f42c1 !important; box-shadow: 0 0 40px rgba(111, 66, 193, 0.8), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-neon 1s infinite; }
-        .combo-glow-200 { border-color: #00e5ff !important; box-shadow: 0 0 50px rgba(0, 229, 255, 0.8), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-plasma 1s infinite alternate; }
-        .combo-glow-500 { border-color: #ff00ff !important; box-shadow: 0 0 60px rgba(255, 0, 255, 0.9), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-matrix 0.8s infinite alternate; }
-        .combo-glow-1000 { border-color: #00ff00 !important; box-shadow: 0 0 80px rgba(0, 255, 0, 1.0), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-god 0.5s infinite alternate; }
-        
-        @keyframes pulse-slow { 0% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } 50% { box-shadow: 0 0 25px rgba(253, 126, 20, 0.7); } 100% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } }
-        @keyframes pulse-menace { 0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } 50% { box-shadow: 0 0 40px rgba(220, 53, 69, 0.9); } 100% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } }
-        @keyframes pulse-neon { 0% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } 50% { box-shadow: 0 0 60px rgba(111, 66, 193, 1.0); } 100% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } }
-        @keyframes pulse-plasma { 0% { box-shadow: 0 0 30px rgba(0, 229, 255, 0.6); } 100% { box-shadow: 0 0 70px rgba(0, 229, 255, 1.0); } }
-        @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
-        @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
-
+        .dailies-box { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:5px; font-size:10px; }
+        .daily-item { background:#1e1e1e; border:1px solid #444; padding:3px 6px; border-radius:4px; color:#aaa; }
+        .daily-done { border-color:#28a745; color:#28a745; }
     </style>
     """, unsafe_allow_html=True)
 
     ranges_db = utils.load_ranges()
     if not ranges_db: st.error("База ренджей пуста."); return
 
-    is_leak_mode = st.session_state.get("leak_mode_active", False)
-
-    if is_leak_mode:
-        st.markdown('<div style="background:#dc3545; color:white; padding:15px; border-radius:10px; text-align:center; font-weight:bold; margin-bottom:15px; box-shadow: 0 4px 10px rgba(220,53,69,0.4); border:2px solid #ffc107;">🔥 АКТИВЕН РЕЖИМ ОТРАБОТКИ ХРОНИЧЕСКИХ ОШИБОК 🔥</div>', unsafe_allow_html=True)
-        if st.button("❌ ВЫЙТИ ИЗ РЕЖИМА ДЫР", use_container_width=True):
-            st.session_state.leak_mode_active = False
-            st.session_state.hand = None
-            st.rerun()
-            
-        target_spot = st.session_state.get("leak_spot")
-        full_key = None
-        for src, sc_dict in ranges_db.items():
-            for sc, sp_dict in sc_dict.items():
-                if target_spot in sp_dict:
-                    full_key = f"{src}|{sc}|{target_spot}"
-                    break
-        
-        if not full_key:
-            st.error("Спот не найден.")
-            st.session_state.leak_mode_active = False
-            st.stop()
-            
-        pool = [full_key]
-        
-    else:
-        scenario_map = {}
-        for src, sc_dict in ranges_db.items():
-            for sc, sp_dict in sc_dict.items():
-                mapped_sc = sc
-                sc_lower = sc.lower()
-                if "3bet" in sc_lower: mapped_sc = "Def vs 3bet"
-                elif "pfr" in sc_lower or "bbvsbu" in sc_lower or "bb def" in sc_lower: mapped_sc = "BB def vs PFR"
-                elif "open raise" in sc_lower: mapped_sc = "Open Raise"
+    scenario_map = {}
+    for src, sc_dict in ranges_db.items():
+        for sc, sp_dict in sc_dict.items():
+            if sc not in scenario_map: scenario_map[sc] = []
+            for sp in sp_dict.keys():
+                scenario_map[sc].append((sp, f"{src}|{sc}|{sp}"))
                 
-                if mapped_sc not in scenario_map: scenario_map[mapped_sc] = []
-                for sp in sp_dict.keys():
-                    scenario_map[mapped_sc].append((sp, f"{src}|{sc}|{sp}"))
-                    
-        all_scenarios = ["Open Raise", "BB def vs PFR", "Def vs 3bet"]
-        all_scenarios = [s for s in all_scenarios if s in scenario_map]
+    all_scenarios = sorted(list(scenario_map.keys()))
 
-        with st.expander("⚙️ Настройки Фильтров", expanded=False):
-            saved = utils.load_user_settings()
-            sel_sc = st.multiselect("Сценарий", all_scenarios, default=[s for s in saved.get("scenarios", []) if s in all_scenarios])
-            
-            sel_spots_keys = []
-            if sel_sc:
-                st.markdown("**Споты для тренировки:**")
-                saved_spots = saved.get("spots", [])
-                for sc in sel_sc:
-                    st.markdown(f"<div style='color:#ffc107; font-size:14px; font-weight:bold; margin-top:8px;'>{sc}</div>", unsafe_allow_html=True)
-                    for sp_name, sp_key in scenario_map[sc]:
-                        is_checked = (sp_key in saved_spots) if "spots" in saved else True
-                        if st.checkbox(sp_name, value=is_checked, key=f"m_chk_{sp_key}"):
-                            sel_spots_keys.append(sp_key)
-            
-            if st.button("🚀 Применить", use_container_width=True):
-                utils.save_user_settings({"scenarios": sel_sc, "spots": sel_spots_keys})
-                st.session_state.hand = None; st.rerun()
+    with st.expander("⚙️ Настройки Фильтров", expanded=False):
+        saved = utils.load_user_settings()
+        sel_sc = st.multiselect("Сценарий", all_scenarios, default=[s for s in saved.get("scenarios", []) if s in all_scenarios])
+        
+        sel_spots_keys = []
+        if sel_sc:
+            st.markdown("**Споты для тренировки:**")
+            saved_spots = saved.get("spots", [])
+            for sc in sel_sc:
+                st.markdown(f"<div style='color:#ffc107; font-size:14px; font-weight:bold; margin-top:8px;'>{sc}</div>", unsafe_allow_html=True)
+                for sp_name, sp_key in scenario_map[sc]:
+                    is_checked = (sp_key in saved_spots) if "spots" in saved else True
+                    if st.checkbox(sp_name, value=is_checked, key=f"m_chk_{sp_key}"):
+                        sel_spots_keys.append(sp_key)
+        
+        if st.button("🚀 Применить", use_container_width=True):
+            utils.save_user_settings({"scenarios": sel_sc, "spots": sel_spots_keys})
+            st.session_state.hand = None; st.rerun()
 
-        pool = sel_spots_keys
-        if not pool:
-            st.warning("⚠️ Не выбран ни один спот.")
-            st.stop()
+    pool = sel_spots_keys
+    if not pool:
+        st.warning("⚠️ Не выбран ни один спот.")
+        st.stop()
 
     if 'combo' not in st.session_state: st.session_state.combo = 0
     if 'session_hands' not in st.session_state: st.session_state.session_hands = 0
@@ -161,17 +137,10 @@ def show():
         src, sc, sp = chosen.split('|')
         data = ranges_db[src][sc][sp]
         r_data = data.get("ranges", data)
-        
-        if is_leak_mode:
-            poss = st.session_state.get("leak_hands", [])
-        else:
-            t_range = r_data.get("training", r_data.get("source", r_data.get("full", "")))
-            poss = utils.parse_range_to_list(t_range)
-            
+        t_range = r_data.get("training", r_data.get("source", r_data.get("full", "")))
+        poss = utils.parse_range_to_list(t_range)
         srs = utils.load_srs_data()
         w = [srs.get(f"{src}_{sc}_{sp}_{h}".replace(" ","_"), 100) for h in poss]
-        if sum(w) == 0: w = [100]*len(poss)
-            
         st.session_state.hand = random.choices(poss, weights=w, k=1)[0]
         st.session_state.rng = random.randint(0, 99)
         ps = ['♠','♥','♦','♣']; s1 = random.choice(ps)
@@ -211,13 +180,25 @@ def show():
     c1 = "suit-red" if s1 == '♥' else "suit-blue" if s1 == '♦' else "suit-green" if s1 == '♣' else "suit-black"
     c2 = "suit-red" if s2 == '♥' else "suit-blue" if s2 == '♦' else "suit-green" if s2 == '♣' else "suit-black"
 
+    stats_data = utils.load_user_stats()
+    rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
     c = st.session_state.combo
-    glow_color = '#00ff00' if c >= 1000 else '#ff00ff' if c >= 500 else '#00e5ff' if c >= 200 else '#6f42c1' if c >= 100 else '#dc3545' if c >= 50 else '#fd7e14' if c >= 25 else '#ffc107' if c >= 10 else '#0dcaf0' if c >= 5 else '#888'
+    progress_pct = int((stats_data["xp"] / next_xp) * 100) if next_xp != "MAX" else 100
+    
+    glow_color = '#6f42c1' if c >= 100 else '#dc3545' if c >= 50 else '#fd7e14' if c >= 25 else '#ffc107' if c >= 10 else '#0dcaf0' if c >= 5 else '#888'
     
     sh = st.session_state.session_hands
     scorr = st.session_state.session_correct
     wr = int((scorr / sh * 100)) if sh > 0 else 0
     wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
+
+    dailies_html = '<div class="dailies-box">'
+    for q in stats_data.get("dailies", {}).get("quests", []):
+        cls = "daily-done" if q["done"] else ""
+        icon = "✅" if q["done"] else "🎯"
+        text = "Done" if q["done"] else f"{q['progress']}/{q['target']}"
+        dailies_html += f'<div class="daily-item {cls}">{icon} {text}</div>'
+    dailies_html += '</div>'
 
     header_html = f"""
     <div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
@@ -226,26 +207,27 @@ def show():
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px;">
             <div style="flex:1;">
-                <div style="font-size:12px; font-weight:bold; color:#aaa;">Винрейт</div>
-                <div style="font-size:14px; font-weight:bold; color:{wr_color};">{wr}%</div>
+                <div style="font-size:12px; font-weight:bold; color:#ffc107;">{rank_name}</div>
+                <div style="background:#333; height:4px; border-radius:2px; margin-top:3px; width:90%;">
+                    <div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div>
+                </div>
             </div>
             <div style="flex:1; text-align:center; font-size:18px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">
                 🔥 x{c}
             </div>
             <div style="flex:1; text-align:right;">
-                <div style="font-size:12px; font-weight:bold; color:#aaa;">Раздачи</div>
-                <div style="font-size:14px; font-weight:bold; color:#fff;">{sh}</div>
+                <div style="font-size:13px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get('streak', 1)} Дней</div>
+                <div style="font-size:9px; color:#aaa;">WR: {wr}%</div>
             </div>
         </div>
+        {dailies_html}
+        <div style="height:6px;"></div>
     </div>
     """
     st.markdown(header_html, unsafe_allow_html=True)
     
     combo_cls = ""
-    if c >= 1000: combo_cls = "combo-glow-1000"
-    elif c >= 500: combo_cls = "combo-glow-500"
-    elif c >= 200: combo_cls = "combo-glow-200"
-    elif c >= 100: combo_cls = "combo-glow-100"
+    if c >= 100: combo_cls = "combo-glow-100"
     elif c >= 50: combo_cls = "combo-glow-50"
     elif c >= 25: combo_cls = "combo-glow-25"
     elif c >= 10: combo_cls = "combo-glow-10"
@@ -272,12 +254,7 @@ def show():
 
     for i in range(1, 6):
         p = rot[i]
-        has_cards = False
-        if is_defense:
-            if p == villain_pos: has_cards = True
-        else:
-            if order.index(p) > order.index(hero_pos): has_cards = True
-            
+        has_cards = (p in cards_in_play)
         cls = "seat-active" if has_cards else "seat-folded"
         cards = '<div class="opp-cards-mob"></div>' if has_cards else ""
         ss = get_seat_style(i)
@@ -335,22 +312,14 @@ def show():
             st.session_state.session_correct += 1
             st.session_state.combo += 1
             st.session_state.msg = f"✅ Верно!"
-            
-            # НОВЫЕ ТЕКСТЫ ДЛЯ СТРИКОВ
-            if st.session_state.combo in [10, 25, 50, 100, 200, 500, 1000]:
-                msgs = {
-                    10: "Комбо x10! Разогрев.",
-                    25: "Комбо x25! Читаешь как открытую книгу.",
-                    50: "Комбо x50! Снайпер.",
-                    100: "Комбо x100! Машина.",
-                    200: "Комбо x200! Ты вообще человек?",
-                    500: "Комбо x500! Режим Бога активирован.",
-                    1000: "Комбо x1000! GTO-солвер курит в сторонке."
-                }
-                st.session_state.toast_msgs.append(msgs[st.session_state.combo])
+            if st.session_state.combo in [10, 25, 50, 100]:
+                st.session_state.toast_msgs.append(f"Комбо x{st.session_state.combo}! Машина.")
         else:
             st.session_state.combo = 0
             st.session_state.msg = f"❌ Ошибка! Нужно: {correct_act}"
+            
+        alerts = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands)
+        if alerts: st.session_state.toast_msgs.extend(alerts)
             
         utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
         st.session_state.srs_mode = True
