@@ -6,30 +6,6 @@ import utils
 def show():
     st.markdown("## 📊 Statistics Hub")
     
-    # Зал Славы (Профиль)
-    stats_data = utils.load_user_stats()
-    rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
-    
-    st.markdown("### 🏆 Твой Профиль")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Ранг", rank_name)
-    c2.metric("Опыт", f"{stats_data['xp']} XP")
-    c3.metric("Рекорд Комбо", f"🔥 x{stats_data.get('max_combo', 0)}")
-    c4.metric("Ежедневный Стрик", f"📅 {stats_data.get('streak', 1)} Дней")
-    
-    achs = stats_data.get("achievements", [])
-    if achs:
-        st.markdown("#### 🎖️ Зал Славы")
-        ach_html = '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">'
-        for a_id in achs:
-            if a_id in utils.ACHIEVEMENTS_DB:
-                a = utils.ACHIEVEMENTS_DB[a_id]
-                ach_html += f'<div style="background:#1e1e1e; border:1px solid #444; border-radius:8px; padding:10px; width:200px; text-align:center;"><div style="font-size:30px;">{a["icon"]}</div><div style="font-weight:bold; color:#ffc107; font-size:14px;">{a["name"]}</div><div style="font-size:11px; color:#aaa; margin-top:4px;">{a["desc"]}</div></div>'
-        ach_html += '</div>'
-        st.markdown(ach_html, unsafe_allow_html=True)
-    
-    st.divider()
-
     df = utils.load_history()
     
     if df.empty or "Date" not in df.columns or "Result" not in df.columns:
@@ -37,7 +13,7 @@ def show():
         return
 
     df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
-    df = df.dropna(subset=["Date"]) 
+    df = df.dropna(subset=["Date"])
     df["Result"] = pd.to_numeric(df["Result"], errors='coerce').fillna(0).astype(int)
     
     if df.empty:
@@ -45,11 +21,11 @@ def show():
         return
 
     with st.expander("🔍 Фильтры", expanded=True):
-        f1, f2, f3 = st.columns(3)
-        time_filter = f1.selectbox("Период", ["All Time", "24 Hours", "7 Days", "30 Days", "1 Year"])
+        c1, c2, c3 = st.columns(3)
+        time_filter = c1.selectbox("Период", ["All Time", "24 Hours", "7 Days", "30 Days", "1 Year"])
         unique_spots = df["Spot"].unique().tolist()
-        spot_filter = f2.multiselect("Споты", unique_spots, default=unique_spots)
-        res_filter = f3.selectbox("Результат", ["Все", "Только Ошибки", "Только Верные"])
+        spot_filter = c2.multiselect("Споты", unique_spots, default=unique_spots)
+        res_filter = c3.selectbox("Результат", ["Все", "Только Ошибки", "Только Верные"])
 
     now = datetime.now()
     if time_filter == "24 Hours": df = df[df["Date"] >= now - timedelta(days=1)]
@@ -77,7 +53,60 @@ def show():
 
     st.divider()
 
-    st.markdown("### 📉 Худшие споты")
+    # --- БЛОК ЛИКФАЙНДЕРА (ТЕПЛОВАЯ КАРТА ДЫР) ---
+    st.markdown("### 🔥 Leak Finder (Тепловая карта ошибок)")
+    st.markdown("Скрипт анализирует хронические дыры. Показывает только те руки, где ты ошибся **минимум 2 раза** и процент ошибок **≥ 30%**.")
+    
+    unique_spots_all = df["Spot"].unique().tolist()
+    target_spot = st.selectbox("Выбери спот для анализа дыр", unique_spots_all, index=0 if unique_spots_all else None)
+    
+    if target_spot:
+        df_spot = df[df["Spot"] == target_spot]
+        
+        hand_stats = df_spot.groupby("Hand").agg(
+            total=("Result", "count"),
+            errors=("Result", lambda x: (x == 0).sum()),
+            correct_action=("CorrectAction", lambda x: x.mode()[0] if not x.mode().empty else "FOLD")
+        ).reset_index()
+        
+        # Жесткий фильтр: отсекаем случайные ошибки (нужно >=2 ошибок и винрейт с рукой <=70%)
+        leaks = hand_stats[(hand_stats["errors"] >= 2) & (hand_stats["errors"] / hand_stats["total"] >= 0.3)]
+        
+        if leaks.empty:
+            st.success(f"В споте '{target_spot}' у тебя нет хронических дыр. Так держать, машина!")
+        else:
+            lc1, lc2 = st.columns([2, 1])
+            leaks_dict = {row['Hand']: {'errors': row['errors'], 'total': row['total'], 'correct_action': row['correct_action']} for _, row in leaks.iterrows()}
+            
+            with lc1:
+                st.markdown(utils.render_leak_matrix(leaks_dict), unsafe_allow_html=True)
+            
+            with lc2:
+                st.warning(f"Найдено дырявых рук: **{len(leaks)}**")
+                
+                overplays = leaks[leaks["correct_action"] == "FOLD"]["errors"].sum()
+                underplays = leaks[leaks["correct_action"] == "RAISE"]["errors"].sum()
+                passive_fails = leaks[leaks["correct_action"] == "CALL"]["errors"].sum()
+                
+                st.markdown("#### Твой диагноз:")
+                if overplays > 0: 
+                    st.markdown(f"- 🗑️ **Мусоришь (Overplay)**: {overplays} ошибок. Ты играешь (открываешь/коллишь/3-бетишь) то, что по GTO уходит в пас.")
+                if underplays > 0: 
+                    st.markdown(f"- 🐔 **Нитуешь (Underplay)**: {underplays} ошибок. Сбрасываешь или пассивно коллишь то, что нужно жестко рейзить.")
+                if passive_fails > 0: 
+                    st.markdown(f"- 🛡️ **Дыры защиты**: {passive_fails} ошибок. Оверфолдишь на стилы/3-беты, не тащишь по шансам.")
+
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("⚔️ ТРЕНИРОВАТЬ ЭТИ ДЫРЫ", use_container_width=True):
+                    st.session_state.leak_mode_active = True
+                    st.session_state.leak_spot = target_spot
+                    st.session_state.leak_hands = leaks["Hand"].tolist()
+                    st.session_state.app_mode = "🎮 Trainer"
+                    st.rerun()
+
+    st.divider()
+
+    st.markdown("### 📉 Худшие споты (Топ-10)")
     if not df.empty:
         stats = df.groupby("Spot")["Result"].agg(['count', 'sum', 'mean']).reset_index()
         stats["Errors"] = stats["count"] - stats["sum"]
