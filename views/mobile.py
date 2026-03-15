@@ -16,11 +16,16 @@ def show():
         .open-raise-btn button { background: #2e7d32; color: white; box-shadow: 0 4px 0 #1b5e20; }
         
         .mobile-game-area { position: relative; width: 100%; height: 280px; margin: 0 auto; background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); border: 6px solid #3e2723; border-radius: 140px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); transition: box-shadow 0.3s, border-color 0.3s; }
-        .combo-glow-3 { border-color: #ffc107 !important; box-shadow: 0 0 10px rgba(255, 193, 7, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
-        .combo-glow-10 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-med 1.5s infinite; }
-        .combo-glow-25 { border-color: #dc3545 !important; box-shadow: 0 0 30px rgba(220, 53, 69, 0.8), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-fast 0.8s infinite; }
-        @keyframes pulse-med { 0% { box-shadow: 0 0 10px rgba(253, 126, 20, 0.5); } 50% { box-shadow: 0 0 25px rgba(253, 126, 20, 0.8); } 100% { box-shadow: 0 0 10px rgba(253, 126, 20, 0.5); } }
-        @keyframes pulse-fast { 0% { box-shadow: 0 0 15px rgba(220, 53, 69, 0.6); } 50% { box-shadow: 0 0 40px rgba(220, 53, 69, 1.0); } 100% { box-shadow: 0 0 15px rgba(220, 53, 69, 0.6); } }
+        
+        .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
+        .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
+        .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-slow 2s infinite; }
+        .combo-glow-50 { border-color: #dc3545 !important; box-shadow: 0 0 30px rgba(220, 53, 69, 0.7), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-menace 1.5s infinite; }
+        .combo-glow-100 { border-color: #6f42c1 !important; box-shadow: 0 0 40px rgba(111, 66, 193, 0.8), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-neon 1s infinite; }
+        
+        @keyframes pulse-slow { 0% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } 50% { box-shadow: 0 0 25px rgba(253, 126, 20, 0.7); } 100% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } }
+        @keyframes pulse-menace { 0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } 50% { box-shadow: 0 0 40px rgba(220, 53, 69, 0.9); } 100% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } }
+        @keyframes pulse-neon { 0% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } 50% { box-shadow: 0 0 60px rgba(111, 66, 193, 1.0); } 100% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } }
 
         .mob-info { position: absolute; top: 25%; width: 100%; text-align: center; pointer-events: none; }
         .mob-info-src { font-size: 10px; color: #888; text-transform: uppercase; }
@@ -42,6 +47,10 @@ def show():
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         .rng-hint { text-align: center; color: #888; font-size: 11px; margin-bottom: 5px; font-family: monospace; }
         .srs-container button { height: 50px; font-size: 13px; background: #343a40; color: #aaa; border: 1px solid #555; }
+        
+        .dailies-box { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:5px; font-size:10px; }
+        .daily-item { background:#1e1e1e; border:1px solid #444; padding:3px 6px; border-radius:4px; color:#aaa; }
+        .daily-done { border-color:#28a745; color:#28a745; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -82,11 +91,14 @@ def show():
         st.stop()
 
     if 'combo' not in st.session_state: st.session_state.combo = 0
-    if 'show_balloons' not in st.session_state: st.session_state.show_balloons = False
-    
-    if st.session_state.show_balloons:
-        st.balloons()
-        st.session_state.show_balloons = False
+    if 'session_hands' not in st.session_state: st.session_state.session_hands = 0
+    if 'session_correct' not in st.session_state: st.session_state.session_correct = 0
+    if 'toast_msgs' not in st.session_state: st.session_state.toast_msgs = []
+
+    if st.session_state.toast_msgs:
+        for msg in st.session_state.toast_msgs:
+            st.toast(msg, icon="🔥" if "Комбо" in msg else "🎯")
+        st.session_state.toast_msgs = []
 
     if 'hand' not in st.session_state: st.session_state.hand = None
     if 'rng' not in st.session_state: st.session_state.rng = 0
@@ -143,36 +155,59 @@ def show():
     c1 = "suit-red" if s1 == '♥' else "suit-blue" if s1 == '♦' else "suit-green" if s1 == '♣' else "suit-black"
     c2 = "suit-red" if s2 == '♥' else "suit-blue" if s2 == '♦' else "suit-green" if s2 == '♣' else "suit-black"
 
+    # --- GAMIFICATION HEADER MOB ---
     stats_data = utils.load_user_stats()
     rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
     c = st.session_state.combo
     progress_pct = int((stats_data["xp"] / next_xp) * 100) if next_xp != "MAX" else 100
-    glow_color = '#dc3545' if c >= 25 else '#fd7e14' if c >= 10 else '#ffc107' if c >= 3 else '#888'
     
+    glow_color = '#6f42c1' if c >= 100 else '#dc3545' if c >= 50 else '#fd7e14' if c >= 25 else '#ffc107' if c >= 10 else '#0dcaf0' if c >= 5 else '#888'
+    
+    sh = st.session_state.session_hands
+    scorr = st.session_state.session_correct
+    wr = int((scorr / sh * 100)) if sh > 0 else 0
+    wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
+
+    dailies_html = '<div class="dailies-box">'
+    for q in stats_data.get("dailies", {}).get("quests", []):
+        cls = "daily-done" if q["done"] else ""
+        icon = "✅" if q["done"] else "🎯"
+        text = "Done" if q["done"] else f"{q['progress']}/{q['target']}"
+        dailies_html += f'<div class="daily-item {cls}">{icon} {text}</div>'
+    dailies_html += '</div>'
+
     header_html = f"""
-    <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:8px 12px; border-radius:10px; margin-bottom:12px; border:1px solid #333; font-family:sans-serif;">
-        <div style="flex:1;">
-            <div style="font-size:12px; font-weight:bold; color:#ffc107;">{rank_name}</div>
-            <div style="background:#333; height:4px; border-radius:2px; margin-top:3px; width:90%;">
-                <div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div>
+    <div style="background:#111; border-radius:10px; margin-bottom:12px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
+        <div style="height: 3px; width: 100%; background: #222;">
+            <div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else '#444'}; transition: width 0.3s;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px;">
+            <div style="flex:1;">
+                <div style="font-size:12px; font-weight:bold; color:#ffc107;">{rank_name}</div>
+                <div style="background:#333; height:4px; border-radius:2px; margin-top:3px; width:90%;">
+                    <div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div>
+                </div>
             </div>
-            <div style="font-size:9px; color:#aaa; margin-top:2px;">{stats_data['xp']}/{next_xp} XP</div>
+            <div style="flex:1; text-align:center; font-size:18px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">
+                🔥 x{c}
+            </div>
+            <div style="flex:1; text-align:right;">
+                <div style="font-size:13px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get('streak', 1)} Дней</div>
+                <div style="font-size:9px; color:#aaa;">WR: {wr}%</div>
+            </div>
         </div>
-        <div style="flex:1; text-align:center; font-size:18px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=3 else 0}px {glow_color};">
-            🔥 x{c}
-        </div>
-        <div style="flex:1; text-align:right;">
-            <div style="font-size:13px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get('streak', 1)} Дней</div>
-            <div style="font-size:9px; color:#aaa;">Max: {stats_data.get('max_combo', 0)}</div>
-        </div>
+        {dailies_html}
+        <div style="height:6px;"></div>
     </div>
     """
     st.markdown(header_html, unsafe_allow_html=True)
     
     combo_cls = ""
-    if c >= 25: combo_cls = "combo-glow-25"
+    if c >= 100: combo_cls = "combo-glow-100"
+    elif c >= 50: combo_cls = "combo-glow-50"
+    elif c >= 25: combo_cls = "combo-glow-25"
     elif c >= 10: combo_cls = "combo-glow-10"
-    elif c >= 3: combo_cls = "combo-glow-3"
+    elif c >= 5: combo_cls = "combo-glow-5"
 
     order = ["EP", "MP", "CO", "BTN", "SB", "BB"]
     try: hero_idx = order.index(hero_pos)
@@ -247,15 +282,20 @@ def show():
     def handle_action(action):
         corr = (correct_act == action)
         st.session_state.last_error = not corr
+        st.session_state.session_hands += 1
+        
         if corr:
+            st.session_state.session_correct += 1
             st.session_state.combo += 1
-            if st.session_state.combo in [10, 25, 50, 100]: st.session_state.show_balloons = True
-            utils.process_gamification(True, st.session_state.combo)
             st.session_state.msg = f"✅ Отлично!"
+            if st.session_state.combo in [10, 25, 50, 100]:
+                st.session_state.toast_msgs.append(f"Комбо x{st.session_state.combo}! Машина.")
         else:
             st.session_state.combo = 0
-            utils.process_gamification(False, 0)
             st.session_state.msg = f"❌ Ошибка! Нужно: {correct_act}"
+            
+        alerts = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands)
+        if alerts: st.session_state.toast_msgs.extend(alerts)
             
         utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
         st.session_state.srs_mode = True
