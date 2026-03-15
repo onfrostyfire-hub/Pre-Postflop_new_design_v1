@@ -83,7 +83,6 @@ def show():
         st.warning("⚠️ Не выбран ни один спот. Отметь галочки в меню слева.")
         st.stop()
 
-    # Стейт для геймификации
     if 'combo' not in st.session_state: st.session_state.combo = 0
     if 'show_balloons' not in st.session_state: st.session_state.show_balloons = False
     
@@ -147,7 +146,6 @@ def show():
     c1 = "suit-red" if s1 in '♥' else "suit-blue" if s1 in '♦' else "suit-black"
     c2 = "suit-red" if s2 in '♥' else "suit-blue" if s2 in '♦' else "suit-black"
 
-    # --- GAMIFICATION HEADER ---
     stats_data = utils.load_user_stats()
     rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
     c = st.session_state.combo
@@ -276,21 +274,21 @@ def show():
                 c1, c2, c3 = st.columns(3)
                 with c1:
                     if st.button("FOLD"): handle_action("FOLD")
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[0].classList.add("fold-btn");</script>', unsafe_allow_html=True)
+                    st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"] button')[0].classList.add("fold-btn");</script>""", unsafe_allow_html=True)
                 with c2:
                     if st.button("CALL"): handle_action("CALL")
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[1].classList.add("call-btn");</script>', unsafe_allow_html=True)
+                    st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"] button')[1].classList.add("call-btn");</script>""", unsafe_allow_html=True)
                 with c3:
                     if st.button("RAISE"): handle_action("RAISE")
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[2].classList.add("raise-btn");</script>', unsafe_allow_html=True)
+                    st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"] button')[2].classList.add("raise-btn");</script>""", unsafe_allow_html=True)
             else:
                 c1, c2 = st.columns(2)
                 with c1:
                     if st.button("FOLD"): handle_action("FOLD")
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[0].classList.add("fold-btn");</script>', unsafe_allow_html=True)
+                    st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"] button')[0].classList.add("fold-btn");</script>""", unsafe_allow_html=True)
                 with c2:
                     if st.button("RAISE"): handle_action("RAISE")
-                    st.markdown('<script>parent.document.querySelectorAll("div[data-testid=\\'column\\']")[1].classList.add("open-raise-btn");</script>', unsafe_allow_html=True)
+                    st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"] button')[1].classList.add("open-raise-btn");</script>""", unsafe_allow_html=True)
         else:
             if st.session_state.last_error: st.error(st.session_state.msg)
             else: st.success(st.session_state.msg)
