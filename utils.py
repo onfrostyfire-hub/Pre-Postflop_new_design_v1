@@ -20,10 +20,12 @@ SPREADSHEET_ID = '15ouWJYZuQET1-sy7k5Wrn1fAzNUX6ssk5K8SOM9uYOc'
 def get_gspread_client():
     try:
         creds_dict = json.loads(st.secrets["GOOGLE_JSON"])
+        # Принудительно чиним съехавшие переносы строк в ключе
+        creds_dict["private_key"] = creds_dict["private_key"].replace('\\n', '\n')
         credentials = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         return gspread.authorize(credentials)
     except Exception as e:
-        st.error(f"Ошибка подключения к Google Sheets: Проверь секреты в Streamlit! {e}")
+        st.error(f"Ошибка подключения к Google Sheets: {e}")
         st.stop()
 
 @st.cache_resource
