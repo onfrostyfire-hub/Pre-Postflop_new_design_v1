@@ -6,24 +6,40 @@ import utils
 def show():
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
-        .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden; }
+        /* Убиваем лишние отступы Streamlit для мобилок */
+        .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; max-width: 100% !important; }
         
-        div[data-testid="stHorizontalBlock"] { flex-direction: row !important; flex-wrap: nowrap !important; gap: 6px !important; }
-        div[data-testid="column"] { width: 33% !important; flex: 1 1 0% !important; min-width: 0 !important; padding: 0 !important; }
+        /* Спрессовываем стопку колонок, чтобы кнопки не расползались по экрану */
+        [data-testid="column"] { margin-bottom: -12px !important; }
 
+        /* Компактный 3D стиль для кнопок в стопке */
         div.stButton > button {
-            width: 100%; height: 50px !important; font-family: 'Roboto', sans-serif; font-weight: 900 !important; font-size: 13px !important; 
-            border-radius: 10px !important; border: none !important; text-transform: uppercase; transition: all 0.1s ease;
-            position: relative; top: 0; padding: 0 4px !important; letter-spacing: 0.5px;
+            width: 100%; 
+            height: 55px !important; 
+            font-family: 'Roboto', sans-serif;
+            font-weight: 900 !important; 
+            font-size: 16px !important; 
+            border-radius: 12px !important; 
+            border: none !important; 
+            text-transform: uppercase; 
+            transition: all 0.1s ease;
+            position: relative;
+            top: 0;
+            padding: 0 4px !important;
+            letter-spacing: 1px;
         }
         div.stButton > button:active { top: 4px; box-shadow: 0 2px 0 transparent !important; }
 
+        /* Игровой стол */
         .mobile-game-area { 
-            position: relative; width: 100%; height: 250px; margin: 0 auto 10px auto; 
+            position: relative; width: 100%; height: 250px; 
+            margin: 0 auto 10px auto; 
             background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); 
-            border: 6px solid #3e2723; border-radius: 125px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); transition: box-shadow 0.3s, border-color 0.3s; 
+            border: 6px solid #3e2723; border-radius: 125px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
+            transition: box-shadow 0.3s, border-color 0.3s; 
         }
         
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
@@ -56,49 +72,10 @@ def show():
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         
-        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 12px; letter-spacing: 0.5px; }
         .dailies-box { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:5px; font-size:10px; }
         .daily-item { background:#1e1e1e; border:1px solid #444; padding:3px 6px; border-radius:4px; color:#aaa; }
         .daily-done { border-color:#28a745; color:#28a745; }
-
-        /* Иконка Ачивок на столе */
-        .ach-btn {
-            position: absolute; bottom: 10px; right: 10px; width: 36px; height: 36px;
-            background: #212529; border: 2px solid #ffc107; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 18px; cursor: pointer; z-index: 30; box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-            transition: transform 0.1s;
-        }
-        .ach-btn:active { transform: scale(0.9); }
-        
-        /* Модальное окно ачивок */
-        .ach-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center;
-            backdrop-filter: blur(3px);
-        }
-        .ach-content {
-            background: #1a1a1a; border: 2px solid #ffc107; border-radius: 15px; width: 90%; max-width: 400px;
-            max-height: 80vh; overflow-y: auto; padding: 20px 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            font-family: 'Roboto', sans-serif;
-        }
-        .ach-item {
-            display: flex; align-items: center; gap: 12px; background: #222; border: 1px solid #444;
-            border-radius: 10px; padding: 10px; margin-bottom: 10px;
-        }
-        .ach-item.unlocked { border-color: #28a745; background: #1b261f; }
-        .ach-icon { font-size: 28px; filter: grayscale(100%) opacity(0.4); }
-        .ach-item.unlocked .ach-icon { filter: none; }
-        .ach-text { flex: 1; }
-        .ach-title { font-weight: 900; font-size: 14px; color: #888; }
-        .ach-item.unlocked .ach-title { color: #ffc107; }
-        .ach-desc { font-size: 11px; color: #777; margin-top: 2px; }
-        .ach-prog { font-size: 11px; font-weight: bold; color: #666; text-align: right; }
-        .ach-item.unlocked .ach-prog { color: #28a745; }
-        .ach-close {
-            width: 100%; padding: 12px; background: #333; color: white; border: none;
-            border-radius: 8px; font-weight: bold; margin-top: 10px; text-transform: uppercase;
-        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -310,45 +287,8 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    # --- HTML ДЛЯ АЧИВОК (Модальное окно + Иконка) ---
-    achs_list_html = ""
-    earned_achs = stats_data.get("achievements", [])
-    for a_id, a_data in utils.ACHIEVEMENTS_DB.items():
-        is_earned = a_id in earned_achs
-        cls_state = "unlocked" if is_earned else ""
-        
-        prog = 0
-        if a_data["type"] == "total_hands": prog = min(stats_data.get("total_hands", 0), a_data["target"])
-        elif a_data["type"] == "max_combo": prog = min(stats_data.get("max_combo", 0), a_data["target"])
-        elif a_data["type"] == "session_hands": prog = min(sh, a_data["target"])
-        
-        prog_text = "Выполнено" if is_earned else f"{prog} / {a_data['target']}"
-        
-        achs_list_html += f"""
-        <div class="ach-item {cls_state}">
-            <div class="ach-icon">{a_data['icon']}</div>
-            <div class="ach-text">
-                <div class="ach-title">{a_data['name']}</div>
-                <div class="ach-desc">{a_data['desc']}</div>
-            </div>
-            <div class="ach-prog">{prog_text}</div>
-        </div>
-        """
-
-    modal_html = f"""
-    <div id="ach-modal" class="ach-modal" onclick="this.style.display='none'">
-        <div class="ach-content" onclick="event.stopPropagation()">
-            <h3 style="color:#fff; margin-top:0; text-align:center; font-size:18px;">Твои награды, катала</h3>
-            {achs_list_html}
-            <button class="ach-close" onclick="document.getElementById('ach-modal').style.display='none'">ЗАКРЫТЬ</button>
-        </div>
-    </div>
-    """
-
     html = f"""
-    {modal_html}
     <div class="mobile-game-area {combo_cls}">
-        <div class="ach-btn" onclick="document.getElementById('ach-modal').style.display='flex'">🎖️</div>
         <div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div></div>
         {opp_html} {chips_html}
         <div class="hero-mob">
@@ -385,6 +325,7 @@ def show():
         st.session_state.srs_mode = True
         st.rerun()
 
+    # БЛОК РЕНДЕРИНГА КНОПОК В СТОПКУ С ЦВЕТАМИ
     if not st.session_state.srs_mode:
         if is_defense:
             st.markdown("""<style>
