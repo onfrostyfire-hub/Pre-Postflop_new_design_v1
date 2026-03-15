@@ -6,21 +6,22 @@ import utils
 def show():
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
-        .block-container { padding-top: 2rem !important; padding-bottom: 5rem !important; }
+        /* Убиваем лишние отступы Streamlit для мобилок */
+        .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden; }
         
-        /* Принудительно выстраиваем колонки в ряд на мобилках */
-        [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 8px; }
+        /* Принудительно ставим кнопки в один ряд */
+        [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; gap: 8px !important; }
         [data-testid="column"] { width: auto !important; flex: 1 1 0% !important; min-width: 0 !important; }
 
-        /* Общий 3D стиль для всех кнопок */
+        /* Базовый 3D стиль для кнопок */
         div.stButton > button {
             width: 100%; 
-            height: 60px !important; 
+            height: 55px !important; 
             font-family: 'Roboto', sans-serif;
-            font-weight: 800 !important; 
-            font-size: 14px !important; 
+            font-weight: 900 !important; 
+            font-size: 15px !important; 
             border-radius: 12px !important; 
             border: none !important; 
             text-transform: uppercase; 
@@ -29,56 +30,14 @@ def show():
             top: 0;
             padding: 0;
         }
-        div.stButton > button:active {
-            top: 4px;
-            box-shadow: 0 2px 0 transparent !important;
-        }
+        div.stButton > button:active { top: 4px; box-shadow: 0 2px 0 transparent !important; }
 
-        /* --- ПАЛИТРА ИГРОВЫХ ДЕЙСТВИЙ --- */
-        .fold-btn button { 
-            background: linear-gradient(180deg, #495057, #343a40) !important; 
-            color: #adb5bd !important; 
-            box-shadow: 0 6px 0 #1d2124, 0 8px 15px rgba(0,0,0,0.3) !important; 
-        }
-        .call-btn button { 
-            background: linear-gradient(180deg, #20c997, #198754) !important; 
-            color: #fff !important; 
-            box-shadow: 0 6px 0 #0f5132, 0 8px 15px rgba(0,0,0,0.3) !important; 
-            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-        }
-        .raise-btn button, .open-raise-btn button { 
-            background: linear-gradient(180deg, #e83e8c, #d63384) !important; 
-            color: #fff !important; 
-            box-shadow: 0 6px 0 #a02561, 0 8px 15px rgba(0,0,0,0.3) !important; 
-            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-        }
-
-        /* --- ПАЛИТРА ОЦЕНКИ (SRS) --- */
-        .srs-hard button { 
-            background: linear-gradient(180deg, #fd7e14, #e85d04) !important; 
-            color: #fff !important; 
-            box-shadow: 0 6px 0 #a13d00, 0 8px 15px rgba(0,0,0,0.3) !important; 
-            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-        }
-        .srs-norm button { 
-            background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; 
-            color: #fff !important; 
-            box-shadow: 0 6px 0 #057085, 0 8px 15px rgba(0,0,0,0.3) !important; 
-            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-        }
-        .srs-easy button { 
-            background: linear-gradient(180deg, #6f42c1, #59339d) !important; 
-            color: #fff !important; 
-            box-shadow: 0 6px 0 #3a1e6d, 0 8px 15px rgba(0,0,0,0.3) !important; 
-            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-        }
-
-        /* Игровой стол */
+        /* Игровой стол (чуть сжат для айфона) */
         .mobile-game-area { 
-            position: relative; width: 100%; height: 280px; 
-            margin: 0 auto 40px auto; /* Увеличен отступ снизу для текста */
+            position: relative; width: 100%; height: 250px; 
+            margin: 0 auto 10px auto; 
             background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); 
-            border: 6px solid #3e2723; border-radius: 140px; 
+            border: 6px solid #3e2723; border-radius: 125px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
             transition: box-shadow 0.3s, border-color 0.3s; 
         }
@@ -95,7 +54,7 @@ def show():
 
         .mob-info { position: absolute; top: 25%; width: 100%; text-align: center; pointer-events: none; }
         .mob-info-src { font-size: 10px; color: #888; text-transform: uppercase; }
-        .mob-info-spot { font-size: 22px; font-weight: 900; color: rgba(255,255,255,0.15); }
+        .mob-info-spot { font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.15); }
         .seat { position: absolute; width: 44px; height: 44px; background: #222; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
         .seat-label { font-size: 9px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 2px; }
         .seat-active { border-color: #ffc107; background: #2a2a2a; }
@@ -105,6 +64,7 @@ def show():
         .chip-3bet { width: 16px; height: 16px; background: #d32f2f; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
         .dealer-mob { width: 16px; height: 16px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 9px; display: flex; justify-content: center; align-items: center; border: 1px solid #bfa006; position: absolute; z-index: 11; }
         .bet-txt { font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 3px; border-radius: 4px; margin-top: -5px; z-index: 20; }
+        
         .hero-mob { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 20; background: #222; padding: 5px 10px; border-radius: 12px; border: 1px solid #ffc107; }
         .card-mob { width: 45px; height: 64px; background: white; border-radius: 4px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .tl-mob { position: absolute; top: 1px; left: 3px; font-weight: bold; font-size: 14px; line-height: 1; }
@@ -112,18 +72,7 @@ def show():
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         
-        /* Читаемая подсказка RNG под столом */
-        .rng-hint { 
-            text-align: center; 
-            color: #adb5bd; 
-            font-size: 13px; 
-            font-family: 'Roboto', sans-serif; 
-            font-weight: 500; 
-            margin-top: -20px; 
-            margin-bottom: 15px; 
-            letter-spacing: 0.5px; 
-        }
-        
+        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 8px; letter-spacing: 0.5px; }
         .dailies-box { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:5px; font-size:10px; }
         .daily-item { background:#1e1e1e; border:1px solid #444; padding:3px 6px; border-radius:4px; color:#aaa; }
         .daily-done { border-color:#28a745; color:#28a745; }
@@ -252,7 +201,7 @@ def show():
     dailies_html += '</div>'
 
     header_html = f"""
-    <div style="background:#111; border-radius:10px; margin-bottom:12px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
+    <div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
         <div style="height: 3px; width: 100%; background: #222;">
             <div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else '#444'}; transition: width 0.3s;"></div>
         </div>
@@ -362,7 +311,7 @@ def show():
         if corr:
             st.session_state.session_correct += 1
             st.session_state.combo += 1
-            st.session_state.msg = f"✅ Отлично!"
+            st.session_state.msg = f"✅ Верно!"
             if st.session_state.combo in [10, 25, 50, 100]:
                 st.session_state.toast_msgs.append(f"Комбо x{st.session_state.combo}! Машина.")
         else:
@@ -376,48 +325,58 @@ def show():
         st.session_state.srs_mode = True
         st.rerun()
 
+    # БЛОК РЕНДЕРИНГА КНОПОК И CSS
     if not st.session_state.srs_mode:
         if is_defense:
+            # 3 кнопки: Fold (Серый), Call (Зеленый), Raise (Розовый)
+            st.markdown("""<style>
+                div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 6px 0 #1d2124, 0 8px 15px rgba(0,0,0,0.3) !important; }
+                div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #20c997, #198754) !important; color: #fff !important; box-shadow: 0 6px 0 #0f5132, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+                div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 6px 0 #a02561, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+            </style>""", unsafe_allow_html=True)
             c1, c2, c3 = st.columns(3)
             with c1:
                 if st.button("FOLD", key="f", use_container_width=True): handle_action("FOLD")
-                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[0].classList.add("fold-btn");</script>""", unsafe_allow_html=True)
             with c2:
                 if st.button("CALL", key="c", use_container_width=True): handle_action("CALL")
-                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[1].classList.add("call-btn");</script>""", unsafe_allow_html=True)
             with c3:
                 if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
-                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[2].classList.add("raise-btn");</script>""", unsafe_allow_html=True)
         else:
+            # 2 кнопки: Fold (Серый), Raise (Розовый)
+            st.markdown("""<style>
+                div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 6px 0 #1d2124, 0 8px 15px rgba(0,0,0,0.3) !important; }
+                div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 6px 0 #a02561, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+            </style>""", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
             with c1:
                 if st.button("FOLD", key="f", use_container_width=True): handle_action("FOLD")
-                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[0].classList.add("fold-btn");</script>""", unsafe_allow_html=True)
             with c2:
                 if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
-                st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[1].classList.add("open-raise-btn");</script>""", unsafe_allow_html=True)
-
-    if st.session_state.srs_mode:
+    else:
+        # 3 кнопки оценки SRS: Hard (Оранжевый), Norm (Голубой), Easy (Фиолетовый)
+        st.markdown("""<style>
+            div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #fd7e14, #e85d04) !important; color: #fff !important; box-shadow: 0 6px 0 #a13d00, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+            div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; color: #fff !important; box-shadow: 0 6px 0 #057085, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+            div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #6f42c1, #59339d) !important; color: #fff !important; box-shadow: 0 6px 0 #3a1e6d, 0 8px 15px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+        </style>""", unsafe_allow_html=True)
+        
+        # Компактные кастомные алерты вместо дефолтных
         if st.session_state.last_error:
-            st.error(st.session_state.msg)
-            with st.expander(f"Show Range ({correct_act})", expanded=True):
-                st.markdown(utils.render_range_matrix(data, st.session_state.hand), unsafe_allow_html=True)
+            st.markdown(f'<div style="background:#dc3545; color:white; padding:8px; border-radius:8px; text-align:center; font-weight:bold; margin-bottom:8px; font-size:14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">{st.session_state.msg}</div>', unsafe_allow_html=True)
         else:
-            st.success(st.session_state.msg)
-            with st.expander(f"🔍 View Range ({correct_act})", expanded=False):
-                st.markdown(utils.render_range_matrix(data, st.session_state.hand), unsafe_allow_html=True)
+            st.markdown(f'<div style="background:#28a745; color:white; padding:8px; border-radius:8px; text-align:center; font-weight:bold; margin-bottom:8px; font-size:14px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">{st.session_state.msg}</div>', unsafe_allow_html=True)
+            
+        with st.expander(f"🔍 Смотреть рендж ({correct_act})", expanded=st.session_state.last_error):
+            st.markdown(utils.render_range_matrix(data, st.session_state.hand), unsafe_allow_html=True)
         
         s1, s2, s3 = st.columns(3)
         k = f"{src}_{sc}_{sp}".replace(" ","_")
         with s1:
             if st.button("HARD", use_container_width=True): 
                 utils.update_srs_smart(k, st.session_state.hand, 'hard'); st.session_state.hand = None; st.rerun()
-            st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[0].classList.add("srs-hard");</script>""", unsafe_allow_html=True)
         with s2:
             if st.button("NORM", use_container_width=True): 
                 utils.update_srs_smart(k, st.session_state.hand, 'normal'); st.session_state.hand = None; st.rerun()
-            st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[1].classList.add("srs-norm");</script>""", unsafe_allow_html=True)
         with s3:
             if st.button("EASY", use_container_width=True): 
                 utils.update_srs_smart(k, st.session_state.hand, 'easy'); st.session_state.hand = None; st.rerun()
-            st.markdown("""<script>parent.document.querySelectorAll('div[data-testid="column"]')[2].classList.add("srs-easy");</script>""", unsafe_allow_html=True)
