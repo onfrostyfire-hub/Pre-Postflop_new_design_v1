@@ -57,12 +57,12 @@ def init_cloud_data():
 
 # --- GAMIFICATION CORE ---
 ACHIEVEMENTS_DB = {
-    "first_blood": {"name": "Первая кровь", "desc": "Отыграл первую раздачу. Неужели?", "icon": "🩸", "target": 1, "type": "total_hands"},
-    "hands_1000": {"name": "Мозоль на пальце", "desc": "1000 раздач. А винрейт всё еще как у макаки?", "icon": "🖱️", "target": 1000, "type": "total_hands"},
-    "hands_5000": {"name": "Ноулайфер", "desc": "5000 раздач. Ты вообще спишь, чудовище?", "icon": "🧟", "target": 5000, "type": "total_hands"},
-    "combo_50": {"name": "Мамкин киберспортсмен", "desc": "Комбо x50. Наверное, просто повезло.", "icon": "🎯", "target": 50, "type": "max_combo"},
-    "combo_100": {"name": "Аимбот", "desc": "Комбо x100. Окей, признаю, ты умеешь тыкать кнопки.", "icon": "🤖", "target": 100, "type": "max_combo"},
-    "session_500": {"name": "Железная жопа", "desc": "500 рук за сессию. Иди потрогай траву.", "icon": "🪑", "target": 500, "type": "session_hands"}
+    "first_blood": {"name": "Первая кровь", "desc": "Отыграл первую раздачу. Неужели?", "icon": "🩸"},
+    "hands_1000": {"name": "Мозоль на пальце", "desc": "1000 раздач. А винрейт всё еще как у макаки?", "icon": "🖱️"},
+    "hands_5000": {"name": "Ноулайфер", "desc": "5000 раздач. Ты вообще спишь, чудовище?", "icon": "🧟"},
+    "combo_50": {"name": "Мамкин киберспортсмен", "desc": "Комбо x50. Наверное, просто повезло.", "icon": "🎯"},
+    "combo_100": {"name": "Аимбот", "desc": "Комбо x100. Окей, признаю, ты умеешь тыкать кнопки.", "icon": "🤖"},
+    "session_500": {"name": "Железная жопа", "desc": "500 рук за сессию. Иди потрогай траву.", "icon": "🪑"}
 }
 
 def load_user_stats():
@@ -110,6 +110,7 @@ def process_gamification(is_correct, combo, session_total_hands):
     now_date_str = now_date.strftime("%Y-%m-%d")
     alerts = []
     
+    # Стрик дней
     if stats["last_date"]:
         try:
             last_date = datetime.strptime(stats["last_date"], "%Y-%m-%d").date()
@@ -120,15 +121,18 @@ def process_gamification(is_correct, combo, session_total_hands):
     else: stats["streak"] = 1
     stats["last_date"] = now_date_str
     
+    # Базовая стата
     stats["total_hands"] += 1
     if is_correct: stats["xp"] += 10
     if combo > stats.get("max_combo", 0): stats["max_combo"] = combo
     
+    # Дейлики
     if stats["dailies"].get("date") != now_date_str:
         stats["dailies"] = {"date": now_date_str, "quests": generate_dailies()}
         
     for q in stats["dailies"]["quests"]:
         if not q["done"]:
+            old_prog = q["progress"]
             if q["id"] == "play": q["progress"] += 1
             elif q["id"] == "correct" and is_correct: q["progress"] += 1
             elif q["id"] == "combo" and combo > q["progress"]: q["progress"] = combo
@@ -137,12 +141,13 @@ def process_gamification(is_correct, combo, session_total_hands):
                 q["progress"] = q["target"]
                 q["done"] = True
                 stats["xp"] += q["xp"]
-                alerts.append(f"🎯 Дейлик: {q['desc']} (+{q['xp']} XP)")
+                alerts.append(f"🎯 Дейлик выполнен: {q['desc']} (+{q['xp']} XP)")
 
+    # Ачивки
     def unlock(ach_id):
         if ach_id not in stats["achievements"]:
             stats["achievements"].append(ach_id)
-            alerts.append(f"🏆 Ачивка: {ACHIEVEMENTS_DB[ach_id]['name']}!")
+            alerts.append(f"🏆 Ачивка: {ACHIEVEMENTS_DB[ach_id]['name']}! {ACHIEVEMENTS_DB[ach_id]['desc']}")
 
     if stats["total_hands"] >= 1: unlock("first_blood")
     if stats["total_hands"] >= 1000: unlock("hands_1000")
