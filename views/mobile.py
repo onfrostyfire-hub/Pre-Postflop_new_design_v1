@@ -206,10 +206,10 @@ def show():
     # MASTERY FETCH
     try:
         mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(st.session_state.current_spot_key, {}))
-    except Exception:
-        mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "transparent", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100, "svg": ""}
+    except Exception as e:
+        mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "#6c757d", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100, "svg": ""}
         
-    m_color = mastery['color'] if mastery['color'] != 'transparent' else '#6c757d'
+    m_color = mastery['color']
     m_svg = mastery.get("svg", "")
     m_rust = mastery.get("is_rusty", False)
     m_icon = mastery.get("icon", "")
@@ -302,8 +302,8 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    # ЖЕСТКАЯ ПЛОСКАЯ ВЕРСТКА
-    html = f'<div class="mobile-game-area {combo_cls}">{m_svg}<div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
+    # ЖЕСТКАЯ ПЛОСКАЯ ВЕРСТКА С ГЕРБАМИ (МАСКИРОВАНА ОТ ПАРСЕРА STREAMLIT)
+    html = f'<div class="mobile-game-area {combo_cls}">{m_svg}<div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
 
