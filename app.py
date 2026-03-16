@@ -1,8 +1,5 @@
 import streamlit as st
-import views.mobile
-import views.desktop
-import views.compare
-import views.stats
+from views import mobile, desktop, compare, stats
 
 st.set_page_config(page_title="Poker Trainer", layout="wide", initial_sidebar_state="collapsed")
 
@@ -20,14 +17,14 @@ def main():
             view_type = st.radio("View Mode", ["Mobile", "Desktop"], index=0)
 
     if app_mode == "🔬 Range Lab":
-        views.compare.show()
+        compare.show()
     elif app_mode == "📊 Statistics":
-        views.stats.show()
+        stats.show()
     else:
         if view_type == "Mobile":
-            views.mobile.show()
+            mobile.show()
         else:
-            views.desktop.show()
+            desktop.show()
 
 if __name__ == "__main__":
     main()
