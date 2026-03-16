@@ -10,6 +10,12 @@ def show():
         .block-container { padding-top: 4rem; }
         .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto; background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%); border: 15px solid #4a1c1c; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: box-shadow 0.3s, border-color 0.3s; }
         
+        .mastery-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; z-index: 1; transition: box-shadow 0.5s ease; }
+        .mastery-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); }
+        .rusty-True { filter: grayscale(100%) opacity(0.6); }
+        .mastery-bar-bg { width: 100px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
+        .mastery-bar-fill { height: 100%; transition: width 0.3s; }
+        
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-slow 2s infinite; }
@@ -47,19 +53,11 @@ def show():
         .rng-hint-box { text-align: center; color: #888; font-size: 13px; font-family: monospace; margin-top: 60px; margin-bottom: 10px; background: #2b2b2b; padding: 5px; border-radius: 6px; border: 1px solid #444; width: 100%; }
         
         div.stButton > button { width: 100%; height: 60px !important; font-size: 18px !important; font-weight: 700; border-radius: 8px; text-transform: uppercase; transition: all 0.2s; }
-        .fold-btn button { background: #495057 !important; color: #adb5bd !important; border: 1px solid #6c757d !important; }
-        .call-btn button { background: #28a745 !important; color: white !important; box-shadow: 0 4px 0 #1e7e34 !important; }
-        .raise-btn button { background: #d63384 !important; color: white !important; box-shadow: 0 4px 0 #a02561 !important; }
-        .open-raise-btn button { background: #2e7d32 !important; color: white !important; box-shadow: 0 4px 0 #1b5e20 !important; }
-        
-        .dailies-box { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px; font-size:12px; }
-        .daily-item { background:#1e1e1e; border:1px solid #444; padding:4px 10px; border-radius:6px; color:#aaa; }
-        .daily-done { border-color:#28a745; color:#28a745; }
     </style>
     """, unsafe_allow_html=True)
 
     ranges_db = utils.load_ranges()
-    if not ranges_db: st.error("База ренджей пуста. Проверь папку spots_data."); return
+    if not ranges_db: st.error("База ренджей пуста."); return
     
     scenario_map = {}
     for src, sc_dict in ranges_db.items():
@@ -143,6 +141,7 @@ def show():
     btn_pos = setup.get("btn_pos", "BTN")
     cards_in_play = setup.get("active_players", [])
     bets_on_table = setup.get("table_bets", {})
+    display_hero_bet = setup.get("hero_bet")
     is_3bet_pot = setup.get("is_3bet_pot", False)
 
     is_defense = bool(villain_pos is not None or "call" in r_data or "Call" in r_data)
@@ -166,9 +165,62 @@ def show():
     c1 = "suit-red" if s1 == '♥' else "suit-blue" if s1 == '♦' else "suit-green" if s1 == '♣' else "suit-black"
     c2 = "suit-red" if s2 == '♥' else "suit-blue" if s2 == '♦' else "suit-green" if s2 == '♣' else "suit-black"
 
+    # --- HEADER & GAMIFICATION ---
     stats_data = utils.load_user_stats()
+    rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
     c = st.session_state.combo
+    progress_pct = int((stats_data["xp"] / next_xp) * 100) if next_xp != "MAX" else 100
     
+    glow_color = '#00ff00' if c >= 1000 else '#ff00ff' if c >= 500 else '#00e5ff' if c >= 200 else '#6f42c1' if c >= 100 else '#dc3545' if c >= 50 else '#fd7e14' if c >= 25 else '#ffc107' if c >= 10 else '#0dcaf0' if c >= 5 else '#888'
+    
+    sh = st.session_state.session_hands
+    scorr = st.session_state.session_correct
+    wr = int((scorr / sh * 100)) if sh > 0 else 0
+    wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
+
+    # MASTERY FETCH
+    try:
+        mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(st.session_state.current_spot_key, {}))
+    except Exception:
+        mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "transparent", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100}
+        
+    m_color = mastery['color'] if mastery['color'] != 'transparent' else '#6c757d'
+
+    header_html = f"""
+    <div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;">
+        <div style="height: 4px; width: 100%; background: #222;">
+            <div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else '#444'}; transition: width 0.3s;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;">
+            <div style="flex:1;">
+                <div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div>
+                <div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;">
+                    <div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div>
+                </div>
+                <div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data['xp']} / {next_xp} XP</div>
+            </div>
+            <div style="flex:1; text-align:center; font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">
+                🔥 x{c}
+            </div>
+            <div style="flex:1; text-align:right;">
+                <div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get('streak', 1)} Дней</div>
+                <div style="font-size:11px; color:#aaa;">Winrate: {wr}%</div>
+            </div>
+        </div>
+    </div>
+    """
+    st.markdown(header_html, unsafe_allow_html=True)
+    
+    combo_cls = ""
+    if c >= 1000: combo_cls = "combo-glow-1000"
+    elif c >= 500: combo_cls = "combo-glow-500"
+    elif c >= 200: combo_cls = "combo-glow-200"
+    elif c >= 100: combo_cls = "combo-glow-100"
+    elif c >= 50: combo_cls = "combo-glow-50"
+    elif c >= 25: combo_cls = "combo-glow-25"
+    elif c >= 10: combo_cls = "combo-glow-10"
+    elif c >= 5: combo_cls = "combo-glow-5"
+
     col_center, col_right = st.columns([2, 1])
     
     with col_center:
@@ -193,6 +245,7 @@ def show():
 
         for i in range(1, 6):
             p = rot[i]
+            
             has_cards = (p in cards_in_play)
             cls = "seat-active" if has_cards else "seat-folded"
             cards = '<div class="opp-cards"></div>' if has_cards else ""
@@ -216,7 +269,6 @@ def show():
                 chips_html += f'<div class="dealer-button" style="{bs}">D</div>'
 
         hero_cs = get_chip_style(0)
-        display_hero_bet = bets_on_table.get(hero_pos)
         if display_hero_bet is not None: 
             bet_txt = f'<div class="bet-txt">{display_hero_bet}bb</div>'
             if display_hero_bet <= 1.0:
@@ -228,40 +280,29 @@ def show():
             hero_bs = get_btn_style(0)
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
-        combo_cls = ""
-        if c >= 1000: combo_cls = "combo-glow-1000"
-        elif c >= 500: combo_cls = "combo-glow-500"
-        elif c >= 200: combo_cls = "combo-glow-200"
-        elif c >= 100: combo_cls = "combo-glow-100"
-        elif c >= 50: combo_cls = "combo-glow-50"
-        elif c >= 25: combo_cls = "combo-glow-25"
-        elif c >= 10: combo_cls = "combo-glow-10"
-        elif c >= 5: combo_cls = "combo-glow-5"
-
-        mast = utils.get_spot_mastery_info(st.session_state.current_spot_key)
-        crest_l, crest_r = utils.get_mastery_svg(mast["tier_name"])
-
-        mastery_html = ""
-        if mast["tier_name"] != "Sandbox":
-            rusty_text = "(Ржавчина)" if mast["rusty"] else ""
-            color_text = "#adb5bd" if mast["rusty"] else "#ffc107"
-            color_bar = "#adb5bd" if mast["rusty"] else "#28a745"
-            mastery_html = f"<div style='font-size:10px; color:{color_text}; font-weight:bold; margin-top:6px; letter-spacing:1px; text-transform:uppercase;'>{mast['icon']} {mast['tier_name']} {rusty_text}</div><div style='background:#222; height:4px; width:70px; margin: 4px auto 0 auto; border-radius:2px; overflow:hidden; border: 1px solid #444;'><div style='background:{color_bar}; height:100%; width:{mast['progress']}%;'></div></div>"
-
-        html = (
-            f'<div class="game-area {combo_cls}">'
-            f'{crest_l}{crest_r}'
-            f'<div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div>{mastery_html}</div>'
-            f'{opp_html}{chips_html}'
-            f'<div class="hero-panel">'
-            f'<div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div>'
-            f'<div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div>'
-            f'<div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div>'
-            f'<div class="rng-desktop">{rng}</div>'
-            f'</div></div>'
-        )
+        html = f"""
+        <div class="game-area {combo_cls}">
+            <div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery['color']};"></div>
+            <div class="table-info">
+                <div class="info-src">{sc}</div>
+                <div class="info-spot">{sp}</div>
+                <div class="mastery-badge rusty-{mastery['is_rusty']}" style="color: {m_color}">
+                    {mastery['icon']} {mastery['name']}
+                </div>
+                <div class="mastery-bar-bg">
+                    <div class="mastery-bar-fill" style="width: {mastery['prog_pct']}%; background: {m_color};"></div>
+                </div>
+            </div>
+            {opp_html} {chips_html}
+            <div class="hero-panel">
+                <div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div>
+                <div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div>
+                <div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div>
+                <div class="rng-desktop">{rng}</div>
+            </div>
+        </div>
+        """
         st.markdown(html, unsafe_allow_html=True)
-        
         if is_defense: st.markdown('<div class="rng-hint-box">📉 0..Freq → Action | 📈 Freq..100 → Fold</div>', unsafe_allow_html=True)
         else: st.markdown("<div style='height:30px;'></div>", unsafe_allow_html=True)
 
@@ -270,20 +311,28 @@ def show():
             st.session_state.last_error = not corr
             st.session_state.session_hands += 1
             
-            utils.update_spot_mastery(st.session_state.current_spot_key, corr)
-            
             if corr:
                 st.session_state.session_correct += 1
                 st.session_state.combo += 1
                 st.session_state.msg = f"✅ Отлично!"
-                if st.session_state.combo in [10, 25, 50, 100]:
-                    st.session_state.toast_msgs.append(f"Комбо x{st.session_state.combo}! Машина.")
+                
+                if st.session_state.combo in [10, 25, 50, 100, 200, 500, 1000]:
+                    msgs = {
+                        10: "Комбо x10! Разогрев.",
+                        25: "Комбо x25! Читаешь как открытую книгу.",
+                        50: "Комбо x50! Снайпер.",
+                        100: "Комбо x100! Машина.",
+                        200: "Комбо x200! Ты вообще человек?",
+                        500: "Комбо x500! Режим Бога активирован.",
+                        1000: "Комбо x1000! GTO-солвер курит в сторонке."
+                    }
+                    st.session_state.toast_msgs.append(msgs[st.session_state.combo])
             else:
                 st.session_state.combo = 0
                 st.session_state.msg = f"❌ Ошибка! Нужно: {correct_act}"
                 
             try:
-                alerts = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands)
+                alerts = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key)
                 if alerts: st.session_state.toast_msgs.extend(alerts)
             except Exception: pass
                 
@@ -291,6 +340,7 @@ def show():
             st.session_state.srs_mode = True
             st.rerun()
 
+        # БЛОК РЕНДЕРИНГА КНОПОК ЧЕРЕЗ CSS
         if not st.session_state.srs_mode:
             if is_defense:
                 st.markdown("""<style>
