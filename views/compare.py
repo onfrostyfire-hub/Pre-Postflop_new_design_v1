@@ -1,5 +1,5 @@
 import streamlit as st
-import utils
+import poker_utils as utils
 
 def render_popover_selector(ranges_db, suffix, emoji):
     k_sc = f"sc_{suffix}"
