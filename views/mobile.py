@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 from datetime import datetime
-import utils
+import poker_utils as utils
 
 def show():
     st.markdown("""
