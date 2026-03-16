@@ -169,7 +169,6 @@ def show():
     c1 = "suit-red" if s1 == '♥' else "suit-blue" if s1 == '♦' else "suit-green" if s1 == '♣' else "suit-black"
     c2 = "suit-red" if s2 == '♥' else "suit-blue" if s2 == '♦' else "suit-green" if s2 == '♣' else "suit-black"
 
-    # --- HEADER & GAMIFICATION ---
     stats_data = utils.load_user_stats()
     rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
     c = st.session_state.combo
@@ -182,7 +181,6 @@ def show():
     wr = int((scorr / sh * 100)) if sh > 0 else 0
     wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
 
-    # MASTERY FETCH
     try:
         mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(st.session_state.current_spot_key, {}))
     except Exception as e:
@@ -255,7 +253,6 @@ def show():
 
         for i in range(1, 6):
             p = rot[i]
-            
             has_cards = (p in cards_in_play)
             cls = "seat-active" if has_cards else "seat-folded"
             cards = '<div class="opp-cards"></div>' if has_cards else ""
@@ -290,7 +287,6 @@ def show():
             hero_bs = get_btn_style(0)
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
-        # ЖЕСТКАЯ ПЛОСКАЯ ВЕРСТКА С ДВУМЯ СИММЕТРИЧНЫМИ ГЕРБАМИ ПО БОКАМ
         html = f'<div class="game-area {combo_cls}"><div class="crest-left">{m_svg}</div><div class="crest-right">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-panel"><div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{rng}</div></div></div>'
         
         st.markdown(html, unsafe_allow_html=True)
@@ -327,7 +323,14 @@ def show():
                 if alerts: st.session_state.toast_msgs.extend(alerts)
             except Exception: pass
                 
-            utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
+            utils.save_to_history({
+                "Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+                "Spot": sp, 
+                "Hand": f"{h_val}", 
+                "Result": int(corr), 
+                "CorrectAction": correct_act,
+                "UserAction": action
+            })
             st.session_state.srs_mode = True
             st.rerun()
 
