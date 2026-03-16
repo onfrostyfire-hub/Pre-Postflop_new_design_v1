@@ -96,7 +96,60 @@ def generate_dailies():
         {"id": "combo", "desc": "Комбо x15", "target": 15, "progress": 0, "done": False, "xp": 1000}
     ]
 
-def process_gamification(is_correct, combo, session_total_hands):
+def get_spot_mastery_info(spot_data_dict):
+    total = spot_data_dict.get("t", 0)
+    hist = spot_data_dict.get("h", "")
+    last_date_str = spot_data_dict.get("d", "")
+
+    days_missed = 0
+    if last_date_str:
+        try:
+            last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
+            days_missed = (datetime.now().date() - last_date).days
+        except: pass
+
+    is_rusty = days_missed >= 14
+
+    def calc_wr(window):
+        if not hist: return 0.0
+        rel_hist = hist[-window:]
+        return (rel_hist.count('1') / len(rel_hist)) * 100
+
+    rank = 0
+    prog_val = total
+    
+    if total >= 5000 and calc_wr(500) >= 95: rank = 5
+    elif total >= 3000 and calc_wr(300) >= 92: rank = 4
+    elif total >= 1500 and calc_wr(200) >= 88: rank = 3
+    elif total >= 500 and calc_wr(150) >= 82: rank = 2
+    elif total >= 100 and calc_wr(100) >= 75: rank = 1
+    else: rank = 0
+
+    # Штраф за простой (>30 дней)
+    penalty = 0
+    if days_missed >= 30:
+        penalty = (days_missed - 16) // 14
+        rank = max(0, rank - penalty)
+
+    ranks_info = [
+        {"n": "Sandbox", "i": "⚪", "c": "transparent", "nt": 100},
+        {"n": "Basic", "i": "🟢", "c": "#28a745", "nt": 500},
+        {"n": "Solid", "i": "🔵", "c": "#0dcaf0", "nt": 1500},
+        {"n": "Unexploitable", "i": "🟣", "c": "#6f42c1", "nt": 3000},
+        {"n": "Elite", "i": "🔴", "c": "#dc3545", "nt": 5000},
+        {"n": "Solver", "i": "☢️", "c": "#ffc107", "nt": 5000},
+    ]
+    info = ranks_info[rank]
+
+    prog_pct = int((prog_val / info["nt"]) * 100) if info["nt"] > 0 else 100
+    if prog_pct > 100: prog_pct = 100
+
+    return {
+        "rank": rank, "name": info["n"], "icon": info["i"], "color": info["c"],
+        "is_rusty": is_rusty, "prog_pct": prog_pct, "total": total, "next": info["nt"]
+    }
+
+def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
     stats = load_user_stats()
     now_date = datetime.now().date()
     now_date_str = now_date.strftime("%Y-%m-%d")
@@ -131,98 +184,19 @@ def process_gamification(is_correct, combo, session_total_hands):
                 stats["xp"] += q["xp"]
                 alerts.append(f"🎯 Дейлик: {q['desc']} (+{q['xp']} XP)")
 
+    if spot_key:
+        if "spot_mastery" not in stats: stats["spot_mastery"] = {}
+        s_data = stats["spot_mastery"].get(spot_key, {"h": "", "t": 0, "d": ""})
+        
+        s_data["t"] += 1
+        s_data["d"] = now_date_str
+        s_data["h"] += "1" if is_correct else "0"
+        
+        if len(s_data["h"]) > 500: s_data["h"] = s_data["h"][-500:]
+        stats["spot_mastery"][spot_key] = s_data
+
     save_user_stats(stats)
     return alerts
-
-def update_spot_mastery(spot_key, is_correct):
-    stats = load_user_stats()
-    if "spot_mastery" not in stats: stats["spot_mastery"] = {}
-    
-    sm = stats["spot_mastery"].get(spot_key, {})
-    total = sm.get("total", 0)
-    hist = sm.get("hist", "")
-    
-    total += 1
-    hist += "1" if is_correct else "0"
-    if len(hist) > 100: hist = hist[-100:]
-    last = datetime.now().strftime("%Y-%m-%d")
-    
-    stats["spot_mastery"][spot_key] = {"total": total, "hist": hist, "last": last}
-    save_user_stats(stats)
-
-def get_spot_mastery_info(spot_key):
-    stats = load_user_stats()
-    sm = stats.get("spot_mastery", {}).get(spot_key, {})
-    total = sm.get("total", 0)
-    hist = sm.get("hist", "")
-    last = sm.get("last", "")
-
-    form = hist.count("1") / len(hist) * 100 if hist else 0.0
-
-    days_since = 0
-    if last:
-        try: days_since = (datetime.now().date() - datetime.strptime(last, "%Y-%m-%d").date()).days
-        except: pass
-
-    is_rusty = days_since > 7
-
-    tiers = [
-        (0, 0, "Sandbox", "⚪", "transparent"),
-        (100, 75, "Basic", "🟢", "#28a745"),
-        (500, 82, "Solid", "🔵", "#0dcaf0"),
-        (1500, 88, "Unexploitable", "🟣", "#6f42c1"),
-        (3000, 92, "Elite", "🔴", "#dc3545"),
-        (5000, 95, "Solver", "☢️", "#ffc107")
-    ]
-
-    current_idx = 0
-    for i in range(len(tiers) - 1, -1, -1):
-        if total >= tiers[i][0] and form >= tiers[i][1]:
-            current_idx = i
-            break
-
-    if days_since > 14 and current_idx > 0:
-        current_idx -= 1
-
-    tier_name = tiers[current_idx][2]
-    icon = tiers[current_idx][3]
-    color = tiers[current_idx][4]
-    
-    if current_idx < len(tiers) - 1:
-        next_total = tiers[current_idx + 1][0]
-        next_form = tiers[current_idx + 1][1]
-        progress = min(100, int((total / next_total) * 100)) if next_total else 100
-        if total >= next_total and form < next_form:
-            progress = 99
-    else:
-        progress = 100
-
-    return {
-        "tier_name": tier_name, "icon": icon, "color": color, 
-        "total": total, "form": int(form), 
-        "rusty": is_rusty, "progress": progress
-    }
-
-def get_mastery_svg(tier_name):
-    base = "position:absolute; width:120px; height:120px; top:50%; transform:translateY(-50%); opacity:0.08; color:rgba(255,255,255,1); pointer-events:none; z-index:1;"
-    svg_l = f'<svg style="{base} left:10%;" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
-    svg_r = f'<svg style="{base} right:10%;" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
-    
-    spade = '<path d="M50 25 C50 25 35 45 35 60 C35 70 45 75 50 65 L46 80 L54 80 L50 65 C55 75 65 70 65 60 C65 45 50 25 50 25 Z" fill="currentColor"/>'
-    shield = '<path d="M25 20 L75 20 L75 55 C75 75 50 90 50 90 C50 90 25 75 25 55 Z" fill="none" stroke="currentColor" stroke-width="4"/>'
-    swords = '<path d="M20 80 L80 20 M20 20 L80 80" stroke="currentColor" stroke-width="3"/><circle cx="20" cy="80" r="3" fill="currentColor"/><circle cx="80" cy="80" r="3" fill="currentColor"/><circle cx="20" cy="20" r="3" fill="currentColor"/><circle cx="80" cy="20" r="3" fill="currentColor"/>'
-    crown = '<path d="M35 15 L40 5 L50 15 L60 5 L65 15 L65 20 L35 20 Z" fill="currentColor"/>'
-    laurels = '<path d="M20 90 C0 60 10 20 25 10 M80 90 C100 60 90 20 75 10" fill="none" stroke="currentColor" stroke-width="3"/>'
-
-    content = ""
-    if tier_name == "Sandbox": return "", ""
-    elif tier_name == "Basic": content = spade
-    elif tier_name == "Solid": content = shield + spade
-    elif tier_name == "Unexploitable": content = swords + shield + spade
-    elif tier_name == "Elite": content = swords + shield + spade + crown
-    elif tier_name == "Solver": content = laurels + swords + shield + spade + crown
-
-    return svg_l + content + '</svg>', svg_r + content + '</svg>'
 
 # --- SAVE & SYNC ---
 def load_srs_data():
