@@ -206,7 +206,6 @@ def show():
     wr = int((scorr / sh * 100)) if sh > 0 else 0
     wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
 
-    # MASTERY FETCH
     try:
         mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(st.session_state.current_spot_key, {}))
     except Exception as e:
@@ -305,7 +304,6 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    # ЖЕСТКАЯ ПЛОСКАЯ ВЕРСТКА С ДВУМЯ СИММЕТРИЧНЫМИ ГЕРБАМИ ПО БОКАМ
     html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
@@ -323,7 +321,6 @@ def show():
             st.session_state.combo += 1
             st.session_state.msg = f"✅ Верно!"
             
-            # НОВЫЕ ТЕКСТЫ ДЛЯ СТРИКОВ
             if st.session_state.combo in [10, 25, 50, 100, 200, 500, 1000]:
                 msgs = {
                     10: "Комбо x10! Разогрев.",
@@ -344,11 +341,17 @@ def show():
             if alerts: st.session_state.toast_msgs.extend(alerts)
         except Exception: pass
             
-        utils.save_to_history({"Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), "CorrectAction": correct_act})
+        utils.save_to_history({
+            "Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+            "Spot": sp, 
+            "Hand": f"{h_val}", 
+            "Result": int(corr), 
+            "CorrectAction": correct_act,
+            "UserAction": action
+        })
         st.session_state.srs_mode = True
         st.rerun()
 
-    # БЛОК РЕНДЕРИНГА КНОПОК В СТОПКУ С ЦВЕТАМИ
     if not st.session_state.srs_mode:
         if is_defense:
             st.markdown("""<style>
