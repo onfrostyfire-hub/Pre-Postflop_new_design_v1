@@ -209,7 +209,6 @@ def show():
         </div>
     </div>
     """
-    st.markdown(header_html, unsafe_allow_html=True)
     
     combo_cls = ""
     if c >= 1000: combo_cls = "combo-glow-1000"
@@ -224,6 +223,8 @@ def show():
     col_center, col_right = st.columns([2, 1])
     
     with col_center:
+        st.markdown(header_html, unsafe_allow_html=True)
+        
         order = ["EP", "MP", "CO", "BTN", "SB", "BB"]
         try: hero_idx = order.index(hero_pos)
         except ValueError: hero_idx = 0
