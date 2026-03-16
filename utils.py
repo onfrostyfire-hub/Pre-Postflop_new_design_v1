@@ -56,7 +56,7 @@ def init_cloud_data():
         st.session_state["settings_changed"] = False
         st.session_state["app_initialized"] = True
 
-# --- GAMIFICATION & MASTERY CORE ---
+# --- GAMIFICATION CORE ---
 def load_user_stats():
     init_cloud_data()
     sets = st.session_state.get("user_settings", {})
@@ -167,12 +167,12 @@ def get_spot_mastery_info(spot_key):
     is_rusty = days_since > 7
 
     tiers = [
-        (0, 0, "Sandbox"),
-        (100, 75, "Basic"),
-        (500, 82, "Solid"),
-        (1500, 88, "Unexploitable"),
-        (3000, 92, "Elite"),
-        (5000, 95, "Solver")
+        (0, 0, "Sandbox", "⚪", "transparent"),
+        (100, 75, "Basic", "🟢", "#28a745"),
+        (500, 82, "Solid", "🔵", "#0dcaf0"),
+        (1500, 88, "Unexploitable", "🟣", "#6f42c1"),
+        (3000, 92, "Elite", "🔴", "#dc3545"),
+        (5000, 95, "Solver", "☢️", "#ffc107")
     ]
 
     current_idx = 0
@@ -185,6 +185,8 @@ def get_spot_mastery_info(spot_key):
         current_idx -= 1
 
     tier_name = tiers[current_idx][2]
+    icon = tiers[current_idx][3]
+    color = tiers[current_idx][4]
     
     if current_idx < len(tiers) - 1:
         next_total = tiers[current_idx + 1][0]
@@ -196,7 +198,8 @@ def get_spot_mastery_info(spot_key):
         progress = 100
 
     return {
-        "tier_name": tier_name, "total": total, "form": int(form), 
+        "tier_name": tier_name, "icon": icon, "color": color, 
+        "total": total, "form": int(form), 
         "rusty": is_rusty, "progress": progress
     }
 
