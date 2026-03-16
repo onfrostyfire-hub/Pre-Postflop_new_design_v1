@@ -253,7 +253,14 @@ def save_user_settings(settings):
 
 def save_to_history(record):
     init_cloud_data()
-    row = [str(record.get("Date", "")), str(record.get("Spot", "")), str(record.get("Hand", "")), str(record.get("Result", "")), str(record.get("CorrectAction", ""))]
+    row = [
+        str(record.get("Date", "")), 
+        str(record.get("Spot", "")), 
+        str(record.get("Hand", "")), 
+        str(record.get("Result", "")), 
+        str(record.get("CorrectAction", "")),
+        str(record.get("UserAction", ""))
+    ]
     st.session_state["history_buffer"].append(row)
     st.session_state["unsaved_count"] += 1
     check_auto_sync()
@@ -282,25 +289,33 @@ def force_sync():
 def load_history():
     try:
         vals = get_worksheets()["History"].get_all_values()
-        if not vals or len(vals) < 2: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction"])
-        return pd.DataFrame(vals[1:], columns=vals[0])
-    except: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction"])
+        if not vals or len(vals) < 2: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
+        
+        headers = vals[0]
+        if "UserAction" not in headers:
+            headers.append("UserAction")
+            for r in vals[1:]: r.append("UNKNOWN")
+            
+        df = pd.DataFrame(vals[1:], columns=headers)
+        return df
+    except: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
 
 def delete_history(days=None):
     try:
         sheets = get_worksheets()
+        headers = ["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"]
         if days is None:
             sheets["History"].clear()
-            sheets["History"].append_row(["Date", "Spot", "Hand", "Result", "CorrectAction"])
+            sheets["History"].append_row(headers)
         else:
             df = load_history()
             if df.empty: return
-            df["Date"] = pd.to_datetime(df["Date"])
+            df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
             now = datetime.now()
             cutoff = now - timedelta(days=days)
             df_new = df[df["Date"] >= cutoff] 
             sheets["History"].clear()
-            rows = [["Date", "Spot", "Hand", "Result", "CorrectAction"]] + df_new.astype(str).values.tolist()
+            rows = [headers] + df_new.astype(str).values.tolist()
             sheets["History"].update(values=rows, range_name="A1")
         load_history.clear()
         if "history_buffer" in st.session_state: st.session_state["history_buffer"] = []
@@ -448,7 +463,7 @@ def render_leak_matrix(leaks_dict):
                 
                 intensity = 0.4 + 0.6 * (err / max_errors)
                 bg = f"rgba(220, 53, 69, {intensity})"
-                title = f"{h} | Ошибок: {err}/{tot} | GTO действие: {act}"
+                title = f"{h} | Ошибок: {err}/{tot} | Основной лик: {act}"
                 
                 border = "1px solid rgba(255,255,255,0.2)"
                 style += f"background:{bg}; {border}; font-weight:bold;"
