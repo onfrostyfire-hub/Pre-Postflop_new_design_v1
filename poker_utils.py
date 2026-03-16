@@ -108,45 +108,54 @@ def get_spot_mastery_info(spot_data_dict):
             days_missed = (datetime.now().date() - last_date).days
         except: pass
 
-    is_rusty = days_missed >= 14
+    is_rusty = days_missed > 7
+    penalty = 1 if days_missed > 14 else 0
 
-    def calc_wr(window):
-        if not hist: return 0.0
-        rel_hist = hist[-window:]
-        return (rel_hist.count('1') / len(rel_hist)) * 100
+    wr_100 = (hist.count('1') / len(hist) * 100) if hist else 0.0
 
     rank = 0
-    prog_val = total
-    
-    if total >= 5000 and calc_wr(500) >= 95: rank = 5
-    elif total >= 3000 and calc_wr(300) >= 92: rank = 4
-    elif total >= 1500 and calc_wr(200) >= 88: rank = 3
-    elif total >= 500 and calc_wr(150) >= 82: rank = 2
-    elif total >= 100 and calc_wr(100) >= 75: rank = 1
-    else: rank = 0
+    if total >= 5000 and wr_100 >= 95: rank = 5
+    elif total >= 3000 and wr_100 >= 92: rank = 4
+    elif total >= 1500 and wr_100 >= 88: rank = 3
+    elif total >= 500 and wr_100 >= 82: rank = 2
+    elif total >= 100 and wr_100 >= 75: rank = 1
 
-    # Штраф за простой (>30 дней)
-    penalty = 0
-    if days_missed >= 30:
-        penalty = (days_missed - 16) // 14
-        rank = max(0, rank - penalty)
+    rank = max(0, rank - penalty)
+
+    svg_basic = '<svg viewBox="0 0 100 100" style="width:200px;height:200px;opacity:0.15;fill:#28a745;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;"><path d="M50 15 C50 15, 20 40, 20 60 A15 15 0 0 0 50 80 A15 15 0 0 0 80 60 C80 40, 50 15, 50 15 Z"/></svg>'
+    svg_solid = '<svg viewBox="0 0 100 100" style="width:200px;height:200px;opacity:0.15;fill:#0dcaf0;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;"><path d="M20 20 L80 20 L80 50 C80 75, 50 90, 50 90 C50 90, 20 75, 20 50 Z" stroke="#0dcaf0" stroke-width="5" fill="none"/><path d="M50 35 C50 35, 35 50, 35 65 A8 8 0 0 0 50 75 A8 8 0 0 0 65 65 C65 50, 50 35, 50 35 Z"/></svg>'
+    svg_unexp = '<svg viewBox="0 0 100 100" style="width:200px;height:200px;opacity:0.15;fill:#6f42c1;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;"><path d="M10 10 L90 90 M90 10 L10 90" stroke="#6f42c1" stroke-width="8"/><path d="M20 20 L80 20 L80 50 C80 75, 50 90, 50 90 C50 90, 20 75, 20 50 Z" stroke="#6f42c1" stroke-width="5" fill="#111"/><path d="M50 35 C50 35, 35 50, 35 65 A8 8 0 0 0 50 75 A8 8 0 0 0 65 65 C65 50, 50 35, 50 35 Z"/></svg>'
+    svg_elite = '<svg viewBox="0 0 100 100" style="width:200px;height:200px;opacity:0.15;fill:#dc3545;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;"><path d="M30 10 L40 20 L50 5 L60 20 L70 10 L65 25 L35 25 Z" fill="#dc3545"/><path d="M10 20 L90 90 M90 20 L10 90" stroke="#dc3545" stroke-width="8"/><path d="M20 30 L80 30 L80 55 C80 80, 50 95, 50 95 C50 95, 20 80, 20 55 Z" stroke="#dc3545" stroke-width="5" fill="#111"/><path d="M50 45 C50 45, 35 60, 35 75 A8 8 0 0 0 50 85 A8 8 0 0 0 65 75 C65 60, 50 45, 50 45 Z"/></svg>'
+    svg_solver = '<svg viewBox="0 0 100 100" style="width:200px;height:200px;opacity:0.15;fill:#ffc107;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;"><path d="M10 50 Q 10 20 40 10 Q 10 30 15 60 Z M90 50 Q 90 20 60 10 Q 90 30 85 60 Z" fill="#ffc107"/><path d="M30 5 L40 15 L50 0 L60 15 L70 5 L65 20 L35 20 Z" fill="#ffc107"/><path d="M5 20 L95 90 M95 20 L5 90" stroke="#ffc107" stroke-width="8"/><path d="M20 25 L80 25 L80 55 C80 80, 50 95, 50 95 C50 95, 20 80, 20 55 Z" stroke="#ffc107" stroke-width="6" fill="#111"/><path d="M50 40 C50 40, 35 55, 35 70 A8 8 0 0 0 50 80 A8 8 0 0 0 65 70 C65 55, 50 40, 50 40 Z"/></svg>'
 
     ranks_info = [
-        {"n": "Sandbox", "i": "⚪", "c": "transparent", "nt": 100},
-        {"n": "Basic", "i": "🟢", "c": "#28a745", "nt": 500},
-        {"n": "Solid", "i": "🔵", "c": "#0dcaf0", "nt": 1500},
-        {"n": "Unexploitable", "i": "🟣", "c": "#6f42c1", "nt": 3000},
-        {"n": "Elite", "i": "🔴", "c": "#dc3545", "nt": 5000},
-        {"n": "Solver", "i": "☢️", "c": "#ffc107", "nt": 5000},
+        {"n": "Sandbox", "i": "⚪", "c": "transparent", "nt": 100, "req_wr": 75, "svg": ""},
+        {"n": "Basic", "i": "🟢", "c": "#28a745", "nt": 500, "req_wr": 82, "svg": svg_basic},
+        {"n": "Solid", "i": "🔵", "c": "#0dcaf0", "nt": 1500, "req_wr": 88, "svg": svg_solid},
+        {"n": "Unexploitable", "i": "🟣", "c": "#6f42c1", "nt": 3000, "req_wr": 92, "svg": svg_unexp},
+        {"n": "Elite", "i": "🔴", "c": "#dc3545", "nt": 5000, "req_wr": 95, "svg": svg_elite},
+        {"n": "Solver", "i": "☢️", "c": "#ffc107", "nt": 5000, "req_wr": 100, "svg": svg_solver},
     ]
     info = ranks_info[rank]
+    next_info = ranks_info[rank+1] if rank < 5 else ranks_info[5]
 
-    prog_pct = int((prog_val / info["nt"]) * 100) if info["nt"] > 0 else 100
-    if prog_pct > 100: prog_pct = 100
+    if rank == 5:
+        prog_pct = 100
+    else:
+        prog_pct = int((total / next_info["nt"]) * 100)
+        if prog_pct >= 100:
+            if wr_100 < next_info["req_wr"]:
+                prog_pct = 99
+            else:
+                prog_pct = 100
+        if prog_pct > 100: prog_pct = 100
+
+    if is_rusty:
+        info["n"] += " (Ржавчина)"
 
     return {
         "rank": rank, "name": info["n"], "icon": info["i"], "color": info["c"],
-        "is_rusty": is_rusty, "prog_pct": prog_pct, "total": total, "next": info["nt"]
+        "is_rusty": is_rusty, "prog_pct": prog_pct, "total": total, "next": info["nt"], "svg": info["svg"]
     }
 
 def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
@@ -192,7 +201,7 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
         s_data["d"] = now_date_str
         s_data["h"] += "1" if is_correct else "0"
         
-        if len(s_data["h"]) > 500: s_data["h"] = s_data["h"][-500:]
+        if len(s_data["h"]) > 100: s_data["h"] = s_data["h"][-100:]
         stats["spot_mastery"][spot_key] = s_data
 
     save_user_stats(stats)
