@@ -11,9 +11,9 @@ def show():
         .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto; background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%); border: 15px solid #4a1c1c; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: box-shadow 0.3s, border-color 0.3s; }
         
         .mastery-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; z-index: 1; transition: box-shadow 0.5s ease; }
-        .mastery-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); }
+        .mastery-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); z-index: 30; }
         .rusty-True { filter: grayscale(100%) opacity(0.6); }
-        .mastery-bar-bg { width: 100px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
+        .mastery-bar-bg { width: 100px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); z-index: 30; }
         .mastery-bar-fill { height: 100%; transition: width 0.3s; }
         
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
@@ -33,7 +33,8 @@ def show():
         @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
         
         .table-info { position: absolute; top: 18%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
-        .info-spot { font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); }
+        .info-spot { font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); z-index: 30; position: relative;}
+        .info-src { z-index: 30; position: relative; }
         .seat { position: absolute; width: 65px; height: 65px; background: #343a40; border: 2px solid #495057; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
         .seat-label { font-size: 11px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 4px; }
         .seat-active { border-color: #ffc107; background: #343a40; }
@@ -182,9 +183,14 @@ def show():
     try:
         mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(st.session_state.current_spot_key, {}))
     except Exception:
-        mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "transparent", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100}
+        mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "transparent", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100, "svg": ""}
         
     m_color = mastery['color'] if mastery['color'] != 'transparent' else '#6c757d'
+    m_svg = mastery.get("svg", "")
+    m_rust = mastery.get("is_rusty", False)
+    m_icon = mastery.get("icon", "")
+    m_name = mastery.get("name", "")
+    m_pct = mastery.get("prog_pct", 0)
 
     header_html = f"""
     <div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;">
@@ -246,7 +252,6 @@ def show():
 
         for i in range(1, 6):
             p = rot[i]
-            
             has_cards = (p in cards_in_play)
             cls = "seat-active" if has_cards else "seat-folded"
             cards = '<div class="opp-cards"></div>' if has_cards else ""
@@ -281,28 +286,9 @@ def show():
             hero_bs = get_btn_style(0)
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
-        html = f"""
-        <div class="game-area {combo_cls}">
-            <div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery['color']};"></div>
-            <div class="table-info">
-                <div class="info-src">{sc}</div>
-                <div class="info-spot">{sp}</div>
-                <div class="mastery-badge rusty-{mastery['is_rusty']}" style="color: {m_color}">
-                    {mastery['icon']} {mastery['name']}
-                </div>
-                <div class="mastery-bar-bg">
-                    <div class="mastery-bar-fill" style="width: {mastery['prog_pct']}%; background: {m_color};"></div>
-                </div>
-            </div>
-            {opp_html} {chips_html}
-            <div class="hero-panel">
-                <div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div>
-                <div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div>
-                <div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div>
-                <div class="rng-desktop">{rng}</div>
-            </div>
-        </div>
-        """
+        # ЖЕСТКАЯ ПЛОСКАЯ ВЕРСТКА
+        html = f'<div class="game-area {combo_cls}">{m_svg}<div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-panel"><div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{rng}</div></div></div>'
+        
         st.markdown(html, unsafe_allow_html=True)
         if is_defense: st.markdown('<div class="rng-hint-box">📉 0..Freq → Action | 📈 Freq..100 → Fold</div>', unsafe_allow_html=True)
         else: st.markdown("<div style='height:30px;'></div>", unsafe_allow_html=True)
@@ -341,7 +327,6 @@ def show():
             st.session_state.srs_mode = True
             st.rerun()
 
-        # БЛОК РЕНДЕРИНГА КНОПОК ЧЕРЕЗ CSS
         if not st.session_state.srs_mode:
             if is_defense:
                 st.markdown("""<style>
