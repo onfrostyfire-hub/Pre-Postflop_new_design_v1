@@ -4,17 +4,54 @@ from datetime import datetime
 import poker_utils as utils
 
 def show():
+    # ЖЕСТКАЯ БЛОКИРОВКА СТАНДАРТНОЙ ВЕРСТКИ STREAMLIT ДЛЯ КНОПОК
     st.markdown("""
-    <style>
+        <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
-        /* Отодвигаем контент от челки Айфона и режем боковой скролл */
-        .block-container { padding-top: 4rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
+        .block-container { padding-top: 4rem !important; padding-bottom: 1rem !important; max-width: 100% !important; }
+        
+        /* УБИВАЕМ СТАНДАРТНУЮ СЕТКУ STREAMLIT ДЛЯ КОЛОНОК И СТАВИМ CSS GRID */
+        div[data-testid="stHorizontalBlock"] {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(10px, 1fr)) !important;
+            gap: 8px !important;
+            width: 100% !important;
+        }
+        div[data-testid="column"] {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            margin-bottom: 0 !important;
+        }
+        div[data-testid="stButton"] {
+            width: 100% !important;
+        }
+        div[data-testid="stButton"] button {
+            width: 100% !important;
+            height: 55px !important;
+            padding: 0 !important;
+            border-radius: 12px !important;
+            border: none !important;
+            transition: transform 0.1s !important;
+        }
+        div[data-testid="stButton"] button:active {
+            transform: translateY(4px) !important;
+            box-shadow: 0 1px 0 transparent !important;
+        }
+        div[data-testid="stButton"] button p {
+            font-family: 'Roboto', sans-serif !important;
+            font-size: 15px !important;
+            font-weight: 900 !important;
+            margin: 0 !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+        }
 
         /* Игровой стол */
         .mobile-game-area { 
             position: relative; width: 100%; height: 250px; 
-            margin: 0 auto 10px auto; 
+            margin: 0 auto 15px auto; 
             background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); 
             border: 6px solid #3e2723; border-radius: 125px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
@@ -67,7 +104,7 @@ def show():
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         
         .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 12px; letter-spacing: 0.5px; }
-    </style>
+        </style>
     """, unsafe_allow_html=True)
 
     ranges_db = utils.load_ranges()
@@ -331,76 +368,42 @@ def show():
         st.session_state.srs_mode = True
         st.rerun()
 
-    # ЖЕСТКАЯ БЛОКИРОВКА СТАНДАРТНОЙ ВЕРСТКИ STREAMLIT ДЛЯ КНОПОК
-    st.markdown("""
-        <style>
-        div[data-testid="stHorizontalBlock"] {
-            flex-wrap: nowrap !important;
-            gap: 8px !important;
-        }
-        div[data-testid="column"] {
-            min-width: 0 !important; 
-            flex: 1 1 0% !important; 
-            width: auto !important;
-        }
-        div[data-testid="stButton"] button {
-            width: 100% !important;
-            height: 55px !important;
-            padding: 0 !important;
-            border-radius: 12px !important;
-            border: none !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4) !important;
-            transition: transform 0.1s !important;
-        }
-        div[data-testid="stButton"] button:active {
-            transform: translateY(2px) !important;
-        }
-        div[data-testid="stButton"] button p {
-            font-size: 15px !important;
-            font-weight: 900 !important;
-            margin: 0 !important;
-            letter-spacing: 0.5px !important;
-            text-transform: uppercase !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
     if not st.session_state.srs_mode:
         if is_defense:
             st.markdown("""<style>
-                div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button { background: linear-gradient(180deg, #495057, #343a40) !important; }
+                div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button { background: linear-gradient(180deg, #495057, #343a40) !important; box-shadow: 0 5px 0 #1d2124 !important; }
                 div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button p { color: #adb5bd !important; }
-                div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button { background: linear-gradient(180deg, #20c997, #198754) !important; }
+                div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button { background: linear-gradient(180deg, #20c997, #198754) !important; box-shadow: 0 5px 0 #0f5132 !important; }
                 div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
-                div[data-testid="column"]:nth-of-type(3) div[data-testid="stButton"] button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; }
+                div[data-testid="column"]:nth-of-type(3) div[data-testid="stButton"] button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; box-shadow: 0 5px 0 #a02561 !important; }
                 div[data-testid="column"]:nth-of-type(3) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
             </style>""", unsafe_allow_html=True)
             c1, c2, c3 = st.columns(3)
             with c1:
-                if st.button("FOLD", key="f", use_container_width=True): handle_action("FOLD")
+                if st.button("FOLD", key="f"): handle_action("FOLD")
             with c2:
-                if st.button("CALL", key="c", use_container_width=True): handle_action("CALL")
+                if st.button("CALL", key="c"): handle_action("CALL")
             with c3:
-                if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
+                if st.button("RAISE", key="r"): handle_action("RAISE")
         else:
             st.markdown("""<style>
-                div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button { background: linear-gradient(180deg, #495057, #343a40) !important; }
+                div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button { background: linear-gradient(180deg, #495057, #343a40) !important; box-shadow: 0 5px 0 #1d2124 !important; }
                 div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button p { color: #adb5bd !important; }
-                div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; }
+                div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; box-shadow: 0 5px 0 #a02561 !important; }
                 div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
             </style>""", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
             with c1:
-                if st.button("FOLD", key="f", use_container_width=True): handle_action("FOLD")
+                if st.button("FOLD", key="f"): handle_action("FOLD")
             with c2:
-                if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
+                if st.button("RAISE", key="r"): handle_action("RAISE")
     else:
         st.markdown("""<style>
-            div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button { background: linear-gradient(180deg, #fd7e14, #e85d04) !important; }
+            div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button { background: linear-gradient(180deg, #fd7e14, #e85d04) !important; box-shadow: 0 5px 0 #a13d00 !important; }
             div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
-            div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button { background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; }
+            div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button { background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; box-shadow: 0 5px 0 #057085 !important; }
             div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
-            div[data-testid="column"]:nth-of-type(3) div[data-testid="stButton"] button { background: linear-gradient(180deg, #6f42c1, #59339d) !important; }
+            div[data-testid="column"]:nth-of-type(3) div[data-testid="stButton"] button { background: linear-gradient(180deg, #6f42c1, #59339d) !important; box-shadow: 0 5px 0 #3a1e6d !important; }
             div[data-testid="column"]:nth-of-type(3) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
         </style>""", unsafe_allow_html=True)
         
@@ -415,11 +418,11 @@ def show():
         s1, s2, s3 = st.columns(3)
         k = f"{src}_{sc}_{sp}".replace(" ","_")
         with s1:
-            if st.button("HARD", use_container_width=True): 
+            if st.button("HARD"): 
                 utils.update_srs_smart(k, st.session_state.hand, 'hard'); st.session_state.hand = None; st.rerun()
         with s2:
-            if st.button("NORM", use_container_width=True): 
+            if st.button("NORM"): 
                 utils.update_srs_smart(k, st.session_state.hand, 'normal'); st.session_state.hand = None; st.rerun()
         with s3:
-            if st.button("EASY", use_container_width=True): 
+            if st.button("EASY"): 
                 utils.update_srs_smart(k, st.session_state.hand, 'easy'); st.session_state.hand = None; st.rerun()
