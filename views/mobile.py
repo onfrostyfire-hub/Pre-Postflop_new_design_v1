@@ -48,6 +48,9 @@ def show():
         .mastery-bar-bg { width: 80px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); z-index: 30; }
         .mastery-bar-fill { height: 100%; transition: width 0.3s; }
         
+        .crest-left-mob { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 75px; height: 75px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
+        .crest-right-mob { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 75px; height: 75px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
+        
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-slow 2s infinite; }
@@ -302,8 +305,8 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    # ЖЕСТКАЯ ПЛОСКАЯ ВЕРСТКА С ГЕРБАМИ (МАСКИРОВАНА ОТ ПАРСЕРА STREAMLIT)
-    html = f'<div class="mobile-game-area {combo_cls}">{m_svg}<div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
+    # ЖЕСТКАЯ ПЛОСКАЯ ВЕРСТКА С ДВУМЯ СИММЕТРИЧНЫМИ ГЕРБАМИ ПО БОКАМ
+    html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
 
