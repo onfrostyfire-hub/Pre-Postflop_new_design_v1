@@ -9,7 +9,7 @@ def show():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
-        .block-container { padding-top: 4rem !important; padding-bottom: 1rem !important; max-width: 100% !important; }
+        .block-container { padding-top: 4rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
         
         /* УБИВАЕМ СТАНДАРТНУЮ СЕТКУ STREAMLIT ДЛЯ КОЛОНОК И СТАВИМ CSS GRID */
         div[data-testid="stHorizontalBlock"] {
@@ -46,6 +46,7 @@ def show():
             margin: 0 !important;
             letter-spacing: 0.5px !important;
             text-transform: uppercase !important;
+            color: #ffffff !important; /* ЖЕСТКО БЕЛЫЙ ТЕКСТ ДЛЯ ВСЕХ КНОПОК */
         }
 
         /* Игровой стол */
@@ -90,6 +91,10 @@ def show():
         .seat-label { font-size: 9px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 2px; }
         .seat-active { border-color: #ffc107; background: #2a2a2a; }
         .seat-folded { opacity: 0.4; border-color: #333; }
+        
+        /* КАРТЫ ОППОНЕНТОВ - ТЕПЕРЬ ОНИ БУДУТ ВИДНЫ */
+        .opp-cards-mob { position: absolute; top: -8px; width: 24px; height: 34px; background: #fff; border-radius: 3px; border: 1px solid #ccc; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); z-index: 20; box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+
         .chip-container { position: absolute; z-index: 10; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
         .chip-mob { width: 14px; height: 14px; background: #111; border: 2px dashed #d32f2f; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         .chip-3bet { width: 16px; height: 16px; background: #d32f2f; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
@@ -368,15 +373,13 @@ def show():
         st.session_state.srs_mode = True
         st.rerun()
 
+    # ДИНАМИЧЕСКИЙ CSS ДЛЯ ЦВЕТОВ КНОПОК ПО СЕТКЕ
     if not st.session_state.srs_mode:
         if is_defense:
             st.markdown("""<style>
-                div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button { background: linear-gradient(180deg, #495057, #343a40) !important; box-shadow: 0 5px 0 #1d2124 !important; }
-                div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button p { color: #adb5bd !important; }
-                div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button { background: linear-gradient(180deg, #20c997, #198754) !important; box-shadow: 0 5px 0 #0f5132 !important; }
-                div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
-                div[data-testid="column"]:nth-of-type(3) div[data-testid="stButton"] button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; box-shadow: 0 5px 0 #a02561 !important; }
-                div[data-testid="column"]:nth-of-type(3) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
+                div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) button { background: linear-gradient(180deg, #6c757d, #495057) !important; box-shadow: 0 4px 0 #343a40 !important; }
+                div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) button { background: linear-gradient(180deg, #20c997, #198754) !important; box-shadow: 0 4px 0 #0f5132 !important; }
+                div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) button { background: linear-gradient(180deg, #e83e8c, #dc3545) !important; box-shadow: 0 4px 0 #a02531 !important; }
             </style>""", unsafe_allow_html=True)
             c1, c2, c3 = st.columns(3)
             with c1:
@@ -387,10 +390,8 @@ def show():
                 if st.button("RAISE", key="r"): handle_action("RAISE")
         else:
             st.markdown("""<style>
-                div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button { background: linear-gradient(180deg, #495057, #343a40) !important; box-shadow: 0 5px 0 #1d2124 !important; }
-                div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button p { color: #adb5bd !important; }
-                div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; box-shadow: 0 5px 0 #a02561 !important; }
-                div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
+                div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) button { background: linear-gradient(180deg, #6c757d, #495057) !important; box-shadow: 0 4px 0 #343a40 !important; }
+                div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) button { background: linear-gradient(180deg, #e83e8c, #dc3545) !important; box-shadow: 0 4px 0 #a02531 !important; }
             </style>""", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
             with c1:
@@ -399,12 +400,9 @@ def show():
                 if st.button("RAISE", key="r"): handle_action("RAISE")
     else:
         st.markdown("""<style>
-            div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button { background: linear-gradient(180deg, #fd7e14, #e85d04) !important; box-shadow: 0 5px 0 #a13d00 !important; }
-            div[data-testid="column"]:nth-of-type(1) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
-            div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button { background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; box-shadow: 0 5px 0 #057085 !important; }
-            div[data-testid="column"]:nth-of-type(2) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
-            div[data-testid="column"]:nth-of-type(3) div[data-testid="stButton"] button { background: linear-gradient(180deg, #6f42c1, #59339d) !important; box-shadow: 0 5px 0 #3a1e6d !important; }
-            div[data-testid="column"]:nth-of-type(3) div[data-testid="stButton"] button p { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
+            div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) button { background: linear-gradient(180deg, #fd7e14, #e85d04) !important; box-shadow: 0 4px 0 #a13d00 !important; }
+            div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) button { background: linear-gradient(180deg, #0dcaf0, #0aa2c0) !important; box-shadow: 0 4px 0 #057085 !important; }
+            div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) button { background: linear-gradient(180deg, #6f42c1, #59339d) !important; box-shadow: 0 4px 0 #3a1e6d !important; }
         </style>""", unsafe_allow_html=True)
         
         if st.session_state.last_error:
