@@ -39,7 +39,7 @@
         "source": "ALL",
         "call": "77,66,55,44,33,22,AJo:0.5,ATo,A9,A8,A7s,A7o:0.75,A6s,A6o:0.75,A5o:0.75,A4o:0.75,A3s,A3o:0.75,A2s,A2o:0.75,KQo,KJo,KTs:0.5,KTo,K9,K8s,K8o:0.75,K7s,K7o:0.75,K6s,K6o:0.75,K5s,K4s,K3s,K2s,QJs:0.5,QJo,QT,Q9s,Q9o:0.75,Q8s,Q8o:0.75,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,JTs:0.5,JTo,J9s,J9o:0.75,J8s,J8o:0.75,J7s:0.5,J6s:0.5,J5s:0.5,J4s:0.5,J3s:0.5,J2s:0.5,T9s:0.5,T9o:0.75,T8s,T8o:0.75,T7s,T6s:0.5,T5s:0.5,T4s:0.5,T3s:0.5,T2s:0.5,98s:0.5,98o:0.75,97s,97o:0.25,96s,95s:0.5,94s:0.5,93s:0.5,87s:0.5,87o:0.75,86s,85s,84s:0.5,76s:0.5,76o,75s,74s,73s,65:0.5,64s,63s,62s:0.5,54:0.5,53s,52s,43s,42s,32s",
         "3bet": "AA,KK,QQ,JJ,TT,99,88,AK,AQ,AJs,AJo:0.5,ATs,A7o:0.25,A6o:0.25,A5s,A5o:0.25,A4s,A4o:0.25,A3o:0.25,A2o:0.25,KQs,KJs,KTs:0.5,K8o:0.25,K7o:0.25,K6o:0.25,K5o:0.25,QJs:0.5,Q9o:0.25,Q8o:0.25,JTs:0.5,J9o:0.25,J8o:0.25,J7s:0.5,J7o:0.25,J6s:0.5,J5s:0.5,J4s:0.5,J3s:0.5,J2s:0.5,T9s:0.5,T9o:0.25,T8o:0.25,T7o:0.25,T6s:0.5,T5s:0.5,T4s:0.5,T3s:0.5,T2s:0.5,98s:0.5,98o:0.25,97o:0.25,95s:0.5,94s:0.5,93s:0.5,87s:0.5,87o:0.25,84s:0.5,76s:0.5,65s:0.5,54s:0.5",
-        "training": "99,88,77,AQo,AJo,AT,A9s,A7o,A6o,A5,A4,A3,A2,KQo,KJo,KTs,K9,K8o,K7o,K6o,K5o,QJs,QTs,Q9,Q8o,JTs,J9,J8o,J6s,J5s,J4s,J3s,J2s,T9,T8,T7o,T6s,T5s,T4s,T3s,T2s,98,97o,87,76,65,54"
+        "training": "99,88,77,AQo,AJo,AT,A9s,A7o,A6o,A5,A4,A3,A2,KQo,KJo,KTs,K9,K8o,K7o,K6o,K5o,QJs,QTs,Q9,Q8o,Q7o,JTs,J9,J8,J7,J6s,J5s,J4s,J3s,J2s,T9,T8,T7,T6s,T5s,T4s,T3s,T2s,98,97o,96s,95s,94s,93s,92s,87,85s,84s,83s,82s,76,74s,73s,72s,65,62s,54,52s,42s,32s"
       }
     },
     "BBvsSB x3 nl100": {
