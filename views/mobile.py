@@ -140,7 +140,6 @@ def show():
                         sel_spots_keys.append(sp_key)
         
         if st.button("🚀 Применить", use_container_width=True):
-            # ИСПРАВЛЕНО: обновляем существующий словарь
             saved["scenarios"] = sel_sc
             saved["spots"] = sel_spots_keys
             utils.save_user_settings(saved)
@@ -241,23 +240,42 @@ def show():
     m_icon = mastery.get("icon", "")
     m_name = mastery.get("name", "")
     m_pct = mastery.get("prog_pct", 0)
+    m_total = mastery.get("total", 0)
+    m_next = mastery.get("next", 100)
+    m_rank = mastery.get("rank", 0)
+    
+    if m_rank == 5:
+        hands_left_text = "MAX RANK"
+    else:
+        h_left = max(0, m_next - m_total)
+        hands_left_text = f"Осталось: {h_left} рук"
 
+    # ДОБАВЛЕН БАР ПРОГРЕССА XP ВЕРХУШКИ ДЛЯ МОБИЛОК
     header_html = f"""
     <div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
         <div style="height: 3px; width: 100%; background: #222;">
             <div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else '#444'}; transition: width 0.3s;"></div>
         </div>
+        <div style="padding:6px 12px 0 12px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="flex:1;">
+                <div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div>
+                <div style="background:#333; height:4px; border-radius:2px; margin-top:3px; width:100%;">
+                    <div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div>
+                </div>
+            </div>
+            <div style="font-size:10px; color:#aaa; margin-left:10px; font-weight:bold;">{stats_data['xp']} / {next_xp} XP</div>
+        </div>
         <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px;">
             <div style="flex:1;">
-                <div style="font-size:12px; font-weight:bold; color:#aaa;">Винрейт</div>
-                <div style="font-size:14px; font-weight:bold; color:{wr_color};">{wr}%</div>
+                <div style="font-size:11px; font-weight:bold; color:#aaa;">Винрейт</div>
+                <div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}%</div>
             </div>
             <div style="flex:1; text-align:center; font-size:18px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">
                 🔥 x{c}
             </div>
             <div style="flex:1; text-align:right;">
-                <div style="font-size:12px; font-weight:bold; color:#aaa;">Раздачи</div>
-                <div style="font-size:14px; font-weight:bold; color:#fff;">{sh}</div>
+                <div style="font-size:11px; font-weight:bold; color:#aaa;">Раздачи</div>
+                <div style="font-size:13px; font-weight:bold; color:#fff;">{sh}</div>
             </div>
         </div>
     </div>
@@ -328,7 +346,8 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
+    # ДОБАВЛЕН СЧЕТЧИК ОСТАВШИХСЯ РУК ДЛЯ SPOT MASTERY
+    html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div style="font-size:8px; color:#aaa; margin-top:2px; text-transform:uppercase; font-weight:bold;">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
 
@@ -376,7 +395,6 @@ def show():
         st.session_state.srs_mode = True
         st.rerun()
 
-    # ДИНАМИЧЕСКИЙ CSS ДЛЯ ЦВЕТОВ КНОПОК ПО СЕТКЕ
     if not st.session_state.srs_mode:
         if is_defense:
             st.markdown("""<style>
