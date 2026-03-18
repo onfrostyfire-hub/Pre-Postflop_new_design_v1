@@ -28,27 +28,37 @@ def show():
             df_hist = df.copy().sort_values("Date")
             new_mastery = {}
             
+            # Создаем маппинг коротких имен спотов в полные ключи для Тренажера
+            ranges_db = utils.load_ranges()
+            sp_to_full_key = {}
+            for src, sc_dict in ranges_db.items():
+                for sc, sp_dict in sc_dict.items():
+                    for sp in sp_dict.keys():
+                        sp_to_full_key[sp] = f"{src}|{sc}|{sp}"
+            
             for _, row in df_hist.iterrows():
-                spot = str(row["Spot"])
+                short_spot = str(row["Spot"])
                 res = str(row["Result"])
                 date_str = row["Date"].strftime("%Y-%m-%d")
                 
-                if spot not in new_mastery:
-                    new_mastery[spot] = {"t": 0, "h": "", "d": ""}
+                full_key = sp_to_full_key.get(short_spot, short_spot)
                 
-                new_mastery[spot]["t"] += 1
-                new_mastery[spot]["d"] = date_str
-                new_mastery[spot]["h"] += res
+                if full_key not in new_mastery:
+                    new_mastery[full_key] = {"t": 0, "h": "", "d": ""}
                 
-                if len(new_mastery[spot]["h"]) > 100:
-                    new_mastery[spot]["h"] = new_mastery[spot]["h"][-100:]
+                new_mastery[full_key]["t"] += 1
+                new_mastery[full_key]["d"] = date_str
+                new_mastery[full_key]["h"] += res
+                
+                if len(new_mastery[full_key]["h"]) > 100:
+                    new_mastery[full_key]["h"] = new_mastery[full_key]["h"][-100:]
                     
             stats = utils.load_user_stats()
             stats["spot_mastery"] = new_mastery
             stats["total_hands"] = len(df_hist)
             utils.save_user_stats(stats)
             utils.force_sync()
-            st.success("✅ Данные Spot Mastery успешно восстановлены из логов! Обнови страницу.")
+            st.success("✅ Данные Spot Mastery успешно восстановлены из логов! Обнови страницу (F5).")
 
     with st.expander("🔍 Фильтры", expanded=True):
         c1, c2, c3 = st.columns(3)
