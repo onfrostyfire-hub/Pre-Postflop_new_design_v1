@@ -23,10 +23,12 @@ def show():
     # --- БЛОК РЕАНИМАЦИИ ДАННЫХ ---
     st.markdown("### 🚑 Реанимация данных")
     with st.expander("Восстановить слетевшие ранги из Истории", expanded=False):
-        st.markdown("Если Стримлит обнулил прогресс спотов, эта кнопка заново пересчитает весь твой опыт, винрейты и ранги (Spot Mastery) на основе сырой истории раздач.")
-        if st.button("🔧 ВОССТАНОВИТЬ SPOT MASTERY", use_container_width=True):
+        st.markdown("Если Стримлит обнулил прогресс, эта кнопка пересчитает весь твой опыт, винрейты, стрик и ранги (Spot Mastery) на основе сырой истории раздач.")
+        if st.button("🔧 ВОССТАНОВИТЬ ВСЁ", use_container_width=True):
             df_hist = df.copy().sort_values("Date")
             new_mastery = {}
+            total_correct = 0
+            unique_dates = set()
             
             # Создаем маппинг коротких имен спотов в полные ключи для Тренажера
             ranges_db = utils.load_ranges()
@@ -38,8 +40,15 @@ def show():
             
             for _, row in df_hist.iterrows():
                 short_spot = str(row["Spot"])
-                res = str(row["Result"])
-                date_str = row["Date"].strftime("%Y-%m-%d")
+                res_int = int(row["Result"])
+                res_str = str(res_int)
+                
+                date_obj = row["Date"].date()
+                date_str = date_obj.strftime("%Y-%m-%d")
+                
+                unique_dates.add(date_obj)
+                if res_int == 1:
+                    total_correct += 1
                 
                 full_key = sp_to_full_key.get(short_spot, short_spot)
                 
@@ -48,17 +57,35 @@ def show():
                 
                 new_mastery[full_key]["t"] += 1
                 new_mastery[full_key]["d"] = date_str
-                new_mastery[full_key]["h"] += res
+                new_mastery[full_key]["h"] += res_str
                 
                 if len(new_mastery[full_key]["h"]) > 100:
                     new_mastery[full_key]["h"] = new_mastery[full_key]["h"][-100:]
-                    
+            
+            # Считаем стрик непрерывных дней
+            sorted_dates = sorted(list(unique_dates), reverse=True)
+            streak = 0
+            if sorted_dates:
+                streak = 1
+                curr_d = sorted_dates[0]
+                for d in sorted_dates[1:]:
+                    if (curr_d - d).days == 1:
+                        streak += 1
+                        curr_d = d
+                    else:
+                        break
+                        
             stats = utils.load_user_stats()
             stats["spot_mastery"] = new_mastery
             stats["total_hands"] = len(df_hist)
+            stats["xp"] = total_correct * 10
+            stats["streak"] = streak
+            if sorted_dates:
+                stats["last_date"] = sorted_dates[0].strftime("%Y-%m-%d")
+                
             utils.save_user_stats(stats)
             utils.force_sync()
-            st.success("✅ Данные Spot Mastery успешно восстановлены из логов! Обнови страницу (F5).")
+            st.success("✅ Все данные (Мастерство, XP, Стрик) успешно восстановлены! Обнови страницу (F5).")
 
     with st.expander("🔍 Фильтры", expanded=True):
         c1, c2, c3 = st.columns(3)
