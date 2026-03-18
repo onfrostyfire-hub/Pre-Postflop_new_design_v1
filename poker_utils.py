@@ -41,15 +41,25 @@ def get_worksheets():
 def init_cloud_data():
     if "app_initialized" not in st.session_state:
         sheets = get_worksheets()
+        
+        # ЖЕСТКИЙ КОНТРОЛЬ ОШИБОК ЧТЕНИЯ SRS
         try:
             srs_vals = sheets["SRS"].get_all_values()
             st.session_state["srs_data"] = {str(r[0]): int(r[1]) for r in srs_vals[1:]} if len(srs_vals) > 1 else {}
-        except: st.session_state["srs_data"] = {}
+        except Exception as e:
+            st.error(f"🚨 Ошибка чтения SRS из Гугла. Остановка, чтобы не затереть базу. Детали: {e}")
+            st.stop()
         
+        # ЖЕСТКИЙ КОНТРОЛЬ ОШИБОК ЧТЕНИЯ НАСТРОЕК
         try:
             set_val = sheets["Settings"].acell('A1').value
-            st.session_state["user_settings"] = json.loads(set_val) if set_val else {}
-        except: st.session_state["user_settings"] = {}
+            if set_val:
+                st.session_state["user_settings"] = json.loads(set_val)
+            else:
+                st.session_state["user_settings"] = {}
+        except Exception as e:
+            st.error(f"🚨 КРИТИЧЕСКАЯ ОШИБКА: Не удалось прочитать настройки из ячейки A1. Остановка приложения, чтобы защитить твои ранги от перезаписи. Детали: {e}")
+            st.stop()
             
         st.session_state["history_buffer"] = []
         st.session_state["unsaved_count"] = 0
@@ -266,7 +276,8 @@ def save_to_history(record):
     check_auto_sync()
 
 def check_auto_sync():
-    if st.session_state["unsaved_count"] >= 5: force_sync()
+    # СНИЗИЛИ ПОРОГ СОХРАНЕНИЯ С 5 ДО 3 РАЗДАЧ, ЧТОБЫ МЕНЬШЕ ТЕРЯТЬ ПРИ ЗАСЫПАНИИ
+    if st.session_state["unsaved_count"] >= 3: force_sync()
 
 def force_sync():
     if st.session_state.get("unsaved_count", 0) == 0: return
@@ -283,7 +294,9 @@ def force_sync():
             st.session_state["settings_changed"] = False
             
         st.session_state["unsaved_count"] = 0
-    except: pass
+    except Exception as e:
+        # ТЕПЕРЬ ОШИБКИ СОХРАНЕНИЯ НЕ ГЛОТАЮТСЯ В ТИШИНЕ
+        st.error(f"⚠️ Ошибка синхронизации с Google Sheets: {e}")
 
 @st.cache_data(ttl=60)
 def load_history():
