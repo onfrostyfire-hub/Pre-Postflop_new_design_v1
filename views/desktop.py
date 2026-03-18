@@ -91,7 +91,10 @@ def show():
                         sel_spots_keys.append(sp_key)
         
         if st.button("🚀 Применить настройки", use_container_width=True):
-            utils.save_user_settings({"scenarios": sel_sc, "spots": sel_spots_keys})
+            # ИСПРАВЛЕНО: обновляем существующий словарь, чтобы не убить стату
+            saved["scenarios"] = sel_sc
+            saved["spots"] = sel_spots_keys
+            utils.save_user_settings(saved)
             st.session_state.hand = None
             st.rerun()
 
