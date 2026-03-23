@@ -204,6 +204,7 @@ def show():
     r_raise = r_data.get("4bet", r_data.get("3bet", r_data.get("Raise", "")))
     r_full = r_data.get("full", r_data.get("Full", ""))
 
+    # ИСПРАВЛЕНА ЛОГИКА РАНДОМАЙЗЕРА
     if is_defense:
         w_c = utils.get_weight(st.session_state.hand, r_call)
         w_raise_val = utils.get_weight(st.session_state.hand, r_raise)
@@ -211,7 +212,7 @@ def show():
         elif rng < (w_raise_val + w_c): correct_act = "CALL"
     else:
         w = utils.get_weight(st.session_state.hand, r_full)
-        if w > 0: correct_act = "RAISE"
+        if rng < w: correct_act = "RAISE"
 
     h_val = st.session_state.hand; s1, s2 = st.session_state.suits
     c1 = "suit-red" if s1 == '♥' else "suit-blue" if s1 == '♦' else "suit-green" if s1 == '♣' else "suit-black"
@@ -250,7 +251,6 @@ def show():
         h_left = max(0, m_next - m_total)
         hands_left_text = f"Осталось: {h_left} рук"
 
-    # ДОБАВЛЕН БАР ПРОГРЕССА XP ВЕРХУШКИ ДЛЯ МОБИЛОК
     header_html = f"""
     <div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
         <div style="height: 3px; width: 100%; background: #222;">
@@ -346,13 +346,14 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    # ДОБАВЛЕН СЧЕТЧИК ОСТАВШИХСЯ РУК ДЛЯ SPOT MASTERY
     html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div style="font-size:8px; color:#aaa; margin-top:2px; text-transform:uppercase; font-weight:bold;">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
 
     if is_defense:
         st.markdown('<div class="rng-hint">RNG 0-Freq: ACTION &nbsp;|&nbsp; Freq-100: FOLD</div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div class="rng-hint">RNG 0-Freq: RAISE &nbsp;|&nbsp; Freq-100: FOLD</div>', unsafe_allow_html=True)
 
     def handle_action(action):
         corr = (correct_act == action)
