@@ -22,7 +22,7 @@
       "setup": { "hero_pos": "CO", "villain_pos": null, "btn_pos": "BTN", "active_players": ["CO", "BTN", "SB", "BB"], "table_bets": {"SB": 0.5, "BB": 1.0}, "hero_bet": null, "is_3bet_pot": false },
       "stats": { "PFR": "28%", "Fold": "72%" },
       "ranges": {
-        "full": "AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22:0.5,AK,AQ,AJ,AT,A9,A8s,A8o:0.5,A7s,A6s,A5s,A5o:0.5,A4s,A3s,A2s,KQ,KJ,KT,K9s,K8s,K7s,K6s,K5s,K4s,K3s,QJ,QT,Q9s,Q8s,Q7s,Q6s,Q5s,JT,J9s,J8s,J7s:0.5,T9s,T8s,T7s:0.5,98s,97s,87s,76s:0.5,65s:0.5,54s:0.5",
+        "full": "AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22,AK,AQ,AJ,AT,A9,A8s,A8o,A7s,A6s,A5s,A4s,A3s,A2s,KQ,KJ,KT,K9s,K8s,K7s,K6s,K5s,K4s,K3s,QJ,QT,Q9s,Q8s,Q7s,Q6s,Q5s,JT,J9s,J8s,T9s,T8s,98s,97s,87s,76s,65s,54s",
         "training": "33,22,A9o,A8o,A5o,K9o,K6s,K5s,K4s,K3s,K2s,QTo,Q7s,Q6s,Q5s,Q4s,Q3s,JTo,J7s,J6s,T7s,T6s,96s,86s,75s,65s,64s,54s,53s,43s"
       }
     },
