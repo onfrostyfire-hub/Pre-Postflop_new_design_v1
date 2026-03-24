@@ -87,7 +87,7 @@ def show():
             utils.force_sync()
             st.success("✅ Все данные (Мастерство, XP, Стрик) успешно восстановлены! Обнови страницу (F5).")
 
-    with st.expander("🔍 Фильтры", expanded=True):
+    with st.expander("🔍 Фильтры", expanded=False):
         c1, c2, c3 = st.columns(3)
         time_filter = c1.selectbox("Период", ["All Time", "24 Hours", "7 Days", "30 Days", "1 Year"])
         unique_spots = df["Spot"].unique().tolist()
@@ -184,13 +184,13 @@ def show():
 
     st.divider()
 
-    st.markdown("### 📉 Худшие споты (Топ-10)")
+    st.markdown("### 📉 Статистика по всем спотам")
     if not df.empty:
         stats = df.groupby("Spot")["Result"].agg(['count', 'sum', 'mean']).reset_index()
         stats["Errors"] = stats["count"] - stats["sum"]
         stats["Accuracy"] = (stats["mean"] * 100).astype(int)
-        worst = stats.sort_values(by="Errors", ascending=False).head(10)
-        st.dataframe(worst[["Spot", "Errors", "Accuracy", "count"]].rename(columns={"count": "Total"}), use_container_width=True, hide_index=True)
+        all_spots = stats.sort_values(by="count", ascending=False)
+        st.dataframe(all_spots[["Spot", "Errors", "Accuracy", "count"]].rename(columns={"count": "Total"}), use_container_width=True, hide_index=True)
 
     with st.expander("📜 Полный лог (нажми, чтобы открыть)"):
         d = df.copy()
