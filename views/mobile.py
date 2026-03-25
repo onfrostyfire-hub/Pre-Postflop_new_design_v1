@@ -84,15 +84,14 @@ def show():
         @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
         @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
 
-        .mob-info { position: absolute; top: 18%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
-        .mob-info-src { font-size: 10px; color: #888; text-transform: uppercase; z-index: 30; position: relative; }
+        .mob-info { position: absolute; top: 28%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
         .mob-info-spot { font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.15); line-height: 1; z-index: 30; position: relative; }
         .seat { position: absolute; width: 44px; height: 44px; background: #222; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
         .seat-label { font-size: 9px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 2px; }
         .seat-active { border-color: #ffc107; background: #2a2a2a; }
         .seat-folded { opacity: 0.4; border-color: #333; }
         
-        /* КАРТЫ ОППОНЕНТОВ - ТЕПЕРЬ ОНИ БУДУТ ВИДНЫ */
+        /* КАРТЫ ОППОНЕНТОВ */
         .opp-cards-mob { position: absolute; top: -8px; width: 24px; height: 34px; background: #fff; border-radius: 3px; border: 1px solid #ccc; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); z-index: 20; box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
 
         .chip-container { position: absolute; z-index: 10; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
@@ -204,7 +203,6 @@ def show():
     r_raise = r_data.get("4bet", r_data.get("3bet", r_data.get("Raise", "")))
     r_full = r_data.get("full", r_data.get("Full", ""))
 
-    # ИСПРАВЛЕНА ЛОГИКА РАНДОМАЙЗЕРА
     if is_defense:
         w_c = utils.get_weight(st.session_state.hand, r_call)
         w_raise_val = utils.get_weight(st.session_state.hand, r_raise)
@@ -282,6 +280,9 @@ def show():
     """
     st.markdown(header_html, unsafe_allow_html=True)
     
+    # НАЗВАНИЕ СЦЕНАРИЯ ТЕПЕРЬ ВЫНЕСЕНО ЗА СТОЛ И ВЕРСТАЕТСЯ АККУРАТНЫМ ШРИФТОМ
+    st.markdown(f"<div style='text-align:center; font-size:13px; color:#888; font-weight:900; text-transform:uppercase; margin-bottom:8px; letter-spacing:1px;'>{sc}</div>", unsafe_allow_html=True)
+    
     combo_cls = ""
     if c >= 1000: combo_cls = "combo-glow-1000"
     elif c >= 500: combo_cls = "combo-glow-500"
@@ -301,9 +302,16 @@ def show():
         return {0: "bottom: -20px; left: 50%; transform: translateX(-50%);", 1: "bottom: 15%; left: 0%;", 2: "top: 15%; left: 0%;", 
                 3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 15%; right: 0%;", 5: "bottom: 15%; right: 0%;"}.get(idx, "")
 
+    # ИСПРАВЛЕННЫЕ КООРДИНАТЫ ФИШЕК: ПРИЖАТЫ К КРАЯМ И ВЫШЕ В ЦЕНТРЕ
     def get_chip_style(idx):
-        return {0: "bottom: 25%; left: 50%; transform: translateX(-50%);", 1: "bottom: 22%; left: 22%;", 2: "top: 22%; left: 22%;",
-                3: "top: 25%; left: 50%; transform: translateX(-50%);", 4: "top: 22%; right: 22%;", 5: "bottom: 22%; right: 22%;"}.get(idx, "")
+        return {
+            0: "bottom: 25%; left: 50%; transform: translateX(-50%);", 
+            1: "bottom: 18%; left: 16%;", 
+            2: "top: 15%; left: 16%;",
+            3: "top: 10%; left: 50%; transform: translateX(-50%);", 
+            4: "top: 15%; right: 16%;", 
+            5: "bottom: 18%; right: 16%;"
+        }.get(idx, "")
 
     def get_btn_style(idx):
         return {0: "bottom: 10%; left: 60%;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
@@ -346,7 +354,8 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-src">{sc}</div><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div style="font-size:8px; color:#aaa; margin-top:2px; text-transform:uppercase; font-weight:bold;">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
+    # УДАЛЕН MOB-INFO-SRC ИЗ ТАБЛИЦЫ, САМ БЛОК ИНФО СДВИНУТ ЧУТЬ НИЖЕ
+    html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div style="font-size:8px; color:#aaa; margin-top:2px; text-transform:uppercase; font-weight:bold;">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
 
