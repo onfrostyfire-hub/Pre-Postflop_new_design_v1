@@ -132,41 +132,56 @@ def get_spot_mastery_info(spot_data_dict):
 
     rank = max(0, rank - penalty)
 
-    # ТОПОВЫЙ ВЕКТОРНЫЙ ДИЗАЙН ГЕРБОВ (С ВЖИГАНЕМ В СУКНО ЧЕРЕЗ DROP-SHADOW)
+    # ==========================================
+    # НОВЫЙ ПРЕМИАЛЬНЫЙ ДИЗАЙН ГЕРБОВ (100x100)
+    # ==========================================
+    
+    # Basic (Радар/Баклер)
     svg_basic = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.35;pointer-events:none;filter:drop-shadow(0 0 10px #28a745);">
-      <path d="M50 15 C50 15 20 40 20 65 A15 15 0 0 0 50 85 A15 15 0 0 0 80 65 C80 40 50 15 50 15 Z" fill="#28a745" opacity="0.4" stroke="#28a745" stroke-width="3"/>
-      <polygon points="46,82 40,98 60,98 54,82" fill="#28a745" opacity="0.8"/>
+      <circle cx="50" cy="50" r="35" fill="#111" stroke="#28a745" stroke-width="4"/>
+      <circle cx="50" cy="50" r="25" fill="none" stroke="#28a745" stroke-width="2" stroke-dasharray="5 5"/>
+      <circle cx="50" cy="50" r="10" fill="#28a745" opacity="0.7"/>
+      <path d="M50 5 V20 M50 95 V80 M5 50 H20 M95 50 H80" stroke="#28a745" stroke-width="4" stroke-linecap="round"/>
     </svg>'''
 
+    # Solid (Щит с кристальным ядром)
     svg_solid = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.45;pointer-events:none;filter:drop-shadow(0 0 12px #0dcaf0);">
-      <path d="M15 20 L50 5 L85 20 L85 50 C85 75 50 95 50 95 C50 95 15 75 15 50 Z" fill="#0dcaf0" opacity="0.2" stroke="#0dcaf0" stroke-width="4"/>
-      <path d="M50 5 V95 C85 75 85 50 85 20 L50 5 Z" fill="#0dcaf0" opacity="0.3"/>
-      <path d="M50 30 C50 30 35 45 35 60 A8 8 0 0 0 50 72 A8 8 0 0 0 65 60 C65 45 50 30 50 30 Z" fill="#0dcaf0" opacity="0.8"/>
+      <path d="M20 20 L50 5 L80 20 L80 60 C80 80 50 95 50 95 C50 95 20 80 20 60 Z" fill="#111" stroke="#0dcaf0" stroke-width="4"/>
+      <path d="M50 5 V95 C80 80 80 60 80 20 L50 5 Z" fill="#0dcaf0" opacity="0.3"/>
+      <polygon points="50,30 70,50 50,70 30,50" fill="none" stroke="#0dcaf0" stroke-width="4"/>
+      <polygon points="50,40 60,50 50,60 40,50" fill="#0dcaf0" opacity="0.9"/>
     </svg>'''
 
+    # Unexploitable (Щит + Мечи)
     svg_unexp = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.55;pointer-events:none;filter:drop-shadow(0 0 15px #6f42c1);">
       <g stroke="#6f42c1" stroke-width="4" stroke-linecap="round">
-        <line x1="15" y1="85" x2="85" y2="15"/><line x1="15" y1="15" x2="85" y2="85"/>
+        <line x1="10" y1="90" x2="90" y2="10"/><line x1="10" y1="10" x2="90" y2="90"/>
       </g>
       <path d="M20 25 L50 10 L80 25 L80 55 C80 80 50 95 50 95 C50 95 20 80 20 55 Z" fill="#111" stroke="#6f42c1" stroke-width="4"/>
       <path d="M50 10 V95 C80 80 80 55 80 25 L50 10 Z" fill="#6f42c1" opacity="0.4"/>
     </svg>'''
 
-    svg_elite = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.65;pointer-events:none;filter:drop-shadow(0 0 20px #dc3545);">
-      <g stroke="#dc3545" stroke-width="5" stroke-linecap="round">
-        <line x1="10" y1="90" x2="90" y2="10"/><line x1="10" y1="10" x2="90" y2="90"/>
+    # Elite (Венки + Щит + Мечи + Корона)
+    svg_elite = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.75;pointer-events:none;filter:drop-shadow(0 0 18px #dc3545);">
+      <path d="M 45 95 C 5 90, -5 40, 25 15" fill="none" stroke="#dc3545" stroke-width="4" stroke-dasharray="6 4" stroke-linecap="round"/>
+      <path d="M 55 95 C 95 90, 105 40, 75 15" fill="none" stroke="#dc3545" stroke-width="4" stroke-dasharray="6 4" stroke-linecap="round"/>
+      <g stroke="#dc3545" stroke-width="4" stroke-linecap="round">
+        <line x1="25" y1="75" x2="75" y2="25"/><line x1="25" y1="25" x2="75" y2="75"/>
       </g>
-      <path d="M20 40 L50 25 L80 40 L80 65 C80 85 50 95 50 95 C50 95 20 85 20 65 Z" fill="#111" stroke="#dc3545" stroke-width="3"/>
-      <path d="M25 35 L35 15 L50 25 L65 15 L75 35 Z" fill="#dc3545" stroke="#111" stroke-width="2"/>
-      <circle cx="35" cy="15" r="3" fill="#dc3545"/><circle cx="50" cy="25" r="3" fill="#dc3545"/><circle cx="65" cy="15" r="3" fill="#dc3545"/>
+      <path d="M30 40 L50 25 L70 40 L70 65 C70 80 50 90 50 90 C50 90 30 80 30 65 Z" fill="#111" stroke="#dc3545" stroke-width="3"/>
+      <path d="M35 35 L42 15 L50 25 L58 15 L65 35 Z" fill="#dc3545" stroke="#111" stroke-width="2"/>
     </svg>'''
 
-    svg_solver = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.8;pointer-events:none;filter:drop-shadow(0 0 25px #ffc107);">
-      <path d="M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z" fill="none" stroke="#ffc107" stroke-width="3"/>
-      <path d="M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z" fill="#ffc107" opacity="0.15"/>
-      <path d="M50 15 L75 30 L75 70 L50 85 L25 70 L25 30 Z" fill="none" stroke="#ffc107" stroke-width="2"/>
-      <path d="M50 5 L50 95 M10 25 L90 75 M10 75 L90 25" stroke="#ffc107" stroke-width="1.5" opacity="0.7"/>
-      <circle cx="50" cy="50" r="14" fill="#ffc107" opacity="0.9"/>
+    # Solver (Гексагон + Золотые Лавры + Сияние)
+    svg_solver = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.95;pointer-events:none;filter:drop-shadow(0 0 20px #ffc107) drop-shadow(0 0 5px #ffffff);">
+      <path d="M 45 98 C 0 95, -10 35, 25 5" fill="none" stroke="#ffc107" stroke-width="5" stroke-dasharray="8 6" stroke-linecap="round"/>
+      <path d="M 55 98 C 100 95, 110 35, 75 5" fill="none" stroke="#ffc107" stroke-width="5" stroke-dasharray="8 6" stroke-linecap="round"/>
+      <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="#111" stroke="#ffc107" stroke-width="3"/>
+      <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="#ffc107" opacity="0.2"/>
+      <line x1="50" y1="15" x2="50" y2="85" stroke="#ffc107" stroke-width="2"/>
+      <line x1="20" y1="32" x2="80" y2="68" stroke="#ffc107" stroke-width="2"/>
+      <line x1="20" y1="68" x2="80" y2="32" stroke="#ffc107" stroke-width="2"/>
+      <circle cx="50" cy="50" r="16" fill="#ffc107"/>
       <circle cx="50" cy="50" r="6" fill="#111"/>
     </svg>'''
 
