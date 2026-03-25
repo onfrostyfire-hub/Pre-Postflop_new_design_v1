@@ -41,8 +41,6 @@ def get_worksheets():
 def init_cloud_data():
     if "app_initialized" not in st.session_state:
         sheets = get_worksheets()
-        
-        # ЖЕСТКИЙ КОНТРОЛЬ ОШИБОК ЧТЕНИЯ SRS
         try:
             srs_vals = sheets["SRS"].get_all_values()
             st.session_state["srs_data"] = {str(r[0]): int(r[1]) for r in srs_vals[1:]} if len(srs_vals) > 1 else {}
@@ -50,7 +48,6 @@ def init_cloud_data():
             st.error(f"🚨 Ошибка чтения SRS из Гугла. Остановка, чтобы не затереть базу. Детали: {e}")
             st.stop()
         
-        # ЖЕСТКИЙ КОНТРОЛЬ ОШИБОК ЧТЕНИЯ НАСТРОЕК
         try:
             set_val = sheets["Settings"].acell('A1').value
             if set_val:
@@ -135,11 +132,43 @@ def get_spot_mastery_info(spot_data_dict):
 
     rank = max(0, rank - penalty)
 
-    svg_basic = '<svg viewBox="0 0 200 200" style="width:100%;height:100%;opacity:0.25;pointer-events:none;"><polygon points="100,180 30,60 100,20 170,60" fill="none" stroke="#28a745" stroke-width="8" stroke-linejoin="round"/><polygon points="100,150 50,70 100,40 150,70" fill="#28a745" opacity="0.5"/><polygon points="100,120 70,75 100,55 130,75" fill="#28a745" opacity="0.9"/></svg>'
-    svg_solid = '<svg viewBox="0 0 200 200" style="width:100%;height:100%;opacity:0.3;pointer-events:none;"><polygon points="100,190 20,65 100,10 180,65" fill="none" stroke="#0dcaf0" stroke-width="8" stroke-linejoin="round"/><polygon points="100,165 40,75 100,30 160,75" fill="#0dcaf0" opacity="0.4"/><polygon points="100,140 60,80 100,50 140,80" fill="#0dcaf0" opacity="0.8"/><circle cx="100" cy="85" r="15" fill="#111" stroke="#0dcaf0" stroke-width="4"/></svg>'
-    svg_unexp = '<svg viewBox="0 0 200 200" style="width:100%;height:100%;opacity:0.3;pointer-events:none;"><line x1="20" y1="180" x2="180" y2="20" stroke="#6f42c1" stroke-width="8" stroke-linecap="round"/><line x1="180" y1="180" x2="20" y2="20" stroke="#6f42c1" stroke-width="8" stroke-linecap="round"/><polygon points="100,190 30,70 100,20 170,70" fill="#111" stroke="#6f42c1" stroke-width="8" stroke-linejoin="round"/><polygon points="100,160 50,75 100,35 150,75" fill="#6f42c1" opacity="0.5"/><polygon points="100,130 70,80 100,50 130,80" fill="#6f42c1"/></svg>'
-    svg_elite = '<svg viewBox="0 0 200 200" style="width:100%;height:100%;opacity:0.35;pointer-events:none;"><line x1="15" y1="185" x2="185" y2="15" stroke="#dc3545" stroke-width="10" stroke-linecap="round"/><line x1="185" y1="185" x2="15" y2="15" stroke="#dc3545" stroke-width="10" stroke-linecap="round"/><polygon points="100,195 25,80 100,40 175,80" fill="#111" stroke="#dc3545" stroke-width="8" stroke-linejoin="round"/><polygon points="100,170 45,85 100,55 155,85" fill="#dc3545" opacity="0.5"/><polygon points="70,35 85,10 100,25 115,10 130,35 120,50 80,50" fill="#dc3545" stroke="#111" stroke-width="2"/><polygon points="100,140 70,90 100,70 130,90" fill="#111" stroke="#dc3545" stroke-width="4"/></svg>'
-    svg_solver = '<svg viewBox="0 0 200 200" style="width:100%;height:100%;opacity:0.4;pointer-events:none;"><path d="M25,160 Q-10,80 35,20" fill="none" stroke="#ffc107" stroke-width="6" stroke-dasharray="10 10"/><path d="M175,160 Q210,80 165,20" fill="none" stroke="#ffc107" stroke-width="6" stroke-dasharray="10 10"/><line x1="10" y1="190" x2="190" y2="10" stroke="#ffc107" stroke-width="10" stroke-linecap="round"/><line x1="190" y1="190" x2="10" y2="10" stroke="#ffc107" stroke-width="10" stroke-linecap="round"/><polygon points="100,200 15,85 100,35 185,85" fill="#111" stroke="#ffc107" stroke-width="8" stroke-linejoin="round"/><polygon points="100,175 35,90 100,55 165,90" fill="#ffc107" opacity="0.5"/><polygon points="65,30 85,5 100,20 115,5 135,30 125,45 75,45" fill="#ffc107" stroke="#111" stroke-width="2"/><polygon points="100,150 65,95 100,70 135,95" fill="#ffc107" stroke="#111" stroke-width="4"/><circle cx="100" cy="105" r="15" fill="#111" stroke="#ffc107" stroke-width="4"/></svg>'
+    # ТОПОВЫЙ ВЕКТОРНЫЙ ДИЗАЙН ГЕРБОВ (С ВЖИГАНЕМ В СУКНО ЧЕРЕЗ DROP-SHADOW)
+    svg_basic = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.35;pointer-events:none;filter:drop-shadow(0 0 10px #28a745);">
+      <path d="M50 15 C50 15 20 40 20 65 A15 15 0 0 0 50 85 A15 15 0 0 0 80 65 C80 40 50 15 50 15 Z" fill="#28a745" opacity="0.4" stroke="#28a745" stroke-width="3"/>
+      <polygon points="46,82 40,98 60,98 54,82" fill="#28a745" opacity="0.8"/>
+    </svg>'''
+
+    svg_solid = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.45;pointer-events:none;filter:drop-shadow(0 0 12px #0dcaf0);">
+      <path d="M15 20 L50 5 L85 20 L85 50 C85 75 50 95 50 95 C50 95 15 75 15 50 Z" fill="#0dcaf0" opacity="0.2" stroke="#0dcaf0" stroke-width="4"/>
+      <path d="M50 5 V95 C85 75 85 50 85 20 L50 5 Z" fill="#0dcaf0" opacity="0.3"/>
+      <path d="M50 30 C50 30 35 45 35 60 A8 8 0 0 0 50 72 A8 8 0 0 0 65 60 C65 45 50 30 50 30 Z" fill="#0dcaf0" opacity="0.8"/>
+    </svg>'''
+
+    svg_unexp = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.55;pointer-events:none;filter:drop-shadow(0 0 15px #6f42c1);">
+      <g stroke="#6f42c1" stroke-width="4" stroke-linecap="round">
+        <line x1="15" y1="85" x2="85" y2="15"/><line x1="15" y1="15" x2="85" y2="85"/>
+      </g>
+      <path d="M20 25 L50 10 L80 25 L80 55 C80 80 50 95 50 95 C50 95 20 80 20 55 Z" fill="#111" stroke="#6f42c1" stroke-width="4"/>
+      <path d="M50 10 V95 C80 80 80 55 80 25 L50 10 Z" fill="#6f42c1" opacity="0.4"/>
+    </svg>'''
+
+    svg_elite = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.65;pointer-events:none;filter:drop-shadow(0 0 20px #dc3545);">
+      <g stroke="#dc3545" stroke-width="5" stroke-linecap="round">
+        <line x1="10" y1="90" x2="90" y2="10"/><line x1="10" y1="10" x2="90" y2="90"/>
+      </g>
+      <path d="M20 40 L50 25 L80 40 L80 65 C80 85 50 95 50 95 C50 95 20 85 20 65 Z" fill="#111" stroke="#dc3545" stroke-width="3"/>
+      <path d="M25 35 L35 15 L50 25 L65 15 L75 35 Z" fill="#dc3545" stroke="#111" stroke-width="2"/>
+      <circle cx="35" cy="15" r="3" fill="#dc3545"/><circle cx="50" cy="25" r="3" fill="#dc3545"/><circle cx="65" cy="15" r="3" fill="#dc3545"/>
+    </svg>'''
+
+    svg_solver = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.8;pointer-events:none;filter:drop-shadow(0 0 25px #ffc107);">
+      <path d="M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z" fill="none" stroke="#ffc107" stroke-width="3"/>
+      <path d="M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z" fill="#ffc107" opacity="0.15"/>
+      <path d="M50 15 L75 30 L75 70 L50 85 L25 70 L25 30 Z" fill="none" stroke="#ffc107" stroke-width="2"/>
+      <path d="M50 5 L50 95 M10 25 L90 75 M10 75 L90 25" stroke="#ffc107" stroke-width="1.5" opacity="0.7"/>
+      <circle cx="50" cy="50" r="14" fill="#ffc107" opacity="0.9"/>
+      <circle cx="50" cy="50" r="6" fill="#111"/>
+    </svg>'''
 
     ranks_info = [
         {"n": "Sandbox", "i": "⚪", "c": "#6c757d", "nt": 100, "req_wr": 75, "svg": ""},
@@ -276,7 +305,6 @@ def save_to_history(record):
     check_auto_sync()
 
 def check_auto_sync():
-    # СНИЗИЛИ ПОРОГ СОХРАНЕНИЯ С 5 ДО 3 РАЗДАЧ, ЧТОБЫ МЕНЬШЕ ТЕРЯТЬ ПРИ ЗАСЫПАНИИ
     if st.session_state["unsaved_count"] >= 3: force_sync()
 
 def force_sync():
@@ -295,7 +323,6 @@ def force_sync():
             
         st.session_state["unsaved_count"] = 0
     except Exception as e:
-        # ТЕПЕРЬ ОШИБКИ СОХРАНЕНИЯ НЕ ГЛОТАЮТСЯ В ТИШИНЕ
         st.error(f"⚠️ Ошибка синхронизации с Google Sheets: {e}")
 
 @st.cache_data(ttl=60)
