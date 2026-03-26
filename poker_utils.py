@@ -33,30 +33,67 @@ def get_worksheets():
     client = get_gspread_client()
     sh = client.open_by_key(SPREADSHEET_ID)
     return {
-        "SRS": sh.worksheet("SRS"),
         "Settings": sh.worksheet("Settings"),
         "History": sh.worksheet("History")
     }
+
+@st.cache_data(ttl=60)
+def load_history():
+    try:
+        vals = get_worksheets()["History"].get_all_values()
+        if not vals or len(vals) < 2: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
+        
+        headers = vals[0]
+        if "UserAction" not in headers:
+            headers.append("UserAction")
+            for r in vals[1:]: r.append("UNKNOWN")
+            
+        df = pd.DataFrame(vals[1:], columns=headers)
+        return df
+    except: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
+
+def rebuild_srs_from_history():
+    """Собирает умные веса с нуля на основе всей истории логов."""
+    df = load_history()
+    weights = {}
+    
+    if df.empty or "Spot" not in df.columns or "Result" not in df.columns:
+        return weights
+
+    # Сортируем от старых к новым, чтобы симулировать ход времени
+    df = df.sort_values("Date")
+    
+    for _, row in df.iterrows():
+        spot = row["Spot"]
+        hand = row["Hand"]
+        try:
+            result = int(float(row["Result"]))
+        except:
+            continue
+            
+        key = f"{spot}_{hand}"
+        w = weights.get(key, 100)
+        
+        if result == 1:
+            w = int(w * 0.8) # Правильно: вес падает
+        else:
+            penalty = 20 if w < 50 else 50
+            w = int((w * 1.5) + penalty) # Ошибка: вес взлетает
+            
+        weights[key] = max(10, min(w, 2000))
+        
+    return weights
 
 def init_cloud_data():
     if "app_initialized" not in st.session_state:
         sheets = get_worksheets()
         
-        # 1. Безопасная загрузка SRS
+        # 1. Динамическая сборка SRS напрямую из истории (больше не зависим от листа SRS)
         try:
-            srs_vals = sheets["SRS"].get_all_values()
-            srs_dict = {}
-            if len(srs_vals) > 1:
-                for r in srs_vals[1:]:
-                    if len(r) >= 2 and str(r[0]).strip():
-                        try:
-                            srs_dict[str(r[0])] = int(float(r[1]))
-                        except ValueError:
-                            pass # Игнорируем мусорные ячейки
-            st.session_state["srs_data"] = srs_dict
+            st.session_state["srs_data"] = rebuild_srs_from_history()
         except Exception as e:
-            st.error(f"🚨 Ошибка чтения SRS. Приложение остановлено для защиты данных: {e}")
-            st.stop()
+            st.error(f"🚨 Ошибка динамической сборки SRS: {e}")
+            st.session_state["srs_data"] = {}
         
         # 2. Безопасная загрузка настроек
         try:
@@ -325,8 +362,8 @@ def save_to_history(record):
     check_auto_sync()
 
 def check_auto_sync():
-    # Сохраняем каждые 3 раздачи (6 операций), чтобы не терять прогресс, но и не лагать
-    if st.session_state.get("unsaved_count", 0) >= 6: 
+    # Сохраняем каждые 3 раздачи
+    if st.session_state.get("unsaved_count", 0) >= 3: 
         force_sync()
 
 # --- БРОНЕБОЙНОЕ ИЗОЛИРОВАННОЕ СОХРАНЕНИЕ ---
@@ -335,36 +372,20 @@ def force_sync():
     sheets = get_worksheets()
     sync_success = True
     
-    # 1. Синкаем SRS с проверкой версий gspread
-    if "srs_data" in st.session_state and st.session_state["srs_data"]:
-        try:
-            rows = [["Key", "Weight"]]
-            for k, v in st.session_state["srs_data"].items():
-                rows.append([str(k), int(float(v))])
-                
-            sheets["SRS"].clear()
-            
-            major_version = int(gspread.__version__.split('.')[0])
-            if major_version >= 6:
-                sheets["SRS"].update(rows) # Для новых версий gspread
-            else:
-                sheets["SRS"].update("A1", rows) # Для старых версий
-        except Exception as e:
-            sync_success = False
-            st.toast(f"❌ Ошибка сохранения SRS: {e}")
-            print(f"SRS Sync error: {e}")
+    # Лист SRS мы больше не пишем в Гугл. Вся математика считается налету.
 
-    # 2. Синкаем Историю
+    # 1. Синкаем Историю
     if "history_buffer" in st.session_state and st.session_state["history_buffer"]:
         try:
             sheets["History"].append_rows(st.session_state["history_buffer"])
             st.session_state["history_buffer"] = []
+            load_history.clear() # Сбрасываем кэш истории, чтобы при релоде данные обновились
         except Exception as e:
             sync_success = False
             st.toast(f"❌ Ошибка сохранения History: {e}")
             print(f"History Sync error: {e}")
 
-    # 3. Синкаем Настройки
+    # 2. Синкаем Настройки
     if st.session_state.get("settings_changed"):
         try:
             sheets["Settings"].update_acell('A1', json.dumps(st.session_state["user_settings"]))
@@ -377,21 +398,6 @@ def force_sync():
     st.session_state["unsaved_count"] = 0
     if sync_success:
         st.toast("☁️ Данные синхронизированы", icon="✅")
-
-@st.cache_data(ttl=60)
-def load_history():
-    try:
-        vals = get_worksheets()["History"].get_all_values()
-        if not vals or len(vals) < 2: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
-        
-        headers = vals[0]
-        if "UserAction" not in headers:
-            headers.append("UserAction")
-            for r in vals[1:]: r.append("UNKNOWN")
-            
-        df = pd.DataFrame(vals[1:], columns=headers)
-        return df
-    except: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
 
 def delete_history(days=None):
     try:
@@ -545,7 +551,7 @@ def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
             elif RANKS.index(r1) < RANKS.index(r2): h = r1 + r2 + 's'
             else: h = r2 + r1 + 'o'
             
-            key = f"{src}_{sc}_{sp}_{h}".replace(" ", "_")
+            key = f"{sp}_{h}" # Убрал лишние префиксы, чтобы ключи сходились с логами History
             w = srs_data.get(key, 100)
             
             if w <= 10: bg = "#0f5132" # Mastered
