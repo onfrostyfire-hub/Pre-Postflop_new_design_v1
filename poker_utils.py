@@ -289,13 +289,18 @@ def update_srs_auto(spot_id, hand, is_correct):
     st.session_state["unsaved_count"] += 1
     check_auto_sync()
 
-# --- REBUILD SRS FROM PERFECT HISTORY ---
+# --- REBUILD SRS FROM PERFECT HISTORY (IRONCLAD VERSION) ---
 def rebuild_srs_from_history():
+    load_history.clear() # Жестко сбрасываем кэш, берем свежую историю
     df = load_history()
+    if df.empty:
+        st.warning("History is empty.")
+        return
+    
     new_srs = {}
     ranges_db = load_ranges()
     
-    # Реверсивный маппинг коротких спотов в базовые ключи
+    # Создаем маппер спотов
     sp_to_base_key = {}
     for src, sc_dict in ranges_db.items():
         for sc, sp_dict in sc_dict.items():
@@ -303,25 +308,31 @@ def rebuild_srs_from_history():
                 base_k = f"{src}_{sc}_{sp}".replace(" ", "_")
                 sp_to_base_key[sp] = base_k
                 
-    if not df.empty:
-        df_hist = df.copy().sort_values("Date")
-        for _, row in df_hist.iterrows():
-            spot = str(row["Spot"])
-            hand = str(row["Hand"])
+    # Вычищаем битые даты перед парсингом
+    df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
+    df_hist = df.dropna(subset=["Date"]).sort_values("Date")
+    
+    # Симулируем твой прогресс с нуля
+    for _, row in df_hist.iterrows():
+        spot = str(row["Spot"]).strip()
+        hand = str(row["Hand"]).strip()
+        try:
             res = int(row["Result"])
+        except:
+            res = 0
             
-            base_k = sp_to_base_key.get(spot, spot.replace(" ", "_"))
-            full_k = f"{base_k}_{hand}"
-            
-            w = new_srs.get(full_k, 100)
-            if res == 1:
-                w = int(w * 0.8)
-            else:
-                w = int(w * 1.5) if w < 50 else int(w * 2.5)
-            new_srs[full_k] = max(10, min(w, 2000))
-            
+        base_k = sp_to_base_key.get(spot, spot.replace(" ", "_"))
+        full_k = f"{base_k}_{hand}"
+        
+        w = new_srs.get(full_k, 100)
+        if res == 1:
+            w = int(w * 0.8)
+        else:
+            w = int(w * 1.5) if w < 50 else int(w * 2.5)
+        new_srs[full_k] = max(10, min(w, 2000))
+        
     st.session_state["srs_data"] = new_srs
-    st.session_state["unsaved_count"] += 3 # Форсируем немедленный синк
+    st.session_state["unsaved_count"] += 2 # Форсируем немедленный синк
     force_sync()
 
 def load_user_settings():
@@ -350,23 +361,31 @@ def save_to_history(record):
     check_auto_sync()
 
 def check_auto_sync():
-    if st.session_state["unsaved_count"] >= 3: force_sync()
+    # Если в буфере 2 действия (History + SRS с одной раздачи), сразу летим в Гугл
+    if st.session_state.get("unsaved_count", 0) >= 2: 
+        force_sync()
 
-# --- ИЗОЛИРОВАННОЕ И БРОНИРОВАННОЕ СОХРАНЕНИЕ ---
+# --- БРОНИРОВАННЫЙ СИНК ДАННЫХ ---
 def force_sync():
     if st.session_state.get("unsaved_count", 0) == 0: return
     sheets = get_worksheets()
     
-    # 1. Сохраняем SRS (Жесткий блок)
+    # 1. Синкаем SRS (Независимо от истории)
     if "srs_data" in st.session_state:
         try:
             rows = [["Key", "Weight"]] + [[str(k), int(v)] for k, v in st.session_state["srs_data"].items()]
-            sheets["SRS"].clear() # Выжигаем старые данные, чтобы не было дублей
-            sheets["SRS"].update(values=rows, range_name="A1")
+            sheets["SRS"].clear()
+            try:
+                sheets["SRS"].update(values=rows, range_name="A1")
+            except Exception:
+                try:
+                    sheets["SRS"].update(rows)
+                except Exception:
+                    sheets["SRS"].update("A1", rows)
         except Exception as e:
             st.error(f"⚠️ SRS Sync Error: {e}")
 
-    # 2. Сохраняем Историю (Независимо от SRS)
+    # 2. Синкаем Историю (Независимо от SRS)
     if "history_buffer" in st.session_state and st.session_state["history_buffer"]:
         try:
             sheets["History"].append_rows(st.session_state["history_buffer"])
@@ -374,7 +393,7 @@ def force_sync():
         except Exception as e:
             st.error(f"⚠️ History Sync Error: {e}")
 
-    # 3. Сохраняем Настройки (Независимо от остального)
+    # 3. Синкаем Настройки
     if st.session_state.get("settings_changed"):
         try:
             sheets["Settings"].update_acell('A1', json.dumps(st.session_state["user_settings"]))
