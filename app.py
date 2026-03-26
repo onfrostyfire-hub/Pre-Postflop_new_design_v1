@@ -4,56 +4,100 @@ from views import mobile, desktop, compare, stats
 st.set_page_config(page_title="Poker Trainer", layout="wide", initial_sidebar_state="collapsed")
 
 def main():
-    # Убираем кнопку бокового меню, делаем шапку прозрачной и опускаем контент
+    # Скрываем черную шапку Стримлита, убираем боковое меню и наводим красоту
     st.markdown("""
     <style>
         [data-testid="collapsedControl"] { display: none !important; }
         header[data-testid="stHeader"] { background: transparent !important; }
-        .block-container { padding-top: 4.5rem !important; }
+        .block-container { padding-top: 3rem !important; }
+        
+        /* Секретный маркер для стилизации только конкретных радио-кнопок */
+        .compact-tabs { display: none; }
+        
+        /* Превращаем радио-кнопки в компактные вкладки */
+        .compact-tabs + div[role="radiogroup"] {
+            display: inline-flex !important;
+            background: #1a1c20 !important;
+            padding: 4px !important;
+            border-radius: 10px !important;
+            border: 1px solid #333 !important;
+            gap: 2px !important;
+        }
+        .compact-tabs + div[role="radiogroup"] label {
+            padding: 6px 14px !important;
+            background: transparent !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+            margin: 0 !important;
+            border: none !important;
+        }
+        /* Прячем сами кружочки радио */
+        .compact-tabs + div[role="radiogroup"] label div:first-child {
+            display: none !important;
+        }
+        /* Текст неактивной вкладки */
+        .compact-tabs + div[role="radiogroup"] label p {
+            color: #888 !important;
+            font-size: 13px !important;
+            font-weight: bold !important;
+            margin: 0 !important;
+        }
+        /* Текст и фон АКТИВНОЙ вкладки */
+        .compact-tabs + div[role="radiogroup"] label[data-checked="true"],
+        .compact-tabs + div[role="radiogroup"] label:has(input:checked) {
+            background: #ffc107 !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
+        }
+        .compact-tabs + div[role="radiogroup"] label[data-checked="true"] p,
+        .compact-tabs + div[role="radiogroup"] label:has(input:checked) p {
+            color: #000 !important;
+            font-weight: 900 !important;
+        }
     </style>
     """, unsafe_allow_html=True)
 
-    # Инициализация состояний
-    if "app_mode" not in st.session_state:
-        st.session_state.app_mode = "🎮 Trainer"
-    if "view_type" not in st.session_state:
-        st.session_state.view_type = "Mobile"
+    # Неубиваемый стейт, чтобы ничего не слетало при перезагрузках
+    if "actual_app_mode" not in st.session_state:
+        st.session_state.actual_app_mode = "🎮 Trainer"
+    if "actual_view_type" not in st.session_state:
+        st.session_state.actual_view_type = "📱 Mobile"
 
-    # --- ВЕРХНИЕ ВКЛАДКИ НАВИГАЦИИ ---
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        if st.button("🎮 Trainer", type="primary" if st.session_state.app_mode == "🎮 Trainer" else "secondary", use_container_width=True):
-            st.session_state.app_mode = "🎮 Trainer"
-            st.rerun()
-    with c2:
-        if st.button("🔬 Range Lab", type="primary" if st.session_state.app_mode == "🔬 Range Lab" else "secondary", use_container_width=True):
-            st.session_state.app_mode = "🔬 Range Lab"
-            st.rerun()
-    with c3:
-        if st.button("📊 Stats", type="primary" if st.session_state.app_mode == "📊 Statistics" else "secondary", use_container_width=True):
-            st.session_state.app_mode = "📊 Statistics"
-            st.rerun()
+    # --- КОМПАКТНЫЕ ВКЛАДКИ ГЛАВНОГО МЕНЮ ---
+    st.markdown('<div class="compact-tabs"></div>', unsafe_allow_html=True)
+    nav_mode = st.radio(
+        "Nav", 
+        ["🎮 Trainer", "🔬 Range Lab", "📊 Stats"], 
+        index=["🎮 Trainer", "🔬 Range Lab", "📊 Stats"].index(st.session_state.actual_app_mode),
+        horizontal=True, 
+        label_visibility="collapsed"
+    )
+    if nav_mode != st.session_state.actual_app_mode:
+        st.session_state.actual_app_mode = nav_mode
+        st.rerun()
 
-    # --- ПОДМЕНЮ: ВЫБОР ПК / МОБАЙЛ (ТОЛЬКО В РАЗДЕЛЕ ТРЕНАЖЕРА) ---
-    if st.session_state.app_mode == "🎮 Trainer":
-        v1, v2 = st.columns(2)
-        with v1:
-            if st.button("📱 Mobile View", type="primary" if st.session_state.view_type == "Mobile" else "secondary", use_container_width=True):
-                st.session_state.view_type = "Mobile"
-                st.rerun()
-        with v2:
-            if st.button("💻 Desktop View", type="primary" if st.session_state.view_type == "Desktop" else "secondary", use_container_width=True):
-                st.session_state.view_type = "Desktop"
-                st.rerun()
-        st.markdown("<hr style='margin: 5px 0 15px 0; border-color: #333;'>", unsafe_allow_html=True)
+    # --- КОМПАКТНЫЕ ВКЛАДКИ ВЫБОРА УСТРОЙСТВА (ТОЛЬКО В ТРЕНАЖЕРЕ) ---
+    if st.session_state.actual_app_mode == "🎮 Trainer":
+        st.markdown('<div class="compact-tabs"></div>', unsafe_allow_html=True)
+        v_mode = st.radio(
+            "View", 
+            ["📱 Mobile", "💻 Desktop"], 
+            index=["📱 Mobile", "💻 Desktop"].index(st.session_state.actual_view_type),
+            horizontal=True, 
+            label_visibility="collapsed"
+        )
+        if v_mode != st.session_state.actual_view_type:
+            st.session_state.actual_view_type = v_mode
+            st.rerun()
+        
+        st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
     # --- РОУТИНГ ПО ЭКРАНАМ ---
-    if st.session_state.app_mode == "🔬 Range Lab":
+    if st.session_state.actual_app_mode == "🔬 Range Lab":
         compare.show()
-    elif st.session_state.app_mode == "📊 Statistics":
+    elif st.session_state.actual_app_mode == "📊 Stats":
         stats.show()
     else:
-        if st.session_state.view_type == "Mobile":
+        if st.session_state.actual_view_type == "📱 Mobile":
             mobile.show()
         else:
             desktop.show()
