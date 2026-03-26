@@ -28,13 +28,6 @@ def show():
         .combo-glow-500 { border-color: #ff00ff !important; box-shadow: 0 0 60px rgba(255, 0, 255, 0.9), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-matrix 0.8s infinite alternate; }
         .combo-glow-1000 { border-color: #00ff00 !important; box-shadow: 0 0 80px rgba(0, 255, 0, 1.0), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-god 0.5s infinite alternate; }
         
-        @keyframes pulse-slow { 0% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } 50% { box-shadow: 0 0 25px rgba(253, 126, 20, 0.7); } 100% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } }
-        @keyframes pulse-menace { 0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } 50% { box-shadow: 0 0 40px rgba(220, 53, 69, 0.9); } 100% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } }
-        @keyframes pulse-neon { 0% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } 50% { box-shadow: 0 0 60px rgba(111, 66, 193, 1.0); } 100% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } }
-        @keyframes pulse-plasma { 0% { box-shadow: 0 0 30px rgba(0, 229, 255, 0.6); } 100% { box-shadow: 0 0 70px rgba(0, 229, 255, 1.0); } }
-        @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
-        @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
-        
         .table-info { position: absolute; top: 18%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
         .info-spot { font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); z-index: 30; position: relative;}
         .info-src { z-index: 30; position: relative; }
@@ -42,7 +35,12 @@ def show():
         .seat-label { font-size: 11px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 4px; }
         .seat-active { border-color: #ffc107; background: #343a40; }
         .seat-folded { opacity: 0.4; border-color: #212529; }
-        .opp-cards { position: absolute; top: -12px; width: 34px; height: 48px; background: #fff; border-radius: 4px; border: 1px solid #ccc; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); z-index: 20; box-shadow: 1px 1px 4px rgba(0,0,0,0.8); }
+        
+        /* ДВЕ КАРТЫ ДЛЯ ОППОНЕНТОВ (ДЕСКТОП) */
+        .opp-cards-desk { position: absolute; top: -15px; display: flex; z-index: 20; }
+        .opp-card-desk { width: 22px; height: 32px; background: #fff; border-radius: 3px; border: 1px solid #777; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+        .opp-card-desk.right { margin-left: -8px; transform: rotate(12deg) translateY(2px); }
+
         .chip-container { position: absolute; z-index: 10; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
         .poker-chip { width: 22px; height: 22px; background: #222; border: 3px dashed #d32f2f; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
         .chip-3bet { width: 24px; height: 24px; background: #d32f2f; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.6); }
@@ -73,7 +71,14 @@ def show():
     all_scenarios = sorted(list(scenario_map.keys()))
 
     with st.sidebar:
-        st.header("⚙️ Фильтры")
+        st.header("⚙️ Настройки")
+        # ПРЯЧЕМ ПЕРЕКЛЮЧАТЕЛЬ ЭКРАНОВ СЮДА
+        dv_btn = st.radio("Режим интерфейса", ["📱 Mobile", "💻 Desktop"], index=0 if st.session_state.actual_view_type=="📱 Mobile" else 1)
+        if dv_btn != st.session_state.actual_view_type:
+            st.session_state.actual_view_type = dv_btn
+            st.rerun()
+            
+        st.markdown("---")
         saved = utils.load_user_settings()
         
         saved_sc = [s for s in saved.get("scenarios", []) if s in all_scenarios]
@@ -258,7 +263,8 @@ def show():
             
             has_cards = (p in cards_in_play)
             cls = "seat-active" if has_cards else "seat-folded"
-            cards = '<div class="opp-cards"></div>' if has_cards else ""
+            # ДВЕ КАРТЫ ДЛЯ ДЕСКТОПА!
+            cards = '<div class="opp-cards-desk"><div class="opp-card-desk"></div><div class="opp-card-desk right"></div></div>' if has_cards else ""
             ss = get_seat_style(i)
             opp_html += f'<div class="seat {cls}" style="{ss}">{cards}<span class="seat-label">{p}</span></div>'
             
