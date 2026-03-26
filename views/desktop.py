@@ -197,6 +197,31 @@ def show():
     m_name = mastery.get("name", "")
     m_pct = mastery.get("prog_pct", 0)
 
+    # --- APPLE-STYLE PILL BADGE LOGIC (DESKTOP) ---
+    multiplier = st.session_state.get("xp_multiplier", 1.0)
+    
+    if multiplier >= 3.0:
+        pill_style = "background: rgba(220, 53, 69, 0.15); border: 1px solid rgba(220, 53, 69, 0.4); box-shadow: 0 0 15px rgba(220, 53, 69, 0.3);"
+        mult_html = '<span style="background: rgba(220, 53, 69, 0.3); color:#fff; font-size:12px; font-weight:900; margin-left:8px; padding: 2px 8px; border-radius: 10px; letter-spacing:0.5px;">x3.0 XP</span>'
+    elif multiplier >= 2.0:
+        pill_style = "background: rgba(13, 202, 240, 0.15); border: 1px solid rgba(13, 202, 240, 0.4); box-shadow: 0 0 15px rgba(13, 202, 240, 0.3);"
+        mult_html = '<span style="background: rgba(13, 202, 240, 0.3); color:#fff; font-size:12px; font-weight:900; margin-left:8px; padding: 2px 8px; border-radius: 10px; letter-spacing:0.5px;">x2.0 XP</span>'
+    elif multiplier >= 1.5:
+        pill_style = "background: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.4); box-shadow: 0 0 10px rgba(255, 193, 7, 0.2);"
+        mult_html = '<span style="background: rgba(255, 193, 7, 0.3); color:#fff; font-size:12px; font-weight:900; margin-left:8px; padding: 2px 8px; border-radius: 10px; letter-spacing:0.5px;">x1.5 XP</span>'
+    else:
+        pill_style = "background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);"
+        mult_html = ''
+        
+    combo_badge = f"""
+    <div style="flex:1; display:flex; justify-content:center; align-items:center;">
+        <div style="{pill_style} backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px 20px; border-radius: 40px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+            <span style="font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">🔥 {c}</span>
+            {mult_html}
+        </div>
+    </div>
+    """
+
     header_html = f"""
     <div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;">
         <div style="height: 4px; width: 100%; background: #222;">
@@ -210,9 +235,9 @@ def show():
                 </div>
                 <div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data['xp']} / {next_xp} XP</div>
             </div>
-            <div style="flex:1; text-align:center; font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">
-                🔥 x{c}
-            </div>
+            
+            {combo_badge}
+
             <div style="flex:1; text-align:right;">
                 <div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get('streak', 1)} Days</div>
                 <div style="font-size:11px; color:#aaa;">Winrate: {wr}%</div>
