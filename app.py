@@ -4,59 +4,62 @@ from views import mobile, desktop, compare, stats
 st.set_page_config(page_title="Poker Trainer", layout="wide", initial_sidebar_state="collapsed")
 
 def main():
-    # Скрываем черную шапку Стримлита, убираем боковое меню и наводим красоту
+    # Тотальная компрессия отступов
     st.markdown("""
     <style>
         [data-testid="collapsedControl"] { display: none !important; }
-        header[data-testid="stHeader"] { background: transparent !important; }
-        .block-container { padding-top: 3rem !important; }
+        header[data-testid="stHeader"] { background: transparent !important; height: 0px !important; min-height: 0px !important; }
+        .block-container { padding-top: 1.5rem !important; padding-bottom: 1rem !important; }
         
-        /* Секретный маркер для стилизации только конкретных радио-кнопок */
+        /* Секретный маркер для вкладок */
         .compact-tabs { display: none; }
         
-        /* Превращаем радио-кнопки в компактные вкладки */
+        /* Обертка радио-кнопок */
         .compact-tabs + div[role="radiogroup"] {
             display: inline-flex !important;
             background: #1a1c20 !important;
-            padding: 4px !important;
-            border-radius: 10px !important;
+            padding: 2px !important;
+            border-radius: 8px !important;
             border: 1px solid #333 !important;
             gap: 2px !important;
+            margin-top: -5px !important; /* Поднимаем вкладки выше */
+            margin-bottom: -8px !important; /* Прижимаем к нижнему элементу */
         }
         .compact-tabs + div[role="radiogroup"] label {
-            padding: 6px 14px !important;
+            padding: 4px 8px !important;
             background: transparent !important;
-            border-radius: 8px !important;
+            border-radius: 6px !important;
             cursor: pointer !important;
             margin: 0 !important;
             border: none !important;
         }
-        /* Прячем сами кружочки радио */
-        .compact-tabs + div[role="radiogroup"] label div:first-child {
-            display: none !important;
+        .compact-tabs + div[role="radiogroup"] label div:first-child { display: none !important; }
+        .compact-tabs + div[role="radiogroup"] label p { 
+            color: #888 !important; 
+            font-size: 11px !important; 
+            font-weight: bold !important; 
+            margin: 0 !important; 
+            text-transform: uppercase; 
         }
-        /* Текст неактивной вкладки */
-        .compact-tabs + div[role="radiogroup"] label p {
-            color: #888 !important;
-            font-size: 13px !important;
-            font-weight: bold !important;
-            margin: 0 !important;
-        }
-        /* Текст и фон АКТИВНОЙ вкладки */
+        
+        /* Активное состояние */
         .compact-tabs + div[role="radiogroup"] label[data-checked="true"],
         .compact-tabs + div[role="radiogroup"] label:has(input:checked) {
             background: #ffc107 !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.4) !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
         }
         .compact-tabs + div[role="radiogroup"] label[data-checked="true"] p,
         .compact-tabs + div[role="radiogroup"] label:has(input:checked) p {
             color: #000 !important;
             font-weight: 900 !important;
         }
+        
+        /* Глобальное схлопывание пустот между блоками Стримлита */
+        div[data-testid="stVerticalBlock"] > div { padding-bottom: 0 !important; margin-bottom: 0 !important; }
+        div.element-container { margin-bottom: 2px !important; }
     </style>
     """, unsafe_allow_html=True)
 
-    # Неубиваемый стейт, чтобы ничего не слетало при перезагрузках
     if "actual_app_mode" not in st.session_state:
         st.session_state.actual_app_mode = "🎮 Trainer"
     if "actual_view_type" not in st.session_state:
@@ -88,8 +91,6 @@ def main():
         if v_mode != st.session_state.actual_view_type:
             st.session_state.actual_view_type = v_mode
             st.rerun()
-        
-        st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 
     # --- РОУТИНГ ПО ЭКРАНАМ ---
     if st.session_state.actual_app_mode == "🔬 Range Lab":
