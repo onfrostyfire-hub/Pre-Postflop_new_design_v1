@@ -7,7 +7,7 @@ def show():
     st.markdown("""
     <style>
         .stApp { background-color: #212529; color: #e9ecef; }
-        .block-container { padding-top: 4rem; }
+        .block-container { padding-top: 4.5rem !important; }
         .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto; background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%); border: 15px solid #4a1c1c; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: box-shadow 0.3s, border-color 0.3s; }
         
         .mastery-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; z-index: 1; transition: box-shadow 0.5s ease; }
@@ -91,7 +91,6 @@ def show():
                         sel_spots_keys.append(sp_key)
         
         if st.button("🚀 Применить настройки", use_container_width=True):
-            # ИСПРАВЛЕНО: обновляем существующий словарь, чтобы не убить стату
             saved["scenarios"] = sel_sc
             saved["spots"] = sel_spots_keys
             utils.save_user_settings(saved)
@@ -166,7 +165,7 @@ def show():
         elif rng < (w_raise_val + w_c): correct_act = "CALL"
     else:
         w = utils.get_weight(st.session_state.hand, r_full)
-        if w > 0: correct_act = "RAISE"
+        if rng < w: correct_act = "RAISE"
 
     h_val = st.session_state.hand; s1, s2 = st.session_state.suits
     c1 = "suit-red" if s1 == '♥' else "suit-blue" if s1 == '♦' else "suit-green" if s1 == '♣' else "suit-black"
@@ -256,6 +255,7 @@ def show():
 
         for i in range(1, 6):
             p = rot[i]
+            
             has_cards = (p in cards_in_play)
             cls = "seat-active" if has_cards else "seat-folded"
             cards = '<div class="opp-cards"></div>' if has_cards else ""
@@ -294,7 +294,7 @@ def show():
         
         st.markdown(html, unsafe_allow_html=True)
         if is_defense: st.markdown('<div class="rng-hint-box">📉 0..Freq → Action | 📈 Freq..100 → Fold</div>', unsafe_allow_html=True)
-        else: st.markdown("<div style='height:30px;'></div>", unsafe_allow_html=True)
+        else: st.markdown('<div class="rng-hint-box">📉 0..Freq → Raise | 📈 Freq..100 → Fold</div>', unsafe_allow_html=True)
 
         def handle_action(action):
             corr = (correct_act == action)
