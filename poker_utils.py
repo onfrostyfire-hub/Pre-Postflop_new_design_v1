@@ -278,21 +278,51 @@ def update_srs_auto(spot_id, hand, is_correct):
     w = data.get(key, 100)
     
     if is_correct:
-        # Gradually reduce weight for correct answers
         w = int(w * 0.8)
     else:
-        # Adaptive penalty based on existing weight
         if w < 50:
-            # Low weight = probably a misclick, slight bump
             w = int(w * 1.5)
         else:
-            # High weight = systematic leak, heavy punishment
             w = int(w * 2.5)
-    
-    # Floor is 10, Ceiling is 2000
+            
     data[key] = max(10, min(w, 2000))
     st.session_state["unsaved_count"] += 1
     check_auto_sync()
+
+# --- REBUILD SRS FROM PERFECT HISTORY ---
+def rebuild_srs_from_history():
+    df = load_history()
+    new_srs = {}
+    ranges_db = load_ranges()
+    
+    # Реверсивный маппинг коротких спотов в базовые ключи
+    sp_to_base_key = {}
+    for src, sc_dict in ranges_db.items():
+        for sc, sp_dict in sc_dict.items():
+            for sp in sp_dict.keys():
+                base_k = f"{src}_{sc}_{sp}".replace(" ", "_")
+                sp_to_base_key[sp] = base_k
+                
+    if not df.empty:
+        df_hist = df.copy().sort_values("Date")
+        for _, row in df_hist.iterrows():
+            spot = str(row["Spot"])
+            hand = str(row["Hand"])
+            res = int(row["Result"])
+            
+            base_k = sp_to_base_key.get(spot, spot.replace(" ", "_"))
+            full_k = f"{base_k}_{hand}"
+            
+            w = new_srs.get(full_k, 100)
+            if res == 1:
+                w = int(w * 0.8)
+            else:
+                w = int(w * 1.5) if w < 50 else int(w * 2.5)
+            new_srs[full_k] = max(10, min(w, 2000))
+            
+    st.session_state["srs_data"] = new_srs
+    st.session_state["unsaved_count"] += 3 # Форсируем немедленный синк
+    force_sync()
 
 def load_user_settings():
     init_cloud_data()
@@ -322,23 +352,37 @@ def save_to_history(record):
 def check_auto_sync():
     if st.session_state["unsaved_count"] >= 3: force_sync()
 
+# --- ИЗОЛИРОВАННОЕ И БРОНИРОВАННОЕ СОХРАНЕНИЕ ---
 def force_sync():
     if st.session_state.get("unsaved_count", 0) == 0: return
     sheets = get_worksheets()
-    try:
-        if "srs_data" in st.session_state:
-            rows = [["Key", "Weight"]] + [[k, v] for k, v in st.session_state["srs_data"].items()]
+    
+    # 1. Сохраняем SRS (Жесткий блок)
+    if "srs_data" in st.session_state:
+        try:
+            rows = [["Key", "Weight"]] + [[str(k), int(v)] for k, v in st.session_state["srs_data"].items()]
+            sheets["SRS"].clear() # Выжигаем старые данные, чтобы не было дублей
             sheets["SRS"].update(values=rows, range_name="A1")
-        if "history_buffer" in st.session_state and st.session_state["history_buffer"]:
+        except Exception as e:
+            st.error(f"⚠️ SRS Sync Error: {e}")
+
+    # 2. Сохраняем Историю (Независимо от SRS)
+    if "history_buffer" in st.session_state and st.session_state["history_buffer"]:
+        try:
             sheets["History"].append_rows(st.session_state["history_buffer"])
             st.session_state["history_buffer"] = []
-        if st.session_state.get("settings_changed"):
+        except Exception as e:
+            st.error(f"⚠️ History Sync Error: {e}")
+
+    # 3. Сохраняем Настройки (Независимо от остального)
+    if st.session_state.get("settings_changed"):
+        try:
             sheets["Settings"].update_acell('A1', json.dumps(st.session_state["user_settings"]))
             st.session_state["settings_changed"] = False
+        except Exception as e:
+            st.error(f"⚠️ Settings Sync Error: {e}")
             
-        st.session_state["unsaved_count"] = 0
-    except Exception as e:
-        st.error(f"⚠️ Google Sheets Sync Error: {e}")
+    st.session_state["unsaved_count"] = 0
 
 @st.cache_data(ttl=60)
 def load_history():
@@ -499,7 +543,6 @@ def render_range_matrix(spot_data, target_hand=None):
         grid_html += stats_html
     return grid_html
 
-# --- ADAPTIVE SRS HEATMAP RENDERER ---
 def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
     grid_html = '<div style="display:grid;grid-template-columns:repeat(13,1fr);gap:1px;background:#111;padding:1px;border:1px solid #444;">'
     for r1 in RANKS:
@@ -511,12 +554,12 @@ def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
             key = f"{src}_{sc}_{sp}_{h}".replace(" ", "_")
             w = srs_data.get(key, 100)
             
-            if w <= 10: bg = "#0f5132" # Mastered (Dark Green)
-            elif w <= 50: bg = "#198754" # Good (Green)
-            elif w <= 150: bg = "#2c3034" # Base (Gray)
-            elif w <= 500: bg = "#854000" # Warning (Dark Orange)
-            elif w <= 1000: bg = "#fd7e14" # Danger (Orange)
-            else: bg = "#dc3545" # Leak (Red)
+            if w <= 10: bg = "#0f5132" # Mastered
+            elif w <= 50: bg = "#198754" # Good
+            elif w <= 150: bg = "#2c3034" # Base
+            elif w <= 500: bg = "#854000" # Warning
+            elif w <= 1000: bg = "#fd7e14" # Danger
+            else: bg = "#dc3545" # Leak
             
             style = f"aspect-ratio:1;display:flex;justify-content:center;align-items:center;font-size:7px;cursor:default;color:#fff;background:{bg};"
             if target_hand and h == target_hand: style += "border:1.5px solid #ffc107;z-index:10;box-shadow: 0 0 4px #ffc107;"
