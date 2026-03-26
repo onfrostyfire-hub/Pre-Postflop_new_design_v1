@@ -129,7 +129,7 @@ def get_rank_info(xp):
     tiers = [
         (0, "🐟 Fish"), (2000, "🪨 Nit"), (7500, "🚶 Reg"),
         (20000, "⚔️ Grinder"), (50000, "🦈 Shark"), (100000, "🎩 High Roller"),
-        (250000, "👑 Boss"), (500000, "🤖 GTO Machine")
+        (250000, "👑 Boss"), (500000, "🤖 GTO Machine"), (1000000, "👽 Poker God")
     ]
     current_rank = tiers[0][1]
     next_xp = tiers[1][0]
@@ -267,11 +267,13 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
     # 1. Считаем множитель от текущего комбо
     multiplier = 1.0
     if is_correct:
-        if combo >= 50: multiplier = 3.0
+        if combo >= 500: multiplier = 10.0
+        elif combo >= 250: multiplier = 5.0
+        elif combo >= 100: multiplier = 4.0
+        elif combo >= 50: multiplier = 3.0
         elif combo >= 25: multiplier = 2.0
         elif combo >= 10: multiplier = 1.5
     
-    # Сохраняем множитель в сессию для UI
     st.session_state["xp_multiplier"] = multiplier
 
     if stats["last_date"]:
@@ -285,11 +287,7 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
     stats["last_date"] = now_date_str
     
     stats["total_hands"] += 1
-    
-    # 2. Начисляем XP с учетом множителя
-    if is_correct: 
-        stats["xp"] += int(10 * multiplier)
-
+    if is_correct: stats["xp"] += int(10 * multiplier)
     if combo > stats.get("max_combo", 0): stats["max_combo"] = combo
     
     if stats["dailies"].get("date") != now_date_str:
