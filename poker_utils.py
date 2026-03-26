@@ -53,7 +53,6 @@ def load_history():
     except: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
 
 def rebuild_srs_from_history():
-    """Собирает веса налету из истории раздач"""
     df = load_history()
     weights = {}
     
@@ -74,9 +73,9 @@ def rebuild_srs_from_history():
         w = weights.get(key, 100)
         
         if result == 1:
-            w = int(w * 0.8) # Правильно - вес падает
+            w = int(w * 0.8)
         else:
-            w = int((w * 1.5) + (20 if w < 50 else 50)) # Ошибка - вес растет + штраф
+            w = int((w * 1.5) + (20 if w < 50 else 50))
             
         weights[key] = max(10, min(w, 2000))
         
@@ -86,7 +85,6 @@ def init_cloud_data():
     if "app_initialized" not in st.session_state:
         sheets = get_worksheets()
         
-        # Строим SRS из хистори, никаких обращений к листу SRS
         try:
             st.session_state["srs_data"] = rebuild_srs_from_history()
         except Exception as e:
@@ -266,6 +264,16 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
     now_date_str = now_date.strftime("%Y-%m-%d")
     alerts = []
     
+    # 1. Считаем множитель от текущего комбо
+    multiplier = 1.0
+    if is_correct:
+        if combo >= 50: multiplier = 3.0
+        elif combo >= 25: multiplier = 2.0
+        elif combo >= 10: multiplier = 1.5
+    
+    # Сохраняем множитель в сессию для UI
+    st.session_state["xp_multiplier"] = multiplier
+
     if stats["last_date"]:
         try:
             last_date = datetime.strptime(stats["last_date"], "%Y-%m-%d").date()
@@ -277,7 +285,11 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
     stats["last_date"] = now_date_str
     
     stats["total_hands"] += 1
-    if is_correct: stats["xp"] += 10
+    
+    # 2. Начисляем XP с учетом множителя
+    if is_correct: 
+        stats["xp"] += int(10 * multiplier)
+
     if combo > stats.get("max_combo", 0): stats["max_combo"] = combo
     
     if stats["dailies"].get("date") != now_date_str:
@@ -558,18 +570,16 @@ def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
             
             w = _get_fuzzy_weight(srs_data, src, sc, sp, h)
             
-            if w <= 10: bg = "#0f5132" # Mastered
-            elif w <= 50: bg = "#198754" # Good
-            elif w <= 150: bg = "#2c3034" # Base
-            elif w <= 500: bg = "#854000" # Warning
-            elif w <= 1000: bg = "#fd7e14" # Danger
-            else: bg = "#dc3545" # Leak
+            if w <= 10: bg = "#0f5132" 
+            elif w <= 50: bg = "#198754" 
+            elif w <= 150: bg = "#2c3034" 
+            elif w <= 500: bg = "#854000" 
+            elif w <= 1000: bg = "#fd7e14" 
+            else: bg = "#dc3545" 
             
-            # Изменил стиль: добавил flex-direction: column чтобы текст вставал друг под другом
             style = f"aspect-ratio:1;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:default;color:#fff;background:{bg};"
             if target_hand and h == target_hand: style += "border:1.5px solid #ffc107;z-index:10;box-shadow: 0 0 4px #ffc107;"
             
-            # Выводим название руки и сам вес прямо в квадратике
             grid_html += f'<div style="{style}" title="{h} | Weight: {w}">'
             grid_html += f'<div style="font-size:9px; font-weight:bold; line-height:1;">{h}</div>'
             grid_html += f'<div style="font-size:7px; color:#ffc107; margin-top:2px; font-weight:bold;">{w}</div>'
