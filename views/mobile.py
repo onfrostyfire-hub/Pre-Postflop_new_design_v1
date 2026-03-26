@@ -4,59 +4,24 @@ from datetime import datetime
 import poker_utils as utils
 
 def show():
-    # ЖЕСТКАЯ БЛОКИРОВКА СТАНДАРТНОЙ ВЕРСТКИ STREAMLIT ДЛЯ КНОПОК
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
-        /* Согласовываем отступ с app.py, чтобы не перебивал */
         .block-container { padding-top: 1.5rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
-        
-        /* Прижимаем экспандер вплотную к верхним вкладкам */
         [data-testid="stExpander"] { margin-top: -5px !important; margin-bottom: 5px !important; }
         
-        /* УБИВАЕМ СТАНДАРТНУЮ СЕТКУ STREAMLIT ДЛЯ КОЛОНОК И СТАВИМ CSS GRID */
-        div[data-testid="stHorizontalBlock"] {
-            display: grid !important;
-            grid-template-columns: repeat(auto-fit, minmax(10px, 1fr)) !important;
-            gap: 8px !important;
-            width: 100% !important;
-        }
-        div[data-testid="column"] {
-            width: 100% !important;
-            min-width: 0 !important;
-            max-width: 100% !important;
-            margin-bottom: 0 !important;
-        }
-        div[data-testid="stButton"] {
-            width: 100% !important;
-        }
-        div[data-testid="stButton"] button {
-            width: 100% !important;
-            height: 50px !important; /* Чуть тоньше кнопки экшенов */
-            padding: 0 !important;
-            border-radius: 12px !important;
-            border: none !important;
-            transition: transform 0.1s !important;
-        }
-        div[data-testid="stButton"] button:active {
-            transform: translateY(4px) !important;
-            box-shadow: 0 1px 0 transparent !important;
-        }
-        div[data-testid="stButton"] button p {
-            font-family: 'Roboto', sans-serif !important;
-            font-size: 15px !important;
-            font-weight: 900 !important;
-            margin: 0 !important;
-            letter-spacing: 0.5px !important;
-            text-transform: uppercase !important;
-            color: #ffffff !important;
-        }
+        div[data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(10px, 1fr)) !important; gap: 8px !important; width: 100% !important; }
+        div[data-testid="column"] { width: 100% !important; min-width: 0 !important; max-width: 100% !important; margin-bottom: 0 !important; }
+        div[data-testid="stButton"] { width: 100% !important; }
+        div[data-testid="stButton"] button { width: 100% !important; height: 50px !important; padding: 0 !important; border-radius: 12px !important; border: none !important; transition: transform 0.1s !important; }
+        div[data-testid="stButton"] button:active { transform: translateY(4px) !important; box-shadow: 0 1px 0 transparent !important; }
+        div[data-testid="stButton"] button p { font-family: 'Roboto', sans-serif !important; font-size: 15px !important; font-weight: 900 !important; margin: 0 !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; color: #ffffff !important; }
 
-        /* Игровой стол */
+        /* СТОЛ СДВИНУТ ВНИЗ ЧТОБЫ НЕ НАЛЕЗАТЬ НА СТАТУСЫ */
         .mobile-game-area { 
             position: relative; width: 100%; height: 250px; 
-            margin: 0 auto 10px auto; /* Меньше отступ снизу */
+            margin: 35px auto 10px auto; 
             background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); 
             border: 6px solid #3e2723; border-radius: 125px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
@@ -88,16 +53,19 @@ def show():
         @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
         @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
 
-        .mob-info { position: absolute; top: 28%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
+        .mob-info { position: absolute; top: 42%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
         .mob-info-spot { font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.15); line-height: 1; z-index: 30; position: relative; }
         .seat { position: absolute; width: 44px; height: 44px; background: #222; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
         .seat-label { font-size: 9px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 2px; }
         .seat-active { border-color: #ffc107; background: #2a2a2a; }
         .seat-folded { opacity: 0.4; border-color: #333; }
         
-        .opp-cards-mob { position: absolute; top: -8px; width: 24px; height: 34px; background: #fff; border-radius: 3px; border: 1px solid #ccc; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); z-index: 20; box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+        /* ДВЕ КАРТЫ ДЛЯ ОППОНЕНТОВ (МОБАЙЛ) */
+        .opp-cards-mob { position: absolute; top: -14px; display: flex; z-index: 20; }
+        .opp-card-mob { width: 18px; height: 26px; background: #fff; border-radius: 2px; border: 1px solid #777; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+        .opp-card-mob.right { margin-left: -8px; transform: rotate(12deg) translateY(2px); }
 
-        .chip-container { position: absolute; z-index: 10; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+        .chip-container { position: absolute; z-index: 25; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
         .chip-mob { width: 14px; height: 14px; background: #111; border: 2px dashed #d32f2f; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         .chip-3bet { width: 16px; height: 16px; background: #d32f2f; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
         .dealer-mob { width: 16px; height: 16px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 9px; display: flex; justify-content: center; align-items: center; border: 1px solid #bfa006; position: absolute; z-index: 11; }
@@ -110,7 +78,7 @@ def show():
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         
-        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 12px; letter-spacing: 0.5px; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -127,6 +95,16 @@ def show():
     all_scenarios = sorted(list(scenario_map.keys()))
 
     with st.expander("⚙️ Настройки Фильтров", expanded=False):
+        # ПРЯЧЕМ ПЕРЕКЛЮЧАТЕЛЬ ЭКРАНОВ СЮДА
+        c_v1, c_v2 = st.columns(2)
+        with c_v1:
+            if st.button("📱 Mobile View", key="mv_btn"):
+                st.session_state.actual_view_type = "📱 Mobile"; st.rerun()
+        with c_v2:
+            if st.button("💻 Desktop View", key="dv_btn"):
+                st.session_state.actual_view_type = "💻 Desktop"; st.rerun()
+        st.markdown("<hr style='margin: 5px 0;'>", unsafe_allow_html=True)
+
         saved = utils.load_user_settings()
         sel_sc = st.multiselect("Сценарий", all_scenarios, default=[s for s in saved.get("scenarios", []) if s in all_scenarios])
         
@@ -299,17 +277,17 @@ def show():
     rot = order[hero_idx:] + order[:hero_idx]
 
     def get_seat_style(idx):
-        return {0: "bottom: -20px; left: 50%; transform: translateX(-50%);", 1: "bottom: 15%; left: 0%;", 2: "top: 15%; left: 0%;", 
-                3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 15%; right: 0%;", 5: "bottom: 15%; right: 0%;"}.get(idx, "")
+        return {0: "bottom: -20px; left: 50%; transform: translateX(-50%);", 1: "bottom: 10%; left: -5%;", 2: "top: 10%; left: -5%;", 
+                3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 10%; right: -5%;", 5: "bottom: 10%; right: -5%;"}.get(idx, "")
 
     def get_chip_style(idx):
         return {
-            0: "bottom: 25%; left: 50%; transform: translateX(-50%);", 
-            1: "bottom: 18%; left: 16%;", 
-            2: "top: 15%; left: 16%;",
-            3: "top: 10%; left: 50%; transform: translateX(-50%);", 
-            4: "top: 15%; right: 16%;", 
-            5: "bottom: 18%; right: 16%;"
+            0: "bottom: 30px; left: 50%; transform: translateX(-50%);", 
+            1: "bottom: 15%; left: 20%;", 
+            2: "top: 15%; left: 20%;",
+            3: "top: 30px; left: 50%; transform: translateX(-50%);", 
+            4: "top: 15%; right: 20%;", 
+            5: "bottom: 15%; right: 20%;"
         }.get(idx, "")
 
     def get_btn_style(idx):
@@ -322,7 +300,8 @@ def show():
         p = rot[i]
         has_cards = (p in cards_in_play)
         cls = "seat-active" if has_cards else "seat-folded"
-        cards = '<div class="opp-cards-mob"></div>' if has_cards else ""
+        # ДВЕ КАРТЫ!
+        cards = '<div class="opp-cards-mob"><div class="opp-card-mob"></div><div class="opp-card-mob right"></div></div>' if has_cards else ""
         ss = get_seat_style(i)
         opp_html += f'<div class="seat {cls}" style="{ss}">{cards}<span class="seat-label">{p}</span></div>'
         
