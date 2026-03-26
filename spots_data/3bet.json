@@ -2,7 +2,7 @@
   "source": "Jayser",
   "scenario": "3bet",
   "spots": {
-    "BUvsCO": {
+    "3bet BUvsCO": {
       "setup": { "hero_pos": "BTN", "villain_pos": "CO", "btn_pos": "BTN", "active_players": ["CO", "BTN", "SB", "BB"], "table_bets": {"CO": 2.5, "SB": 0.5, "BB": 1.0}, "hero_bet": null, "is_3bet_pot": false },
       "ranges": {
         "3bet": "AA,KK,QQ,JJ,TT,99,88,77,66:0.5,AK,AQ,AJ,ATs,A9s,A8s,A7s,A6s,A5s,A4s,KQ,KJs,KTs,K9s,QJs,QTs,Q9s,JTs,J9s,T9s,76s:0.5,65s:0.5,54s:0.5",
@@ -11,7 +11,7 @@
       },
       "stats": { "3bet": "13%" }
     },
-    "SBvsCO": {
+    "3bet SBvsCO": {
       "setup": { "hero_pos": "SB", "villain_pos": "CO", "btn_pos": "BTN", "active_players": ["CO", "SB", "BB"], "table_bets": {"CO": 2.5, "BB": 1.0}, "hero_bet": 0.5, "is_3bet_pot": false },
       "ranges": {
         "3bet": "AA,KK,QQ,JJ,TT,99,88,AK,AQ,AJ,ATs,A9s,A5s,A4s,KQ,KJs,KTs,K9s,QJs,QTs,JTs,J9s,T9s",
@@ -20,7 +20,7 @@
       },
       "stats": { "3bet": "11%" }
     },
-    "SBvsBU": {
+    "3bet SBvsBU": {
       "setup": { "hero_pos": "SB", "villain_pos": "BTN", "btn_pos": "BTN", "active_players": ["BTN", "SB", "BB"], "table_bets": {"BTN": 2.5, "BB": 1.0}, "hero_bet": 0.5, "is_3bet_pot": false },
       "ranges": {
         "3bet": "AA,KK,QQ,JJ,TT,99,88,77,66:0.5,AK,AQ,AJ,ATs,ATo:0.5,A9s,A8s,A7s:0.5,A5s,A4s,KQ,KJ,KTs,K9s,QJs,QTs,Q9s:0.5,JTs,J9s,T9s,T8s,87s:0.5,76s:0.5,65s:0.5",
