@@ -41,13 +41,24 @@ def get_worksheets():
 def init_cloud_data():
     if "app_initialized" not in st.session_state:
         sheets = get_worksheets()
+        
+        # 1. Безопасная загрузка SRS
         try:
             srs_vals = sheets["SRS"].get_all_values()
-            st.session_state["srs_data"] = {str(r[0]): int(r[1]) for r in srs_vals[1:]} if len(srs_vals) > 1 else {}
+            srs_dict = {}
+            if len(srs_vals) > 1:
+                for r in srs_vals[1:]:
+                    if len(r) >= 2 and str(r[0]).strip():
+                        try:
+                            srs_dict[str(r[0])] = int(float(r[1]))
+                        except ValueError:
+                            pass # Игнорируем мусорные ячейки
+            st.session_state["srs_data"] = srs_dict
         except Exception as e:
-            st.error(f"🚨 SRS Read Error. Halting to protect data: {e}")
+            st.error(f"🚨 Ошибка чтения SRS. Приложение остановлено для защиты данных: {e}")
             st.stop()
         
+        # 2. Безопасная загрузка настроек
         try:
             set_val = sheets["Settings"].acell('A1').value
             if set_val:
@@ -55,7 +66,7 @@ def init_cloud_data():
             else:
                 st.session_state["user_settings"] = {}
         except Exception as e:
-            st.error(f"🚨 CRITICAL ERROR: Settings cell A1 read failed. Halting. {e}")
+            st.error(f"🚨 Ошибка чтения Settings: {e}")
             st.stop()
             
         st.session_state["history_buffer"] = []
@@ -278,14 +289,13 @@ def update_srs_auto(spot_id, hand, is_correct):
     w = data.get(key, 100)
     
     if is_correct:
-        w = int(w * 0.8) # Плавное снижение
+        w = int(w * 0.8) 
     else:
-        # Штрафы за тупость. Если рука была выучена (вес < 50) - штраф 20. 
-        # Если рука и так проблемная - штраф 50.
         penalty = 20 if w < 50 else 50
         w = int((w * 1.5) + penalty)
             
-    data[key] = max(10, min(w, 2000)) # Ограничиваем рамки
+    data[key] = max(10, min(w, 2000))
+    st.session_state["srs_data"] = data
     st.session_state["unsaved_count"] += 1
     check_auto_sync()
 
@@ -315,35 +325,43 @@ def save_to_history(record):
     check_auto_sync()
 
 def check_auto_sync():
-    # 1 раздача = 1 запись в History + 1 апдейт SRS = 2 операции.
-    # Синкаем строго каждые 5 раздач (10 операций), чтобы убрать лаги.
-    if st.session_state.get("unsaved_count", 0) >= 10: 
+    # Сохраняем каждые 3 раздачи (6 операций), чтобы не терять прогресс, но и не лагать
+    if st.session_state.get("unsaved_count", 0) >= 6: 
         force_sync()
 
-# --- ИЗОЛИРОВАННОЕ И БРОНИРОВАННОЕ СОХРАНЕНИЕ ---
+# --- БРОНЕБОЙНОЕ ИЗОЛИРОВАННОЕ СОХРАНЕНИЕ ---
 def force_sync():
     if st.session_state.get("unsaved_count", 0) == 0: return
     sheets = get_worksheets()
+    sync_success = True
     
-    # 1. Синкаем SRS (Независимо от истории)
-    if "srs_data" in st.session_state:
+    # 1. Синкаем SRS с проверкой версий gspread
+    if "srs_data" in st.session_state and st.session_state["srs_data"]:
         try:
-            rows = [["Key", "Weight"]] + [[str(k), int(v)] for k, v in st.session_state["srs_data"].items()]
+            rows = [["Key", "Weight"]]
+            for k, v in st.session_state["srs_data"].items():
+                rows.append([str(k), int(float(v))])
+                
             sheets["SRS"].clear()
-            try:
-                # Универсальный синтаксис для новых и старых версий gspread
-                sheets["SRS"].update(values=rows, range_name="A1")
-            except TypeError:
-                sheets["SRS"].update("A1", rows)
+            
+            major_version = int(gspread.__version__.split('.')[0])
+            if major_version >= 6:
+                sheets["SRS"].update(rows) # Для новых версий gspread
+            else:
+                sheets["SRS"].update("A1", rows) # Для старых версий
         except Exception as e:
-            print(f"SRS Sync error: {e}") # Глотаем ошибку молча, пишем в консоль, чтобы не сломать UI.
+            sync_success = False
+            st.toast(f"❌ Ошибка сохранения SRS: {e}")
+            print(f"SRS Sync error: {e}")
 
-    # 2. Синкаем Историю (Независимо от SRS)
+    # 2. Синкаем Историю
     if "history_buffer" in st.session_state and st.session_state["history_buffer"]:
         try:
             sheets["History"].append_rows(st.session_state["history_buffer"])
             st.session_state["history_buffer"] = []
         except Exception as e:
+            sync_success = False
+            st.toast(f"❌ Ошибка сохранения History: {e}")
             print(f"History Sync error: {e}")
 
     # 3. Синкаем Настройки
@@ -352,9 +370,13 @@ def force_sync():
             sheets["Settings"].update_acell('A1', json.dumps(st.session_state["user_settings"]))
             st.session_state["settings_changed"] = False
         except Exception as e:
+            sync_success = False
+            st.toast(f"❌ Ошибка сохранения Settings: {e}")
             print(f"Settings Sync error: {e}")
             
     st.session_state["unsaved_count"] = 0
+    if sync_success:
+        st.toast("☁️ Данные синхронизированы", icon="✅")
 
 @st.cache_data(ttl=60)
 def load_history():
