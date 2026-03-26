@@ -4,12 +4,16 @@ from datetime import datetime
 import poker_utils as utils
 
 def show():
-    # ЖЕСТКАЯ БЛОКИРОВКА СТАНДАРТНОЙ ВЕРСТКИ STREAMLIT ДЛЯ КНОПОК И ОТСТУПОВ
+    # ЖЕСТКАЯ БЛОКИРОВКА СТАНДАРТНОЙ ВЕРСТКИ STREAMLIT ДЛЯ КНОПОК
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
-        .block-container { padding-top: 4.5rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
+        /* Согласовываем отступ с app.py, чтобы не перебивал */
+        .block-container { padding-top: 1.5rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
+        
+        /* Прижимаем экспандер вплотную к верхним вкладкам */
+        [data-testid="stExpander"] { margin-top: -5px !important; margin-bottom: 5px !important; }
         
         /* УБИВАЕМ СТАНДАРТНУЮ СЕТКУ STREAMLIT ДЛЯ КОЛОНОК И СТАВИМ CSS GRID */
         div[data-testid="stHorizontalBlock"] {
@@ -29,7 +33,7 @@ def show():
         }
         div[data-testid="stButton"] button {
             width: 100% !important;
-            height: 55px !important;
+            height: 50px !important; /* Чуть тоньше кнопки экшенов */
             padding: 0 !important;
             border-radius: 12px !important;
             border: none !important;
@@ -46,13 +50,13 @@ def show():
             margin: 0 !important;
             letter-spacing: 0.5px !important;
             text-transform: uppercase !important;
-            color: #ffffff !important; /* ЖЕСТКО БЕЛЫЙ ТЕКСТ ДЛЯ ВСЕХ КНОПОК */
+            color: #ffffff !important;
         }
 
         /* Игровой стол */
         .mobile-game-area { 
             position: relative; width: 100%; height: 250px; 
-            margin: 0 auto 15px auto; 
+            margin: 0 auto 10px auto; /* Меньше отступ снизу */
             background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); 
             border: 6px solid #3e2723; border-radius: 125px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
@@ -91,7 +95,6 @@ def show():
         .seat-active { border-color: #ffc107; background: #2a2a2a; }
         .seat-folded { opacity: 0.4; border-color: #333; }
         
-        /* КАРТЫ ОППОНЕНТОВ */
         .opp-cards-mob { position: absolute; top: -8px; width: 24px; height: 34px; background: #fff; border-radius: 3px; border: 1px solid #ccc; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); z-index: 20; box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
 
         .chip-container { position: absolute; z-index: 10; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
@@ -107,7 +110,7 @@ def show():
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         
-        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 12px; letter-spacing: 0.5px; }
+        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 8px; letter-spacing: 0.5px; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -250,7 +253,7 @@ def show():
         hands_left_text = f"Осталось: {h_left} рук"
 
     header_html = f"""
-    <div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
+    <div style="background:#111; border-radius:10px; margin-bottom:5px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
         <div style="height: 3px; width: 100%; background: #222;">
             <div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else '#444'}; transition: width 0.3s;"></div>
         </div>
