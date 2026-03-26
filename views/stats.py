@@ -21,69 +21,62 @@ def show():
         return
 
     st.markdown("### 🚑 Data Recovery")
-    with st.expander("Recover Spot Mastery & SRS from History", expanded=False):
-        st.markdown("If your progress or hand weights got reset, this will recalculate everything from raw history.")
+    with st.expander("Recover Spot Mastery from History", expanded=False):
+        st.markdown("If your progress got reset, this will recalculate your experience, streak, and Spot Mastery from raw history.")
         
-        c1, c2 = st.columns(2)
-        with c1:
-            if st.button("🔧 RECOVER SPOT MASTERY", use_container_width=True):
-                df_hist = df.copy().sort_values("Date")
-                new_mastery = {}
-                total_correct = 0
-                unique_dates = set()
+        if st.button("🔧 RECOVER SPOT MASTERY", use_container_width=True):
+            df_hist = df.copy().sort_values("Date")
+            new_mastery = {}
+            total_correct = 0
+            unique_dates = set()
+            
+            ranges_db = utils.load_ranges()
+            sp_to_full_key = {}
+            for src, sc_dict in ranges_db.items():
+                for sc, sp_dict in sc_dict.items():
+                    for sp in sp_dict.keys():
+                        sp_to_full_key[sp] = f"{src}|{sc}|{sp}"
+            
+            for _, row in df_hist.iterrows():
+                short_spot = str(row["Spot"])
+                res_int = int(row["Result"])
+                res_str = str(res_int)
+                date_obj = row["Date"].date()
+                date_str = date_obj.strftime("%Y-%m-%d")
                 
-                ranges_db = utils.load_ranges()
-                sp_to_full_key = {}
-                for src, sc_dict in ranges_db.items():
-                    for sc, sp_dict in sc_dict.items():
-                        for sp in sp_dict.keys():
-                            sp_to_full_key[sp] = f"{src}|{sc}|{sp}"
+                unique_dates.add(date_obj)
+                if res_int == 1: total_correct += 1
                 
-                for _, row in df_hist.iterrows():
-                    short_spot = str(row["Spot"])
-                    res_int = int(row["Result"])
-                    res_str = str(res_int)
-                    date_obj = row["Date"].date()
-                    date_str = date_obj.strftime("%Y-%m-%d")
-                    
-                    unique_dates.add(date_obj)
-                    if res_int == 1: total_correct += 1
-                    
-                    full_key = sp_to_full_key.get(short_spot, short_spot)
-                    if full_key not in new_mastery: new_mastery[full_key] = {"t": 0, "h": "", "d": ""}
-                    
-                    new_mastery[full_key]["t"] += 1
-                    new_mastery[full_key]["d"] = date_str
-                    new_mastery[full_key]["h"] += res_str
-                    
-                    if len(new_mastery[full_key]["h"]) > 100:
-                        new_mastery[full_key]["h"] = new_mastery[full_key]["h"][-100:]
+                full_key = sp_to_full_key.get(short_spot, short_spot)
+                if full_key not in new_mastery: new_mastery[full_key] = {"t": 0, "h": "", "d": ""}
                 
-                sorted_dates = sorted(list(unique_dates), reverse=True)
-                streak = 1 if sorted_dates else 0
-                if sorted_dates:
-                    curr_d = sorted_dates[0]
-                    for d in sorted_dates[1:]:
-                        if (curr_d - d).days == 1:
-                            streak += 1
-                            curr_d = d
-                        else: break
-                            
-                stats = utils.load_user_stats()
-                stats["spot_mastery"] = new_mastery
-                stats["total_hands"] = len(df_hist)
-                stats["xp"] = total_correct * 10
-                stats["streak"] = streak
-                if sorted_dates: stats["last_date"] = sorted_dates[0].strftime("%Y-%m-%d")
-                    
-                utils.save_user_stats(stats)
-                utils.force_sync()
-                st.success("✅ Spot Mastery recovered! Refresh the page.")
-
-        with c2:
-            if st.button("🧠 REBUILD SRS FROM HISTORY", type="primary", use_container_width=True):
-                utils.rebuild_srs_from_history()
-                st.success("✅ Neural weights (SRS) rebuilt for all hands! Check the Google Sheet.")
+                new_mastery[full_key]["t"] += 1
+                new_mastery[full_key]["d"] = date_str
+                new_mastery[full_key]["h"] += res_str
+                
+                if len(new_mastery[full_key]["h"]) > 100:
+                    new_mastery[full_key]["h"] = new_mastery[full_key]["h"][-100:]
+            
+            sorted_dates = sorted(list(unique_dates), reverse=True)
+            streak = 1 if sorted_dates else 0
+            if sorted_dates:
+                curr_d = sorted_dates[0]
+                for d in sorted_dates[1:]:
+                    if (curr_d - d).days == 1:
+                        streak += 1
+                        curr_d = d
+                    else: break
+                        
+            stats = utils.load_user_stats()
+            stats["spot_mastery"] = new_mastery
+            stats["total_hands"] = len(df_hist)
+            stats["xp"] = total_correct * 10
+            stats["streak"] = streak
+            if sorted_dates: stats["last_date"] = sorted_dates[0].strftime("%Y-%m-%d")
+                
+            utils.save_user_stats(stats)
+            utils.force_sync()
+            st.success("✅ Spot Mastery recovered! Refresh the page.")
 
     with st.expander("🔍 Filters", expanded=False):
         c1, c2, c3 = st.columns(3)
