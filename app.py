@@ -4,15 +4,16 @@ from views import mobile, desktop, compare, stats
 st.set_page_config(page_title="Poker Trainer", layout="wide", initial_sidebar_state="collapsed")
 
 def main():
-    # Скрываем дефолтную кнопку открытия бокового меню и убираем лишние отступы сверху
+    # Убираем кнопку бокового меню, делаем шапку прозрачной и опускаем контент
     st.markdown("""
     <style>
         [data-testid="collapsedControl"] { display: none !important; }
-        .block-container { padding-top: 2rem !important; }
+        header[data-testid="stHeader"] { background: transparent !important; }
+        .block-container { padding-top: 4.5rem !important; }
     </style>
     """, unsafe_allow_html=True)
 
-    # Инициализация состояний, если их нет при старте
+    # Инициализация состояний
     if "app_mode" not in st.session_state:
         st.session_state.app_mode = "🎮 Trainer"
     if "view_type" not in st.session_state:
