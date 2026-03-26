@@ -220,23 +220,31 @@ def show():
     m_next = mastery.get("next", 100)
     m_rank = mastery.get("rank", 0)
     
-    if m_rank == 5:
+    if m_rank >= 5:
         hands_left_text = "MAX RANK"
     else:
         h_left = max(0, m_next - m_total)
         hands_left_text = f"Remaining: {h_left} hands"
 
-    # Сплющенный HTML без отступов, чтобы Streamlit не сломал верстку
     multiplier = st.session_state.get("xp_multiplier", 1.0)
-    if multiplier >= 3.0:
+    if multiplier >= 10.0:
+        pill_style = "background: rgba(0, 255, 0, 0.15); border: 1px solid rgba(0, 255, 0, 0.4); box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);"
+        mult_html = '<span style="background: rgba(0, 255, 0, 0.4); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px; white-space: nowrap;">x10.0 XP</span>'
+    elif multiplier >= 5.0:
+        pill_style = "background: rgba(255, 0, 255, 0.15); border: 1px solid rgba(255, 0, 255, 0.4); box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);"
+        mult_html = '<span style="background: rgba(255, 0, 255, 0.4); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px; white-space: nowrap;">x5.0 XP</span>'
+    elif multiplier >= 4.0:
+        pill_style = "background: rgba(111, 66, 193, 0.15); border: 1px solid rgba(111, 66, 193, 0.4); box-shadow: 0 0 20px rgba(111, 66, 193, 0.4);"
+        mult_html = '<span style="background: rgba(111, 66, 193, 0.4); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px; white-space: nowrap;">x4.0 XP</span>'
+    elif multiplier >= 3.0:
         pill_style = "background: rgba(220, 53, 69, 0.15); border: 1px solid rgba(220, 53, 69, 0.4); box-shadow: 0 0 15px rgba(220, 53, 69, 0.3);"
-        mult_html = '<span style="background: rgba(220, 53, 69, 0.3); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px;">x3.0 XP</span>'
+        mult_html = '<span style="background: rgba(220, 53, 69, 0.3); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px; white-space: nowrap;">x3.0 XP</span>'
     elif multiplier >= 2.0:
         pill_style = "background: rgba(13, 202, 240, 0.15); border: 1px solid rgba(13, 202, 240, 0.4); box-shadow: 0 0 15px rgba(13, 202, 240, 0.3);"
-        mult_html = '<span style="background: rgba(13, 202, 240, 0.3); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px;">x2.0 XP</span>'
+        mult_html = '<span style="background: rgba(13, 202, 240, 0.3); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px; white-space: nowrap;">x2.0 XP</span>'
     elif multiplier >= 1.5:
         pill_style = "background: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.4); box-shadow: 0 0 10px rgba(255, 193, 7, 0.2);"
-        mult_html = '<span style="background: rgba(255, 193, 7, 0.3); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px;">x1.5 XP</span>'
+        mult_html = '<span style="background: rgba(255, 193, 7, 0.3); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px; white-space: nowrap;">x1.5 XP</span>'
     else:
         pill_style = "background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);"
         mult_html = ''
@@ -346,14 +354,14 @@ def show():
             st.session_state.last_error = False
             st.session_state.hand = None
             
-            if st.session_state.combo in [10, 25, 50, 100, 200, 500, 1000]:
+            if st.session_state.combo in [10, 25, 50, 100, 250, 500, 1000]:
                 msgs = {
                     10: "Combo x10! Warming up.", 25: "Combo x25! Reading them like a book.",
                     50: "Combo x50! Sniper.", 100: "Combo x100! Machine.",
-                    200: "Combo x200! Are you even human?", 500: "Combo x500! God Mode activated.",
+                    250: "Combo x250! Are you even human?", 500: "Combo x500! God Mode activated.",
                     1000: "Combo x1000! Solvers fear you."
                 }
-                st.session_state.toast_msgs.append(msgs[st.session_state.combo])
+                st.session_state.toast_msgs.append(msgs.get(st.session_state.combo, "Unstoppable!"))
         else:
             st.session_state.combo = 0
             st.session_state.last_error = True
