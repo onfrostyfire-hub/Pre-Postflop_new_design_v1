@@ -226,6 +226,31 @@ def show():
         h_left = max(0, m_next - m_total)
         hands_left_text = f"Remaining: {h_left} hands"
 
+    # --- APPLE-STYLE PILL BADGE LOGIC ---
+    multiplier = st.session_state.get("xp_multiplier", 1.0)
+    
+    if multiplier >= 3.0:
+        pill_style = "background: rgba(220, 53, 69, 0.15); border: 1px solid rgba(220, 53, 69, 0.4); box-shadow: 0 0 15px rgba(220, 53, 69, 0.3);"
+        mult_html = '<span style="background: rgba(220, 53, 69, 0.3); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px;">x3.0 XP</span>'
+    elif multiplier >= 2.0:
+        pill_style = "background: rgba(13, 202, 240, 0.15); border: 1px solid rgba(13, 202, 240, 0.4); box-shadow: 0 0 15px rgba(13, 202, 240, 0.3);"
+        mult_html = '<span style="background: rgba(13, 202, 240, 0.3); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px;">x2.0 XP</span>'
+    elif multiplier >= 1.5:
+        pill_style = "background: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.4); box-shadow: 0 0 10px rgba(255, 193, 7, 0.2);"
+        mult_html = '<span style="background: rgba(255, 193, 7, 0.3); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px;">x1.5 XP</span>'
+    else:
+        pill_style = "background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);"
+        mult_html = ''
+        
+    combo_badge = f"""
+    <div style="flex:1; display:flex; justify-content:center; align-items:center;">
+        <div style="{pill_style} backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+            <span style="font-size:16px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">🔥 {c}</span>
+            {mult_html}
+        </div>
+    </div>
+    """
+
     header_html = f"""
     <div style="background:#111; border-radius:10px; margin-bottom:5px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
         <div style="height: 3px; width: 100%; background: #222;">
@@ -245,9 +270,9 @@ def show():
                 <div style="font-size:11px; font-weight:bold; color:#aaa;">Winrate</div>
                 <div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}%</div>
             </div>
-            <div style="flex:1; text-align:center; font-size:18px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">
-                🔥 x{c}
-            </div>
+            
+            {combo_badge}
+
             <div style="flex:1; text-align:right;">
                 <div style="font-size:11px; font-weight:bold; color:#aaa;">Hands</div>
                 <div style="font-size:13px; font-weight:bold; color:#fff;">{sh}</div>
