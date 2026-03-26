@@ -9,7 +9,7 @@ def show():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
-        .block-container { padding-top: 4rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
+        .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
         
         /* УБИВАЕМ СТАНДАРТНУЮ СЕТКУ STREAMLIT ДЛЯ КОЛОНОК И СТАВИМ CSS GRID */
         div[data-testid="stHorizontalBlock"] {
@@ -280,9 +280,6 @@ def show():
     """
     st.markdown(header_html, unsafe_allow_html=True)
     
-    # НАЗВАНИЕ СЦЕНАРИЯ ТЕПЕРЬ ВЫНЕСЕНО ЗА СТОЛ И ВЕРСТАЕТСЯ АККУРАТНЫМ ШРИФТОМ
-    st.markdown(f"<div style='text-align:center; font-size:13px; color:#888; font-weight:900; text-transform:uppercase; margin-bottom:8px; letter-spacing:1px;'>{sc}</div>", unsafe_allow_html=True)
-    
     combo_cls = ""
     if c >= 1000: combo_cls = "combo-glow-1000"
     elif c >= 500: combo_cls = "combo-glow-500"
@@ -302,7 +299,6 @@ def show():
         return {0: "bottom: -20px; left: 50%; transform: translateX(-50%);", 1: "bottom: 15%; left: 0%;", 2: "top: 15%; left: 0%;", 
                 3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 15%; right: 0%;", 5: "bottom: 15%; right: 0%;"}.get(idx, "")
 
-    # ИСПРАВЛЕННЫЕ КООРДИНАТЫ ФИШЕК: ПРИЖАТЫ К КРАЯМ И ВЫШЕ В ЦЕНТРЕ
     def get_chip_style(idx):
         return {
             0: "bottom: 25%; left: 50%; transform: translateX(-50%);", 
@@ -354,7 +350,6 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    # УДАЛЕН MOB-INFO-SRC ИЗ ТАБЛИЦЫ, САМ БЛОК ИНФО СДВИНУТ ЧУТЬ НИЖЕ
     html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div style="font-size:8px; color:#aaa; margin-top:2px; text-transform:uppercase; font-weight:bold;">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
