@@ -9,7 +9,7 @@ def show():
     df = utils.load_history()
     
     if df.empty or "Date" not in df.columns or "Result" not in df.columns:
-        st.info("История пуста. Иди тренируйся, Начальник!")
+        st.info("History is empty. Go train, Boss!")
         return
 
     df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
@@ -17,20 +17,18 @@ def show():
     df["Result"] = pd.to_numeric(df["Result"], errors='coerce').fillna(0).astype(int)
     
     if df.empty:
-        st.info("История пуста. Иди тренируйся, Начальник!")
+        st.info("History is empty. Go train, Boss!")
         return
 
-    # --- БЛОК РЕАНИМАЦИИ ДАННЫХ ---
-    st.markdown("### 🚑 Реанимация данных")
-    with st.expander("Восстановить слетевшие ранги из Истории", expanded=False):
-        st.markdown("Если Стримлит обнулил прогресс, эта кнопка пересчитает весь твой опыт, винрейты, стрик и ранги (Spot Mastery) на основе сырой истории раздач.")
-        if st.button("🔧 ВОССТАНОВИТЬ ВСЁ", use_container_width=True):
+    st.markdown("### 🚑 Data Recovery")
+    with st.expander("Recover Spot Mastery from History", expanded=False):
+        st.markdown("If your progress got reset, this will recalculate your experience, streak, and Spot Mastery from raw history.")
+        if st.button("🔧 RECOVER ALL DATA", use_container_width=True):
             df_hist = df.copy().sort_values("Date")
             new_mastery = {}
             total_correct = 0
             unique_dates = set()
             
-            # Создаем маппинг коротких имен спотов в полные ключи для Тренажера
             ranges_db = utils.load_ranges()
             sp_to_full_key = {}
             for src, sc_dict in ranges_db.items():
@@ -62,7 +60,6 @@ def show():
                 if len(new_mastery[full_key]["h"]) > 100:
                     new_mastery[full_key]["h"] = new_mastery[full_key]["h"][-100:]
             
-            # Считаем стрик непрерывных дней
             sorted_dates = sorted(list(unique_dates), reverse=True)
             streak = 0
             if sorted_dates:
@@ -85,14 +82,14 @@ def show():
                 
             utils.save_user_stats(stats)
             utils.force_sync()
-            st.success("✅ Все данные (Мастерство, XP, Стрик) успешно восстановлены! Обнови страницу (F5).")
+            st.success("✅ All data recovered successfully! Refresh the page.")
 
-    with st.expander("🔍 Фильтры", expanded=False):
+    with st.expander("🔍 Filters", expanded=False):
         c1, c2, c3 = st.columns(3)
-        time_filter = c1.selectbox("Период", ["All Time", "24 Hours", "7 Days", "30 Days", "1 Year"])
+        time_filter = c1.selectbox("Timeframe", ["All Time", "24 Hours", "7 Days", "30 Days", "1 Year"])
         unique_spots = df["Spot"].unique().tolist()
-        spot_filter = c2.multiselect("Споты", unique_spots, default=unique_spots)
-        res_filter = c3.selectbox("Результат", ["Все", "Только Ошибки", "Только Верные"])
+        spot_filter = c2.multiselect("Spots", unique_spots, default=unique_spots)
+        res_filter = c3.selectbox("Result", ["All", "Errors Only", "Correct Only"])
 
     now = datetime.now()
     if time_filter == "24 Hours": df = df[df["Date"] >= now - timedelta(days=1)]
@@ -101,26 +98,26 @@ def show():
     elif time_filter == "1 Year": df = df[df["Date"] >= now - timedelta(days=365)]
         
     if spot_filter: df = df[df["Spot"].isin(spot_filter)]
-    if res_filter == "Только Ошибки": df = df[df["Result"] == 0]
-    elif res_filter == "Только Верные": df = df[df["Result"] == 1]
+    if res_filter == "Errors Only": df = df[df["Result"] == 0]
+    elif res_filter == "Correct Only": df = df[df["Result"] == 1]
 
     if df.empty:
-        st.warning("Нет данных по выбранным фильтрам.")
+        st.warning("No data found for these filters.")
         return
 
     total_hands = len(df)
     correct_hands = df["Result"].sum()
     accuracy = int((correct_hands / total_hands) * 100) if total_hands > 0 else 0
 
-    st.markdown("### Общая сводка")
+    st.markdown("### Overall Summary")
     k1, k2, k3 = st.columns(3)
-    k1.metric("Всего рук", total_hands)
-    k2.metric("Точность", f"{accuracy}%")
-    k3.metric("Ошибок", total_hands - correct_hands)
+    k1.metric("Total Hands", total_hands)
+    k2.metric("Accuracy", f"{accuracy}%")
+    k3.metric("Errors", total_hands - correct_hands)
 
     st.divider()
 
-    st.markdown("### 📉 Статистика по всем спотам")
+    st.markdown("### 📉 Spots Breakdown")
     if not df.empty:
         stats = df.groupby("Spot")["Result"].agg(['count', 'sum', 'mean']).reset_index()
         stats["Errors"] = stats["count"] - stats["sum"]
@@ -128,7 +125,7 @@ def show():
         all_spots = stats.sort_values(by="count", ascending=False)
         st.dataframe(all_spots[["Spot", "Errors", "Accuracy", "count"]].rename(columns={"count": "Total"}), use_container_width=True, hide_index=True)
 
-    with st.expander("📜 Полный лог (нажми, чтобы открыть)"):
+    with st.expander("📜 Raw History Log (click to expand)"):
         d = df.copy()
         d["Result"] = d["Result"].apply(lambda x: "✅" if x==1 else "❌")
         d = d.sort_values("Date", ascending=False)
@@ -138,14 +135,14 @@ def show():
 
     st.divider()
 
-    st.markdown("### 🗑️ Очистка истории")
-    with st.expander("⚠️ Опасная зона", expanded=False):
+    st.markdown("### 🗑️ Danger Zone")
+    with st.expander("Clear History", expanded=False):
         d1, d2, d3, d4 = st.columns(4)
-        if d1.button("Стереть: 24 Часа", use_container_width=True):
-            utils.delete_history(days=1); st.success("Готово!"); st.rerun()
-        if d2.button("Стереть: Неделю", use_container_width=True):
-            utils.delete_history(days=7); st.success("Готово!"); st.rerun()
-        if d3.button("Стереть: Месяц", use_container_width=True):
-            utils.delete_history(days=30); st.success("Готово!"); st.rerun()
-        if d4.button("Стереть: Год", use_container_width=True):
-            utils.delete_history(days=365); st.success("Готово!"); st.rerun()
+        if d1.button("Delete: 24 Hours", use_container_width=True):
+            utils.delete_history(days=1); st.success("Done!"); st.rerun()
+        if d2.button("Delete: 7 Days", use_container_width=True):
+            utils.delete_history(days=7); st.success("Done!"); st.rerun()
+        if d3.button("Delete: 30 Days", use_container_width=True):
+            utils.delete_history(days=30); st.success("Done!"); st.rerun()
+        if d4.button("Delete: 1 Year", use_container_width=True):
+            utils.delete_history(days=365); st.success("Done!"); st.rerun()
