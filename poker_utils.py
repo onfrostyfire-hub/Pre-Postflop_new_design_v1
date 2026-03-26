@@ -357,7 +357,6 @@ def save_to_history(record):
     check_auto_sync()
 
 def check_auto_sync():
-    # Сохраняем историю каждые 3 раздачи
     if st.session_state.get("unsaved_count", 0) >= 3: 
         force_sync()
 
@@ -367,12 +366,11 @@ def force_sync():
     sheets = get_worksheets()
     sync_success = True
 
-    # Синкаем только Историю и Настройки. Лист SRS не трогаем.
     if "history_buffer" in st.session_state and st.session_state["history_buffer"]:
         try:
             sheets["History"].append_rows(st.session_state["history_buffer"])
             st.session_state["history_buffer"] = []
-            load_history.clear() # Сбрасываем кэш, чтобы загрузить свежую базу
+            load_history.clear()
         except Exception as e:
             sync_success = False
             print(f"History Sync error: {e}")
@@ -534,7 +532,6 @@ def render_range_matrix(spot_data, target_hand=None):
     return grid_html
 
 def _get_fuzzy_weight(srs_data, src, sc, sp, h):
-    """Бронебойный поиск веса. Сравнивает ключи напрямую или ищет вхождения спота и руки."""
     exact_keys = [
         f"{sp}_{h}",
         f"{sp}_{h}".replace(" ", "_"),
@@ -545,12 +542,11 @@ def _get_fuzzy_weight(srs_data, src, sc, sp, h):
         if k in srs_data:
             return srs_data[k]
             
-    # Если точного ключа нет, ищем по кускам строки (на случай, если интерфейс склеил спот как-то хитро)
     for k, v in srs_data.items():
         if sp in k and h in k:
             return v
             
-    return 100 # Дефолт, если рука играется первый раз
+    return 100
 
 def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
     grid_html = '<div style="display:grid;grid-template-columns:repeat(13,1fr);gap:1px;background:#111;padding:1px;border:1px solid #444;">'
@@ -569,9 +565,16 @@ def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
             elif w <= 1000: bg = "#fd7e14" # Danger
             else: bg = "#dc3545" # Leak
             
-            style = f"aspect-ratio:1;display:flex;justify-content:center;align-items:center;font-size:7px;cursor:default;color:#fff;background:{bg};"
+            # Изменил стиль: добавил flex-direction: column чтобы текст вставал друг под другом
+            style = f"aspect-ratio:1;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:default;color:#fff;background:{bg};"
             if target_hand and h == target_hand: style += "border:1.5px solid #ffc107;z-index:10;box-shadow: 0 0 4px #ffc107;"
-            grid_html += f'<div style="{style}" title="{h} | Weight (Freq): {w}">{h}</div>'
+            
+            # Выводим название руки и сам вес прямо в квадратике
+            grid_html += f'<div style="{style}" title="{h} | Weight: {w}">'
+            grid_html += f'<div style="font-size:9px; font-weight:bold; line-height:1;">{h}</div>'
+            grid_html += f'<div style="font-size:7px; color:#ffc107; margin-top:2px; font-weight:bold;">{w}</div>'
+            grid_html += '</div>'
+            
     grid_html += '</div>'
     
     grid_html += '''
