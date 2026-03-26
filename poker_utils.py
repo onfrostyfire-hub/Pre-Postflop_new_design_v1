@@ -53,21 +53,20 @@ def load_history():
     except: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
 
 def rebuild_srs_from_history():
-    """Собирает умные веса с нуля на основе всей истории логов."""
+    """Собирает веса налету из истории раздач"""
     df = load_history()
     weights = {}
     
     if df.empty or "Spot" not in df.columns or "Result" not in df.columns:
         return weights
 
-    # Сортируем от старых к новым, чтобы симулировать ход времени
     df = df.sort_values("Date")
     
     for _, row in df.iterrows():
-        spot = row["Spot"]
-        hand = row["Hand"]
+        spot = str(row.get("Spot", ""))
+        hand = str(row.get("Hand", ""))
         try:
-            result = int(float(row["Result"]))
+            result = int(float(row.get("Result", 0)))
         except:
             continue
             
@@ -75,10 +74,9 @@ def rebuild_srs_from_history():
         w = weights.get(key, 100)
         
         if result == 1:
-            w = int(w * 0.8) # Правильно: вес падает
+            w = int(w * 0.8) # Правильно - вес падает
         else:
-            penalty = 20 if w < 50 else 50
-            w = int((w * 1.5) + penalty) # Ошибка: вес взлетает
+            w = int((w * 1.5) + (20 if w < 50 else 50)) # Ошибка - вес растет + штраф
             
         weights[key] = max(10, min(w, 2000))
         
@@ -88,14 +86,13 @@ def init_cloud_data():
     if "app_initialized" not in st.session_state:
         sheets = get_worksheets()
         
-        # 1. Динамическая сборка SRS напрямую из истории (больше не зависим от листа SRS)
+        # Строим SRS из хистори, никаких обращений к листу SRS
         try:
             st.session_state["srs_data"] = rebuild_srs_from_history()
         except Exception as e:
             st.error(f"🚨 Ошибка динамической сборки SRS: {e}")
             st.session_state["srs_data"] = {}
         
-        # 2. Безопасная загрузка настроек
         try:
             set_val = sheets["Settings"].acell('A1').value
             if set_val:
@@ -314,25 +311,23 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
     save_user_stats(stats)
     return alerts
 
-# --- SMART ADAPTIVE SRS ALGORITHM ---
+# --- ADAPTIVE SRS ALGORITHM ---
 def load_srs_data():
     init_cloud_data()
     return st.session_state.get("srs_data", {})
 
 def update_srs_auto(spot_id, hand, is_correct):
     init_cloud_data()
-    data = st.session_state.setdefault("srs_data", {})
+    data = st.session_state["srs_data"]
     key = f"{spot_id}_{hand}"
     w = data.get(key, 100)
     
     if is_correct:
-        w = int(w * 0.8) 
+        w = int(w * 0.8)
     else:
-        penalty = 20 if w < 50 else 50
-        w = int((w * 1.5) + penalty)
+        w = int((w * 1.5) + (20 if w < 50 else 50))
             
     data[key] = max(10, min(w, 2000))
-    st.session_state["srs_data"] = data
     st.session_state["unsaved_count"] += 1
     check_auto_sync()
 
@@ -362,42 +357,37 @@ def save_to_history(record):
     check_auto_sync()
 
 def check_auto_sync():
-    # Сохраняем каждые 3 раздачи
+    # Сохраняем историю каждые 3 раздачи
     if st.session_state.get("unsaved_count", 0) >= 3: 
         force_sync()
 
-# --- БРОНЕБОЙНОЕ ИЗОЛИРОВАННОЕ СОХРАНЕНИЕ ---
+# --- ИЗОЛИРОВАННОЕ СОХРАНЕНИЕ ---
 def force_sync():
     if st.session_state.get("unsaved_count", 0) == 0: return
     sheets = get_worksheets()
     sync_success = True
-    
-    # Лист SRS мы больше не пишем в Гугл. Вся математика считается налету.
 
-    # 1. Синкаем Историю
+    # Синкаем только Историю и Настройки. Лист SRS не трогаем.
     if "history_buffer" in st.session_state and st.session_state["history_buffer"]:
         try:
             sheets["History"].append_rows(st.session_state["history_buffer"])
             st.session_state["history_buffer"] = []
-            load_history.clear() # Сбрасываем кэш истории, чтобы при релоде данные обновились
+            load_history.clear() # Сбрасываем кэш, чтобы загрузить свежую базу
         except Exception as e:
             sync_success = False
-            st.toast(f"❌ Ошибка сохранения History: {e}")
             print(f"History Sync error: {e}")
 
-    # 2. Синкаем Настройки
     if st.session_state.get("settings_changed"):
         try:
             sheets["Settings"].update_acell('A1', json.dumps(st.session_state["user_settings"]))
             st.session_state["settings_changed"] = False
         except Exception as e:
             sync_success = False
-            st.toast(f"❌ Ошибка сохранения Settings: {e}")
             print(f"Settings Sync error: {e}")
             
     st.session_state["unsaved_count"] = 0
     if sync_success:
-        st.toast("☁️ Данные синхронизированы", icon="✅")
+        st.toast("☁️ История сохранена", icon="✅")
 
 def delete_history(days=None):
     try:
@@ -543,6 +533,25 @@ def render_range_matrix(spot_data, target_hand=None):
         grid_html += stats_html
     return grid_html
 
+def _get_fuzzy_weight(srs_data, src, sc, sp, h):
+    """Бронебойный поиск веса. Сравнивает ключи напрямую или ищет вхождения спота и руки."""
+    exact_keys = [
+        f"{sp}_{h}",
+        f"{sp}_{h}".replace(" ", "_"),
+        f"{src}_{sc}_{sp}_{h}".replace(" ", "_"),
+        f"{sc}_{sp}_{h}".replace(" ", "_")
+    ]
+    for k in exact_keys:
+        if k in srs_data:
+            return srs_data[k]
+            
+    # Если точного ключа нет, ищем по кускам строки (на случай, если интерфейс склеил спот как-то хитро)
+    for k, v in srs_data.items():
+        if sp in k and h in k:
+            return v
+            
+    return 100 # Дефолт, если рука играется первый раз
+
 def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
     grid_html = '<div style="display:grid;grid-template-columns:repeat(13,1fr);gap:1px;background:#111;padding:1px;border:1px solid #444;">'
     for r1 in RANKS:
@@ -551,8 +560,7 @@ def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
             elif RANKS.index(r1) < RANKS.index(r2): h = r1 + r2 + 's'
             else: h = r2 + r1 + 'o'
             
-            key = f"{sp}_{h}" # Убрал лишние префиксы, чтобы ключи сходились с логами History
-            w = srs_data.get(key, 100)
+            w = _get_fuzzy_weight(srs_data, src, sc, sp, h)
             
             if w <= 10: bg = "#0f5132" # Mastered
             elif w <= 50: bg = "#198754" # Good
