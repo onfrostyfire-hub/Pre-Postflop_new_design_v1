@@ -25,7 +25,7 @@ def get_gspread_client():
         credentials = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         return gspread.authorize(credentials)
     except Exception as e:
-        st.error(f"Ошибка подключения к Google Sheets: Проверь секреты в Streamlit! {e}")
+        st.error(f"Google Sheets Connection Error: {e}")
         st.stop()
 
 @st.cache_resource
@@ -45,7 +45,7 @@ def init_cloud_data():
             srs_vals = sheets["SRS"].get_all_values()
             st.session_state["srs_data"] = {str(r[0]): int(r[1]) for r in srs_vals[1:]} if len(srs_vals) > 1 else {}
         except Exception as e:
-            st.error(f"🚨 Ошибка чтения SRS из Гугла. Остановка, чтобы не затереть базу. Детали: {e}")
+            st.error(f"🚨 SRS Read Error. Halting to protect data: {e}")
             st.stop()
         
         try:
@@ -55,7 +55,7 @@ def init_cloud_data():
             else:
                 st.session_state["user_settings"] = {}
         except Exception as e:
-            st.error(f"🚨 КРИТИЧЕСКАЯ ОШИБКА: Не удалось прочитать настройки из ячейки A1. Остановка приложения, чтобы защитить твои ранги от перезаписи. Детали: {e}")
+            st.error(f"🚨 CRITICAL ERROR: Settings cell A1 read failed. Halting. {e}")
             st.stop()
             
         st.session_state["history_buffer"] = []
@@ -98,9 +98,9 @@ def get_rank_info(xp):
 
 def generate_dailies():
     return [
-        {"id": "play", "desc": "Сыграть 100 рук", "target": 100, "progress": 0, "done": False, "xp": 500},
-        {"id": "correct", "desc": "50 верных ответов", "target": 50, "progress": 0, "done": False, "xp": 500},
-        {"id": "combo", "desc": "Комбо x15", "target": 15, "progress": 0, "done": False, "xp": 1000}
+        {"id": "play", "desc": "Play 100 hands", "target": 100, "progress": 0, "done": False, "xp": 500},
+        {"id": "correct", "desc": "50 correct answers", "target": 50, "progress": 0, "done": False, "xp": 500},
+        {"id": "combo", "desc": "Combo x15", "target": 15, "progress": 0, "done": False, "xp": 1000}
     ]
 
 def get_spot_mastery_info(spot_data_dict):
@@ -132,11 +132,6 @@ def get_spot_mastery_info(spot_data_dict):
 
     rank = max(0, rank - penalty)
 
-    # ==========================================
-    # НОВЫЙ ПРЕМИАЛЬНЫЙ ДИЗАЙН ГЕРБОВ (100x100)
-    # ==========================================
-    
-    # Basic (Радар/Баклер)
     svg_basic = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.35;pointer-events:none;filter:drop-shadow(0 0 10px #28a745);">
       <circle cx="50" cy="50" r="35" fill="#111" stroke="#28a745" stroke-width="4"/>
       <circle cx="50" cy="50" r="25" fill="none" stroke="#28a745" stroke-width="2" stroke-dasharray="5 5"/>
@@ -144,7 +139,6 @@ def get_spot_mastery_info(spot_data_dict):
       <path d="M50 5 V20 M50 95 V80 M5 50 H20 M95 50 H80" stroke="#28a745" stroke-width="4" stroke-linecap="round"/>
     </svg>'''
 
-    # Solid (Щит с кристальным ядром)
     svg_solid = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.45;pointer-events:none;filter:drop-shadow(0 0 12px #0dcaf0);">
       <path d="M20 20 L50 5 L80 20 L80 60 C80 80 50 95 50 95 C50 95 20 80 20 60 Z" fill="#111" stroke="#0dcaf0" stroke-width="4"/>
       <path d="M50 5 V95 C80 80 80 60 80 20 L50 5 Z" fill="#0dcaf0" opacity="0.3"/>
@@ -152,7 +146,6 @@ def get_spot_mastery_info(spot_data_dict):
       <polygon points="50,40 60,50 50,60 40,50" fill="#0dcaf0" opacity="0.9"/>
     </svg>'''
 
-    # Unexploitable (Щит + Мечи)
     svg_unexp = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.55;pointer-events:none;filter:drop-shadow(0 0 15px #6f42c1);">
       <g stroke="#6f42c1" stroke-width="4" stroke-linecap="round">
         <line x1="10" y1="90" x2="90" y2="10"/><line x1="10" y1="10" x2="90" y2="90"/>
@@ -161,7 +154,6 @@ def get_spot_mastery_info(spot_data_dict):
       <path d="M50 10 V95 C80 80 80 55 80 25 L50 10 Z" fill="#6f42c1" opacity="0.4"/>
     </svg>'''
 
-    # Elite (Венки + Щит + Мечи + Корона)
     svg_elite = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.75;pointer-events:none;filter:drop-shadow(0 0 18px #dc3545);">
       <path d="M 45 95 C 5 90, -5 40, 25 15" fill="none" stroke="#dc3545" stroke-width="4" stroke-dasharray="6 4" stroke-linecap="round"/>
       <path d="M 55 95 C 95 90, 105 40, 75 15" fill="none" stroke="#dc3545" stroke-width="4" stroke-dasharray="6 4" stroke-linecap="round"/>
@@ -172,7 +164,6 @@ def get_spot_mastery_info(spot_data_dict):
       <path d="M35 35 L42 15 L50 25 L58 15 L65 35 Z" fill="#dc3545" stroke="#111" stroke-width="2"/>
     </svg>'''
 
-    # Solver (Гексагон + Золотые Лавры + Сияние)
     svg_solver = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.95;pointer-events:none;filter:drop-shadow(0 0 20px #ffc107) drop-shadow(0 0 5px #ffffff);">
       <path d="M 45 98 C 0 95, -10 35, 25 5" fill="none" stroke="#ffc107" stroke-width="5" stroke-dasharray="8 6" stroke-linecap="round"/>
       <path d="M 55 98 C 100 95, 110 35, 75 5" fill="none" stroke="#ffc107" stroke-width="5" stroke-dasharray="8 6" stroke-linecap="round"/>
@@ -217,7 +208,7 @@ def get_spot_mastery_info(spot_data_dict):
 
     name = info["n"]
     if is_rusty:
-        name += " (Ржавчина)"
+        name += " (Rusty)"
 
     return {
         "rank": rank, "name": name, "icon": info["i"], "color": info["c"],
@@ -257,7 +248,7 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
                 q["progress"] = q["target"]
                 q["done"] = True
                 stats["xp"] += q["xp"]
-                alerts.append(f"🎯 Дейлик: {q['desc']} (+{q['xp']} XP)")
+                alerts.append(f"🎯 Daily: {q['desc']} (+{q['xp']} XP)")
 
     if spot_key:
         if "spot_mastery" not in stats: stats["spot_mastery"] = {}
@@ -275,22 +266,31 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
     save_user_stats(stats)
     return alerts
 
-# --- SAVE & SYNC ---
+# --- NEW ADAPTIVE SRS ALGORITHM ---
 def load_srs_data():
     init_cloud_data()
     return st.session_state.get("srs_data", {})
 
-def update_srs_smart(spot_id, hand, rating):
+def update_srs_auto(spot_id, hand, is_correct):
     init_cloud_data()
     data = st.session_state["srs_data"]
     key = f"{spot_id}_{hand}"
     w = data.get(key, 100)
     
-    if rating == 'hard': w *= 2.5
-    elif rating == 'normal': w = w / 1.5 if w > 100 else w * 1.2
-    elif rating == 'easy': w /= 4.0
+    if is_correct:
+        # Gradually reduce weight for correct answers
+        w = int(w * 0.8)
+    else:
+        # Adaptive penalty based on existing weight
+        if w < 50:
+            # Low weight = probably a misclick, slight bump
+            w = int(w * 1.5)
+        else:
+            # High weight = systematic leak, heavy punishment
+            w = int(w * 2.5)
     
-    data[key] = int(max(1, min(w, 2000)))
+    # Floor is 10, Ceiling is 2000
+    data[key] = max(10, min(w, 2000))
     st.session_state["unsaved_count"] += 1
     check_auto_sync()
 
@@ -338,7 +338,7 @@ def force_sync():
             
         st.session_state["unsaved_count"] = 0
     except Exception as e:
-        st.error(f"⚠️ Ошибка синхронизации с Google Sheets: {e}")
+        st.error(f"⚠️ Google Sheets Sync Error: {e}")
 
 @st.cache_data(ttl=60)
 def load_history():
@@ -374,7 +374,7 @@ def delete_history(days=None):
             sheets["History"].update(values=rows, range_name="A1")
         load_history.clear()
         if "history_buffer" in st.session_state: st.session_state["history_buffer"] = []
-    except Exception as e: st.error(f"Ошибка удаления истории: {e}")
+    except Exception as e: st.error(f"Error clearing history: {e}")
 
 @st.cache_data(ttl=0)
 def load_ranges():
@@ -390,7 +390,7 @@ def load_ranges():
                     if src not in db: db[src] = {}
                     if sc not in db[src]: db[src][sc] = {}
                     db[src][sc].update(data.get("spots", {}))
-                except Exception as e: st.error(f"Ошибка чтения {file}: {e}")
+                except Exception as e: st.error(f"Read error {file}: {e}")
     return db
 
 ALL_HANDS = []
@@ -499,34 +499,35 @@ def render_range_matrix(spot_data, target_hand=None):
         grid_html += stats_html
     return grid_html
 
-def render_leak_matrix(leaks_dict):
+# --- ADAPTIVE SRS HEATMAP RENDERER ---
+def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
     grid_html = '<div style="display:grid;grid-template-columns:repeat(13,1fr);gap:1px;background:#111;padding:1px;border:1px solid #444;">'
-    max_errors = max([v['errors'] for v in leaks_dict.values()]) if leaks_dict else 1
-    
     for r1 in RANKS:
         for r2 in RANKS:
             if RANKS.index(r1) == RANKS.index(r2): h = r1 + r2
             elif RANKS.index(r1) < RANKS.index(r2): h = r1 + r2 + 's'
             else: h = r2 + r1 + 'o'
             
-            style = "aspect-ratio:1;display:flex;justify-content:center;align-items:center;font-size:7px;cursor:default;color:#fff;"
+            key = f"{src}_{sc}_{sp}_{h}".replace(" ", "_")
+            w = srs_data.get(key, 100)
             
-            if h in leaks_dict:
-                err = leaks_dict[h]['errors']
-                tot = leaks_dict[h]['total']
-                act = leaks_dict[h]['correct_action']
-                
-                intensity = 0.4 + 0.6 * (err / max_errors)
-                bg = f"rgba(220, 53, 69, {intensity})"
-                title = f"{h} | Ошибок: {err}/{tot} | Основной лик: {act}"
-                
-                border = "1px solid rgba(255,255,255,0.2)"
-                style += f"background:{bg}; {border}; font-weight:bold;"
-            else:
-                bg = "#2c3034"
-                title = f"{h} | Нет дыр"
-                style += f"background:{bg}; color:#495057;"
+            if w <= 10: bg = "#0f5132" # Mastered (Dark Green)
+            elif w <= 50: bg = "#198754" # Good (Green)
+            elif w <= 150: bg = "#2c3034" # Base (Gray)
+            elif w <= 500: bg = "#854000" # Warning (Dark Orange)
+            elif w <= 1000: bg = "#fd7e14" # Danger (Orange)
+            else: bg = "#dc3545" # Leak (Red)
             
-            grid_html += f'<div style="{style}" title="{title}">{h}</div>'
+            style = f"aspect-ratio:1;display:flex;justify-content:center;align-items:center;font-size:7px;cursor:default;color:#fff;background:{bg};"
+            if target_hand and h == target_hand: style += "border:1.5px solid #ffc107;z-index:10;box-shadow: 0 0 4px #ffc107;"
+            grid_html += f'<div style="{style}" title="{h} | Weight (Freq): {w}">{h}</div>'
     grid_html += '</div>'
+    
+    grid_html += '''
+    <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; font-size:10px; color:#aaa; font-family:sans-serif; text-transform:uppercase; font-weight:bold;">
+        <div style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;background:#0f5132;border-radius:2px;"></div>Mastered</div>
+        <div style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;background:#2c3034;border-radius:2px;"></div>Default</div>
+        <div style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;background:#dc3545;border-radius:2px;"></div>Leak</div>
+    </div>
+    '''
     return grid_html
