@@ -49,11 +49,9 @@ def main():
 
     if "actual_app_mode" not in st.session_state:
         st.session_state.actual_app_mode = "🎮 Trainer"
-    # ПО УМОЛЧАНИЮ ВСЕГДА МОБАЙЛ (на телефоне сразу откроется как надо)
     if "actual_view_type" not in st.session_state:
         st.session_state.actual_view_type = "📱 Mobile"
 
-    # --- ТОЛЬКО ОДНА ПАНЕЛЬ НАВИГАЦИИ ---
     st.markdown('<div class="compact-tabs"></div>', unsafe_allow_html=True)
     nav_mode = st.radio(
         "Nav", 
@@ -66,7 +64,6 @@ def main():
         st.session_state.actual_app_mode = nav_mode
         st.rerun()
 
-    # --- РОУТИНГ ---
     if st.session_state.actual_app_mode == "🔬 Range Lab":
         compare.show()
     elif st.session_state.actual_app_mode == "📊 Stats":
