@@ -23,7 +23,7 @@
     "3bet SBvsBU": {
       "setup": { "hero_pos": "SB", "villain_pos": "BTN", "btn_pos": "BTN", "active_players": ["BTN", "SB", "BB"], "table_bets": {"BTN": 2.5, "BB": 1.0}, "hero_bet": 0.5, "is_3bet_pot": false },
       "ranges": {
-        "3bet": "AA,KK,QQ,JJ,TT,99,88,77,66:0.5,AK,AQ,AJ,ATs,ATo:0.5,A9s,A8s,A7s,A5s,A4s,KQ,KJs,KJo:0.5,KTs,K9s,QJs,QTs,Q9s,JTs,J9s,T9s,T8s:0.5,98s:0.5",
+        "3bet": "AA,KK,QQ,JJ,TT,99,88,77,66,AK,AQ,AJ,ATs,ATo:0.5,A9s,A8s,A7s,A5s,A4s,KQ,KJs,KJo:0.5,KTs,K9s,QJs,QTs,Q9s,JTs,J9s,T9s,T8s:0.5,98s:0.5",
         "call": "",
         "training": "88,77,66,55,ATo,A9s,A8s,A7s,A6s,A3s,A2s,KJo,K9s,K8s,K7s,Q9s,Q8s,J9s,J8s,T8s,98s,87s,76s,65s"
       },
