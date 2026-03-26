@@ -226,9 +226,8 @@ def show():
         h_left = max(0, m_next - m_total)
         hands_left_text = f"Remaining: {h_left} hands"
 
-    # --- APPLE-STYLE PILL BADGE LOGIC ---
+    # Сплющенный HTML без отступов, чтобы Streamlit не сломал верстку
     multiplier = st.session_state.get("xp_multiplier", 1.0)
-    
     if multiplier >= 3.0:
         pill_style = "background: rgba(220, 53, 69, 0.15); border: 1px solid rgba(220, 53, 69, 0.4); box-shadow: 0 0 15px rgba(220, 53, 69, 0.3);"
         mult_html = '<span style="background: rgba(220, 53, 69, 0.3); color:#fff; font-size:10px; font-weight:900; margin-left:6px; padding: 2px 6px; border-radius: 8px; letter-spacing:0.5px;">x3.0 XP</span>'
@@ -242,44 +241,10 @@ def show():
         pill_style = "background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);"
         mult_html = ''
         
-    combo_badge = f"""
-    <div style="flex:1; display:flex; justify-content:center; align-items:center;">
-        <div style="{pill_style} backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
-            <span style="font-size:16px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">🔥 {c}</span>
-            {mult_html}
-        </div>
-    </div>
-    """
+    combo_badge = f'<div style="flex:1; display:flex; justify-content:center; align-items:center;"><div style="{pill_style} backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s ease;"><span style="font-size:16px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c >=5 else 0}px {glow_color};">🔥 {c}</span>{mult_html}</div></div>'
 
-    header_html = f"""
-    <div style="background:#111; border-radius:10px; margin-bottom:5px; border:1px solid #333; overflow:hidden; font-family:sans-serif;">
-        <div style="height: 3px; width: 100%; background: #222;">
-            <div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else '#444'}; transition: width 0.3s;"></div>
-        </div>
-        <div style="padding:6px 12px 0 12px; display:flex; justify-content:space-between; align-items:center;">
-            <div style="flex:1;">
-                <div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div>
-                <div style="background:#333; height:4px; border-radius:2px; margin-top:3px; width:100%;">
-                    <div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div>
-                </div>
-            </div>
-            <div style="font-size:10px; color:#aaa; margin-left:10px; font-weight:bold;">{stats_data['xp']} / {next_xp} XP</div>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px;">
-            <div style="flex:1;">
-                <div style="font-size:11px; font-weight:bold; color:#aaa;">Winrate</div>
-                <div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}%</div>
-            </div>
-            
-            {combo_badge}
-
-            <div style="flex:1; text-align:right;">
-                <div style="font-size:11px; font-weight:bold; color:#aaa;">Hands</div>
-                <div style="font-size:13px; font-weight:bold; color:#fff;">{sh}</div>
-            </div>
-        </div>
-    </div>
-    """
+    header_html = f'<div style="background:#111; border-radius:10px; margin-bottom:5px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 3px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:6px 12px 0 12px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:4px; border-radius:2px; margin-top:3px; width:100%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div></div></div><div style="font-size:10px; color:#aaa; margin-left:10px; font-weight:bold;">{stats_data["xp"]} / {next_xp} XP</div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px;"><div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Winrate</div><div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}%</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Hands</div><div style="font-size:13px; font-weight:bold; color:#fff;">{sh}</div></div></div></div>'
+    
     st.markdown(header_html, unsafe_allow_html=True)
     
     combo_cls = ""
@@ -401,7 +366,6 @@ def show():
         
         st.rerun()
 
-    # --- ERROR SCREEN (SRS Matrix & Range) ---
     if st.session_state.last_error:
         st.markdown(f'<div style="background:#dc3545; color:white; padding:12px; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:15px; font-size:16px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">{st.session_state.msg}</div>', unsafe_allow_html=True)
         
@@ -417,7 +381,6 @@ def show():
             st.session_state.hand = None
             st.rerun()
 
-    # --- NORMAL ACTION BUTTONS ---
     else:
         with st.expander("🫣 Peek Range", expanded=False):
             st.markdown(utils.render_range_matrix(data, st.session_state.hand), unsafe_allow_html=True)
