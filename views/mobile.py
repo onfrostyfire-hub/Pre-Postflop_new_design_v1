@@ -4,12 +4,12 @@ from datetime import datetime
 import poker_utils as utils
 
 def show():
-    # ЖЕСТКАЯ БЛОКИРОВКА СТАНДАРТНОЙ ВЕРСТКИ STREAMLIT ДЛЯ КНОПОК
+    # ЖЕСТКАЯ БЛОКИРОВКА СТАНДАРТНОЙ ВЕРСТКИ STREAMLIT ДЛЯ КНОПОК И ОТСТУПОВ
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
-        .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
+        .block-container { padding-top: 4.5rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
         
         /* УБИВАЕМ СТАНДАРТНУЮ СЕТКУ STREAMLIT ДЛЯ КОЛОНОК И СТАВИМ CSS GRID */
         div[data-testid="stHorizontalBlock"] {
