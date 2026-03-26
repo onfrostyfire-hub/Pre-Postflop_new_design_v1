@@ -18,7 +18,7 @@ def show():
         div[data-testid="stButton"] button:active { transform: translateY(4px) !important; box-shadow: 0 1px 0 transparent !important; }
         div[data-testid="stButton"] button p { font-family: 'Roboto', sans-serif !important; font-size: 15px !important; font-weight: 900 !important; margin: 0 !important; letter-spacing: 0.5px !important; text-transform: uppercase !important; color: #ffffff !important; }
 
-        /* СТОЛ СДВИНУТ ВНИЗ ЧТОБЫ НЕ НАЛЕЗАТЬ НА СТАТУСЫ */
+        /* СТОЛ */
         .mobile-game-area { 
             position: relative; width: 100%; height: 250px; 
             margin: 35px auto 10px auto; 
@@ -53,14 +53,14 @@ def show():
         @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
         @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
 
-        .mob-info { position: absolute; top: 42%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
+        /* ИНФО-БЛОК ЦЕНТРА СТОЛА СДВИНУТ ВЫШЕ */
+        .mob-info { position: absolute; top: 24%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
         .mob-info-spot { font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.15); line-height: 1; z-index: 30; position: relative; }
         .seat { position: absolute; width: 44px; height: 44px; background: #222; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
         .seat-label { font-size: 9px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 2px; }
         .seat-active { border-color: #ffc107; background: #2a2a2a; }
         .seat-folded { opacity: 0.4; border-color: #333; }
         
-        /* ДВЕ КАРТЫ ДЛЯ ОППОНЕНТОВ (МОБАЙЛ) */
         .opp-cards-mob { position: absolute; top: -14px; display: flex; z-index: 20; }
         .opp-card-mob { width: 18px; height: 26px; background: #fff; border-radius: 2px; border: 1px solid #777; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
         .opp-card-mob.right { margin-left: -8px; transform: rotate(12deg) translateY(2px); }
@@ -78,7 +78,7 @@ def show():
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         
-        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 12px; letter-spacing: 0.5px; }
+        .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 8px; letter-spacing: 0.5px; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -95,7 +95,6 @@ def show():
     all_scenarios = sorted(list(scenario_map.keys()))
 
     with st.expander("⚙️ Настройки Фильтров", expanded=False):
-        # ПРЯЧЕМ ПЕРЕКЛЮЧАТЕЛЬ ЭКРАНОВ СЮДА
         c_v1, c_v2 = st.columns(2)
         with c_v1:
             if st.button("📱 Mobile View", key="mv_btn"):
@@ -280,18 +279,19 @@ def show():
         return {0: "bottom: -20px; left: 50%; transform: translateX(-50%);", 1: "bottom: 10%; left: -5%;", 2: "top: 10%; left: -5%;", 
                 3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 10%; right: -5%;", 5: "bottom: 10%; right: -5%;"}.get(idx, "")
 
+    # ИСПРАВЛЕНЫ КООРДИНАТЫ ФИШЕК (ХИРО ВЫШЕ, ОСТАЛЬНЫЕ БЛИЖЕ К АВАТАРАМ)
     def get_chip_style(idx):
         return {
-            0: "bottom: 30px; left: 50%; transform: translateX(-50%);", 
-            1: "bottom: 15%; left: 20%;", 
-            2: "top: 15%; left: 20%;",
-            3: "top: 30px; left: 50%; transform: translateX(-50%);", 
-            4: "top: 15%; right: 20%;", 
-            5: "bottom: 15%; right: 20%;"
+            0: "bottom: 75px; left: 50%; transform: translateX(-50%);", 
+            1: "bottom: 20%; left: 10%;", 
+            2: "top: 20%; left: 10%;",
+            3: "top: 35px; left: 50%; transform: translateX(-50%);", 
+            4: "top: 20%; right: 10%;", 
+            5: "bottom: 20%; right: 10%;"
         }.get(idx, "")
 
     def get_btn_style(idx):
-        return {0: "bottom: 10%; left: 60%;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
+        return {0: "bottom: 25px; left: 60%;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
                 3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
 
     opp_html = ""; chips_html = ""
@@ -300,7 +300,6 @@ def show():
         p = rot[i]
         has_cards = (p in cards_in_play)
         cls = "seat-active" if has_cards else "seat-folded"
-        # ДВЕ КАРТЫ!
         cards = '<div class="opp-cards-mob"><div class="opp-card-mob"></div><div class="opp-card-mob right"></div></div>' if has_cards else ""
         ss = get_seat_style(i)
         opp_html += f'<div class="seat {cls}" style="{ss}">{cards}<span class="seat-label">{p}</span></div>'
