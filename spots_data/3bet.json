@@ -7,7 +7,7 @@
       "ranges": {
         "3bet": "AA,KK,QQ,JJ,TT,99,88,77,66:0.5,AK,AQ,AJ,ATs,A9s,A8s,A7s,A6s,A5s,A4s,KQ,KJs,KTs,K9s,QJs,QTs,Q9s,JTs,J9s,T9s,76s:0.5,65s:0.5,54s:0.5",
         "call": "",
-        "training": "88,77,66,55,AJo,ATo,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,KQo,KJo,K9s,K8s,QTs,Q9s,Q8s,JTs,J9s,J8s,T9s,T8s,98s,97s,87s,86s,76s,75s,65s,64s,54s"
+        "training": "88,77,66,55,AJo,ATo,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,KQo,K9s,K8s,QTs,Q9s,Q8s,JTs,J9s,J8s,T9s,T8s,98s,87s,76s,65s,54s"
       },
       "stats": { "3bet": "13%" }
     },
@@ -16,7 +16,7 @@
       "ranges": {
         "3bet": "AA,KK,QQ,JJ,TT,99,88,AK,AQ,AJ,ATs,A9s,A5s,A4s,KQ,KJs,KTs,K9s,QJs,QTs,JTs,J9s,T9s",
         "call": "",
-        "training": "99,88,77,66,55,AJo,ATo,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,KQo,KJo,KTs,K9s,K8s,QJs,QTs,Q9s,JTs,J9s,T9s,T8s,98s,97s,87s,86s,76s,65s"
+        "training": "99,88,77,66,55,AJo,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,KQo,KTs,K9s,QJs,QTs,Q9s,JTs,J9s,T9s,T8s,98s,87s,76s,65s"
       },
       "stats": { "3bet": "11%" }
     },
