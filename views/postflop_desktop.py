@@ -67,6 +67,10 @@ def show():
         .act-bottom { bottom: -24px; } .act-top { top: -24px; }
 
         .dealer-button { width: 24px; height: 24px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; z-index: 15; position: absolute; border: 1px solid #bfa006; box-shadow: 1px 1px 3px rgba(0,0,0,0.7); }
+        
+        .chip-container { position: absolute; z-index: 10; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+        .poker-chip { width: 22px; height: 22px; background: #222; border: 3px dashed #d32f2f; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
+        .bet-txt { font-size: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 4px; border-radius: 4px; margin-top: -5px; z-index: 20; text-transform: lowercase; }
 
         .hero-panel { position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%); background: #212529; border: 2px solid #ffc107; border-radius: 12px; padding: 6px 18px; display: flex; gap: 8px; z-index: 30; align-items: center; }
         .card { width: 50px; height: 70px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-family: sans-serif; }
@@ -235,6 +239,10 @@ def show():
         return {0: "bottom: 10%; left: 60%;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
                 3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
 
+    def get_chip_style(idx):
+        return {0: "bottom: 25%; left: 50%; transform: translateX(-50%);", 1: "bottom: 22%; left: 22%;", 2: "top: 22%; left: 22%;",
+                3: "top: 25%; left: 50%; transform: translateX(-50%);", 4: "top: 22%; right: 22%;", 5: "bottom: 22%; right: 22%;"}.get(idx, "")
+
     opp_html = ""; chips_html = ""
 
     for i in range(1, 6):
@@ -245,15 +253,24 @@ def show():
         ss = get_seat_style(i)
         
         v_act_html = ""
+        is_bet = villain_act and ("BET" in villain_act.upper() or "RAISE" in villain_act.upper())
+        
         if p == villain_pos and villain_act:
-            pos_class = "act-bottom" if i in [2, 3, 4] else "act-top"
-            v_act_html = f'<div class="villain-act-badge {pos_class}">{villain_act}</div>'
+            if not is_bet:
+                pos_class = "act-bottom" if i in [2, 3, 4] else "act-top"
+                v_act_html = f'<div class="villain-act-badge {pos_class}">{villain_act}</div>'
             
         opp_html += f'<div class="seat {cls}" style="{ss}">{cards}<span class="seat-label">{p}</span>{v_act_html}</div>'
 
         if p == btn_pos:
             bs = get_btn_style(i)
             chips_html += f'<div class="dealer-button" style="{bs}">D</div>'
+            
+        if p == villain_pos and is_bet:
+            cs = get_chip_style(i)
+            bet_amount_str = villain_act.upper().replace("BET", "").replace("RAISE", "").strip().lower()
+            bet_txt = f'<div class="bet-txt">{bet_amount_str}</div>'
+            chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div>{bet_txt}</div>'
 
     if rot[0] == btn_pos:
         hero_bs = get_btn_style(0)
