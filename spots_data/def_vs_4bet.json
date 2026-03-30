@@ -22,7 +22,7 @@
     },
     "SB def vs 4bet BU": {
       "setup": { "hero_pos": "SB", "villain_pos": "BTN", "btn_pos": "BTN", "active_players": ["BTN", "SB"], "table_bets": {"BTN": 24.0, "SB": 12.0, "BB": 1.0}, "hero_bet": 12.0, "is_3bet_pot": true },
-      "stats": { "Call": "7.1%", "5bet": "3.6", "Fold": "33%"    },
+      "stats": { "5bet": "3.6", "Call": "7.1%",  "Fold": "33%"    },
       "ranges": {
         "call": "AA:0.5,TT:0.5,99,88,77,66:0.5,AQ,AJs,ATs,A9s:0.5,KQs,KJs,KTs,K9s:0.5,QJs:0.5,QTs:0.5,JTs:0.5,T9s:0.5",
         "Raise": "AA:0.5,KK,QQ,JJ,TT:0.5,AK,A5s,A4s",
