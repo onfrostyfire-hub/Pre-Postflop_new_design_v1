@@ -3,58 +3,7 @@ import random
 from datetime import datetime
 import poker_utils as utils
 
-# Палитра для динамических экшенов на постфлопе
 ACTION_COLORS = ["#28a745", "#d63384", "#0dcaf0", "#ffc107", "#6f42c1"]
-
-def render_pf_matrix(spot_data, actions, target_hand=None):
-    ranges = spot_data.get("ranges", {})
-    grid_html = '<div style="display:grid;grid-template-columns:repeat(13,1fr);gap:1px;background:#111;padding:1px;border:1px solid #444;">'
-    
-    for r1 in utils.RANKS:
-        for r2 in utils.RANKS:
-            if utils.RANKS.index(r1) == utils.RANKS.index(r2): h = r1 + r2
-            elif utils.RANKS.index(r1) < utils.RANKS.index(r2): h = r1 + r2 + 's'
-            else: h = r2 + r1 + 'o'
-            
-            weights = [utils.get_weight(h, ranges.get(act, "")) for act in actions]
-            total_w = sum(weights)
-            
-            style = "aspect-ratio:1;display:flex;justify-content:center;align-items:center;font-size:7px;cursor:default;color:#fff;"
-            tooltip = f"{h} | " + ", ".join([f"{act}: {w:.0f}%" for act, w in zip(actions, weights) if w > 0])
-            
-            if total_w == 0:
-                bg = "#2c3034"
-                style += "color:#495057;"
-            else:
-                # Если экшенов несколько — делаем градиент из цветов
-                stops = []
-                curr_pct = 0.0
-                norm_weights = [(w / total_w) * 100 for w in weights]
-                for i, w in enumerate(norm_weights):
-                    if w > 0:
-                        color = ACTION_COLORS[i % len(ACTION_COLORS)]
-                        stops.append(f"{color} {curr_pct}%")
-                        curr_pct += w
-                        stops.append(f"{color} {curr_pct}%")
-                if curr_pct < 100:
-                    stops.append(f"#2c3034 {curr_pct}%")
-                    stops.append(f"#2c3034 100%")
-                bg = f"linear-gradient(to right, {', '.join(stops)})" if len(stops) > 2 else ACTION_COLORS[weights.index(max(weights))]
-            
-            style += f"background:{bg};"
-            if target_hand and h == target_hand: style += "border:1.5px solid #fff;z-index:10;box-shadow: 0 0 6px #fff;"
-            grid_html += f'<div style="{style}" title="{tooltip}">{h}</div>'
-            
-    grid_html += '</div>'
-    
-    # Легенда
-    legend_html = '<div style="display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap; font-size:12px; font-weight:bold; font-family:sans-serif;">'
-    for i, act in enumerate(actions):
-        color = ACTION_COLORS[i % len(ACTION_COLORS)]
-        legend_html += f'<div style="background:#222; border:1px solid {color}; color:{color}; padding:4px 10px; border-radius:6px; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">{act}</div>'
-    legend_html += '</div>'
-    
-    return grid_html + legend_html
 
 def map_suit(s):
     mapping = {'h': '♥', 'd': '♦', 'c': '♣', 's': '♠'}
@@ -92,6 +41,14 @@ def show():
         .onenote-link { position: absolute; top: 25px; right: 40px; background: #6f42c1; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; text-decoration: none; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.6); z-index: 50; transition: transform 0.2s; }
         .onenote-link:hover { transform: scale(1.1); color: white; }
 
+        .seat { position: absolute; width: 65px; height: 65px; background: #343a40; border: 2px solid #495057; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
+        .seat-label { font-size: 11px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 4px; }
+        .seat-active { border-color: #ffc107; background: #343a40; }
+        .seat-folded { opacity: 0.4; border-color: #212529; }
+        .opp-cards-desk { position: absolute; top: -15px; display: flex; z-index: 20; }
+        .opp-card-desk { width: 22px; height: 32px; background: #fff; border-radius: 3px; border: 1px solid #777; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+        .opp-card-desk.right { margin-left: -8px; transform: rotate(12deg) translateY(2px); }
+
         .hero-panel { position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%); background: #212529; border: 2px solid #ffc107; border-radius: 12px; padding: 6px 18px; display: flex; gap: 8px; z-index: 30; align-items: center; }
         .card { width: 50px; height: 70px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-family: sans-serif; }
         .tl { position: absolute; top: 2px; left: 4px; font-weight: bold; font-size: 16px; line-height: 1.1; }
@@ -99,7 +56,6 @@ def show():
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #212529; } .suit-green { color: #198754; }
         .rng-desktop { position: absolute; right: -50px; top: 15px; width: 40px; height: 40px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 16px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
         
-        /* Combo glow animations */
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; }
@@ -118,12 +74,12 @@ def show():
     for full_key in pf_db.keys():
         parts = [p.strip() for p in full_key.split('|')]
         if len(parts) != 5: continue
-        spot, hero_pos, street, branch, board = parts
+        spot, hero_pos_key, street, branch, board = parts
         if spot not in tree: tree[spot] = {}
-        if hero_pos not in tree[spot]: tree[spot][hero_pos] = {}
-        if street not in tree[spot][hero_pos]: tree[spot][hero_pos][street] = {}
-        if branch not in tree[spot][hero_pos][street]: tree[spot][hero_pos][street][branch] = []
-        tree[spot][hero_pos][street][branch].append((board, full_key))
+        if hero_pos_key not in tree[spot]: tree[spot][hero_pos_key] = {}
+        if street not in tree[spot][hero_pos_key]: tree[spot][hero_pos_key][street] = {}
+        if branch not in tree[spot][hero_pos_key][street]: tree[spot][hero_pos_key][street][branch] = []
+        tree[spot][hero_pos_key][street][branch].append((board, full_key))
 
     with st.sidebar:
         st.header("⚙️ Postflop Filters")
@@ -165,7 +121,6 @@ def show():
         st.warning("⚠️ Выбери фильтры и борды в меню слева.")
         st.stop()
 
-    # Инициализация стейта для постфлопа
     for k in ['pf_combo', 'pf_session_hands', 'pf_session_correct', 'pf_rng']:
         if k not in st.session_state: st.session_state[k] = 0
     if 'pf_toast_msgs' not in st.session_state: st.session_state.pf_toast_msgs = []
@@ -176,7 +131,6 @@ def show():
     if 'pf_current_spot_key' not in st.session_state: st.session_state.pf_current_spot_key = None
     if 'pf_last_error' not in st.session_state: st.session_state.pf_last_error = False
     
-    # Генерация раздачи
     if st.session_state.pf_hand is None or st.session_state.pf_current_spot_key is None or st.session_state.pf_current_spot_key not in pool:
         chosen_key = random.choice(pool)
         st.session_state.pf_current_spot_key = chosen_key
@@ -190,7 +144,6 @@ def show():
         st.session_state.pf_hand = random.choices(poss, weights=w, k=1)[0]
         st.session_state.pf_rng = random.randint(0, 99)
         
-        # Назначаем масти (пока рандомно, без жесткого блокера борда для простоты)
         ps = ['♠','♥','♦','♣']
         s1 = random.choice(ps)
         st.session_state.pf_suits = [s1, s1 if 's' in st.session_state.pf_hand else random.choice([x for x in ps if x!=s1])]
@@ -199,6 +152,8 @@ def show():
     data = pf_db[chosen_key]
     parts = [p.strip() for p in chosen_key.split('|')]
     
+    hero_pos = data.get("hero_pos", "BTN")
+    active_players = data.get("active_players", ["BTN", "BB"])
     board_raw = data.get("board_cards", [])
     pot_size = data.get("pot_size", 0)
     villain_act = data.get("villain_action", "")
@@ -206,7 +161,6 @@ def show():
     actions = data.get("actions", ["Check"])
     ranges = data.get("ranges", {})
 
-    # Логика расчета правильного экшена по весам
     h_val = st.session_state.pf_hand
     action_weights = {act: utils.get_weight(h_val, ranges.get(act, "")) for act in actions}
     
@@ -232,101 +186,82 @@ def show():
     try: mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(chosen_key, {}))
     except: mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "#6c757d", "is_rusty": False, "prog_pct": 0, "svg": ""}
 
-    col_center, col_right = st.columns([2, 1])
+    # Логика рассадки 6-max
+    order = ["EP", "MP", "CO", "BTN", "SB", "BB"]
+    try: hero_idx = order.index(hero_pos)
+    except ValueError: hero_idx = 0
+    rot = order[hero_idx:] + order[:hero_idx]
+
+    def get_seat_style(idx):
+        return {0: "bottom: -20px; left: 50%; transform: translateX(-50%);", 1: "bottom: 15%; left: 0%;", 2: "top: 15%; left: 0%;", 
+                3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 15%; right: 0%;", 5: "bottom: 15%; right: 0%;"}.get(idx, "")
+
+    opp_html = ""
+    for i in range(1, 6):
+        p = rot[i]
+        has_cards = (p in active_players)
+        cls = "seat-active" if has_cards else "seat-folded"
+        cards = '<div class="opp-cards-desk"><div class="opp-card-desk"></div><div class="opp-card-desk right"></div></div>' if has_cards else ""
+        ss = get_seat_style(i)
+        opp_html += f'<div class="seat {cls}" style="{ss}">{cards}<span class="seat-label">{p}</span></div>'
+
+    st.markdown(f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin: 0 auto 20px auto; padding:10px 20px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data["xp"]} XP</div></div><div style="flex:1; text-align:center;"><span style="font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c>=5 else 0}px {glow_color};">🔥 {c}</span></div><div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Hands: {st.session_state.pf_session_hands}</div></div></div>', unsafe_allow_html=True)
     
-    with col_center:
-        # Header Stats
-        st.markdown(f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin: 0 auto 20px auto; padding:10px 20px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data["xp"]} XP</div></div><div style="flex:1; text-align:center;"><span style="font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c>=5 else 0}px {glow_color};">🔥 {c}</span></div><div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Hands: {st.session_state.pf_session_hands}</div></div></div>', unsafe_allow_html=True)
+    board_html = ""
+    for card in board_raw:
+        rank = card[:-1].upper()
+        suit = map_suit(card[-1])
+        sc = get_suit_color_class(suit)
+        board_html += f'<div class="board-card"><div class="bc-tl {sc}">{rank}<br>{suit}</div><div class="bc-c {sc}">{suit}</div></div>'
         
-        # Board HTML
-        board_html = ""
-        for card in board_raw:
-            rank = card[:-1].upper()
-            suit = map_suit(card[-1])
-            sc = get_suit_color_class(suit)
-            board_html += f'<div class="board-card"><div class="bc-tl {sc}">{rank}<br>{suit}</div><div class="bc-c {sc}">{suit}</div></div>'
-            
-        villain_html = f'<div class="villain-action">{villain_act}</div>' if villain_act else ""
-        link_html = f'<a href="{info_link}" target="_blank" class="onenote-link" title="Open Strategy in OneNote">ℹ️</a>' if info_link else ""
+    villain_html = f'<div class="villain-action">{villain_act}</div>' if villain_act else ""
+    link_html = f'<a href="{info_link}" target="_blank" class="onenote-link" title="Open Strategy in OneNote">ℹ️</a>' if info_link else ""
 
-        html = f'''
-        <div class="game-area {combo_cls}">
-            <div class="crest-left">{mastery.get("svg","")}</div><div class="crest-right">{mastery.get("svg","")}</div>
-            <div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery.get("color","#888")};"></div>
-            {link_html}
-            <div class="table-info">
-                <div class="info-src">{parts[0]} | {parts[1]} | {parts[2]}</div>
-                <div class="info-spot">{parts[3]}</div>
-                <div class="mastery-badge rusty-{mastery.get("is_rusty",False)}" style="color:{mastery.get("color")}; border-color:{mastery.get("color")};">{mastery.get("icon")} {mastery.get("name")}</div>
-                <div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width:{mastery.get("prog_pct",0)}%; background:{mastery.get("color")};"></div></div>
-            </div>
-            {villain_html}
-            <div class="board-container">{board_html}</div>
-            <div class="pot-badge">Pot: {pot_size} bb</div>
-            
-            <div class="hero-panel">
-                <div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div>
-                <div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div>
-                <div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div>
-                <div class="rng-desktop">{st.session_state.pf_rng}</div>
-            </div>
-        </div>
-        '''
-        st.markdown(html, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+    html = f'<div class="game-area {combo_cls}"><div class="crest-left">{mastery.get("svg","")}</div><div class="crest-right">{mastery.get("svg","")}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery.get("color","#888")};"></div>{link_html}<div class="table-info"><div class="info-src">{parts[0]} | {parts[1]} | {parts[2]}</div><div class="info-spot">{parts[3]}</div><div class="mastery-badge rusty-{mastery.get("is_rusty",False)}" style="color:{mastery.get("color")}; border-color:{mastery.get("color")};">{mastery.get("icon")} {mastery.get("name")}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width:{mastery.get("prog_pct",0)}%; background:{mastery.get("color")};"></div></div></div>{villain_html}<div class="board-container">{board_html}</div><div class="pot-badge">Pot: {pot_size} bb</div>{opp_html}<div class="hero-panel"><div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{st.session_state.pf_rng}</div></div></div>'
+    
+    st.markdown(html, unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
 
-        def handle_action(action):
-            corr = (correct_act == action)
-            st.session_state.pf_session_hands += 1
+    def handle_action(action):
+        corr = (correct_act == action)
+        st.session_state.pf_session_hands += 1
+        
+        k = f"{chosen_key}_{h_val}".replace(" ","_")
+        utils.update_srs_auto(k, h_val, corr, is_postflop=True)
+        
+        utils.save_to_history({
+            "Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+            "Spot": chosen_key, "Hand": f"{h_val}", "Result": int(corr), 
+            "CorrectAction": correct_act, "UserAction": action
+        }, is_postflop=True)
+        
+        if corr:
+            st.session_state.pf_session_correct += 1
+            st.session_state.pf_combo += 1
+            st.session_state.pf_last_error = False
+            st.session_state.pf_hand = None
+        else:
+            st.session_state.pf_combo = 0
+            st.session_state.pf_last_error = True
+            st.session_state.msg = f"❌ ОШИБКА! Ты нажал {action}, но правильный экшен: {correct_act}"
             
-            k = f"{chosen_key}_{h_val}".replace(" ","_")
-            utils.update_srs_auto(k, h_val, corr, is_postflop=True)
-            
-            utils.save_to_history({
-                "Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
-                "Spot": chosen_key, "Hand": f"{h_val}", "Result": int(corr), 
-                "CorrectAction": correct_act, "UserAction": action
-            }, is_postflop=True)
-            
-            if corr:
-                st.session_state.pf_session_correct += 1
-                st.session_state.pf_combo += 1
-                st.session_state.pf_last_error = False
-                st.session_state.pf_hand = None
-            else:
-                st.session_state.pf_combo = 0
-                st.session_state.pf_last_error = True
-                st.session_state.msg = f"❌ ОШИБКА! Ты нажал {action}, но правильный экшен: {correct_act}"
-                
-            try:
-                alerts = utils.process_gamification(corr, st.session_state.pf_combo, st.session_state.pf_session_hands, chosen_key, is_postflop=True)
-                if alerts: st.session_state.pf_toast_msgs.extend(alerts)
-            except: pass
+        try:
+            alerts = utils.process_gamification(corr, st.session_state.pf_combo, st.session_state.pf_session_hands, chosen_key, is_postflop=True)
+            if alerts: st.session_state.pf_toast_msgs.extend(alerts)
+        except: pass
+        st.rerun()
+
+    if st.session_state.pf_last_error:
+        st.markdown(f'<div style="background:#dc3545; color:white; padding:12px; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:15px; font-size:16px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">{st.session_state.msg}</div>', unsafe_allow_html=True)
+        if st.button("ПОНЯТНО, ДАЛЬШЕ", type="primary", use_container_width=True):
+            st.session_state.pf_last_error = False
+            st.session_state.pf_hand = None
             st.rerun()
-
-        if st.session_state.pf_last_error:
-            st.markdown(f'<div style="background:#dc3545; color:white; padding:12px; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:15px; font-size:16px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">{st.session_state.msg}</div>', unsafe_allow_html=True)
-            if st.button("ПОНЯТНО, ДАЛЬШЕ", type="primary", use_container_width=True):
-                st.session_state.pf_last_error = False
-                st.session_state.pf_hand = None
-                st.rerun()
-        else:
-            # Динамические кнопки
-            btn_cols = st.columns(len(actions))
-            for i, act in enumerate(actions):
-                with btn_cols[i]:
-                    color = ACTION_COLORS[i % len(ACTION_COLORS)]
-                    st.markdown(f"""<style>div[data-testid="column"]:nth-of-type({i+1}) button {{ border-top: 3px solid {color} !important; }}</style>""", unsafe_allow_html=True)
-                    if st.button(act, key=f"pf_btn_{i}", use_container_width=True):
-                        handle_action(act)
-
-    with col_right:
-        if not st.session_state.pf_last_error:
-            st.markdown(f"<div style='text-align:center;font-weight:bold;margin-bottom:10px;color:#ccc;font-size:14px;'>{parts[4]}</div>", unsafe_allow_html=True)
-            with st.expander("🫣 Peek Range", expanded=False):
-                st.markdown(render_pf_matrix(data, actions, st.session_state.pf_hand), unsafe_allow_html=True)
-        else:
-            st.markdown("### 🎯 Correct Ranges")
-            st.markdown(render_pf_matrix(data, actions, st.session_state.pf_hand), unsafe_allow_html=True)
-            st.markdown("### 🧠 SRS Weights")
-            st.markdown(utils.render_srs_matrix(data, "", "", chosen_key, utils.load_srs_data(is_postflop=True), st.session_state.pf_hand), unsafe_allow_html=True)
+    else:
+        btn_cols = st.columns(len(actions))
+        for i, act in enumerate(actions):
+            with btn_cols[i]:
+                color = ACTION_COLORS[i % len(ACTION_COLORS)]
+                st.markdown(f"""<style>div[data-testid="column"]:nth-of-type({i+1}) button {{ border-top: 3px solid {color} !important; }}</style>""", unsafe_allow_html=True)
+                if st.button(act, key=f"pf_btn_{i}", use_container_width=True):
+                    handle_action(act)
