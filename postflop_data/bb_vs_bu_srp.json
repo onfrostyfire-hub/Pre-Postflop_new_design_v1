@@ -6,14 +6,31 @@
     "active_players": ["BTN", "BB"],
     "board_cards": ["Kh", "8d", "7h"],
     "pot_size": 5.5,
-    "villain_action": "CHECK", 
+    "villain_action": "CHECK",
     "info_link": "https://onenote.com/твоя_ссылка",
     "actions": ["Check", "Bet 1.7bb", "Bet 3.6bb"],
     "ranges": {
-      "Check": "AA,KK,QQ,JTs",
-      "Bet 1.7bb": "88,77,AKs",
-      "Bet 3.6bb": "66,55,AQs",
-      "training": "AA,KK,QQ,88,77,66,55,AKs,AQs,JTs"
+      "Check": "AsAc, KsKc, QsQc, JsTs",
+      "Bet 1.7bb": "8s8c, 7s7c, AsKs",
+      "Bet 3.6bb": "6s6c, 5s5c, AsQs",
+      "training": "AsAc, KsKc, QsQc, JsTs, 8s8c, 7s7c, AsKs, 6s6c, 5s5c, AsQs"
+    }
+  },
+  "BBvsBU srp | Hero OOP | Flop | def vs cbet | Kh8d7h": {
+    "hero_pos": "BB",
+    "villain_pos": "BTN",
+    "btn_pos": "BTN",
+    "active_players": ["BTN", "BB"],
+    "board_cards": ["Kh", "8d", "7h"],
+    "pot_size": 7.2,
+    "villain_action": "BET 1.7bb",
+    "info_link": "https://onenote.com/твоя_ссылка",
+    "actions": ["Fold", "Call", "Raise"],
+    "ranges": {
+      "Fold": "2s2c, 3s3c, 4s4c, 5s5c, As2s, As3s",
+      "Call": "Ks9s, KsTs, KsJs, KsQs, 7s7c, 8s8c",
+      "Raise": "8s7s, 8c7c, Kh8h, Kd8d",
+      "training": "2s2c, 3s3c, 4s4c, 5s5c, As2s, As3s, Ks9s, KsTs, KsJs, KsQs, 7s7c, 8s8c, 8s7s, 8c7c, Kh8h, Kd8d"
     }
   }
 }
