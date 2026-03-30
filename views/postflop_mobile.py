@@ -78,6 +78,10 @@ def show():
         .act-bottom-mob { bottom: -18px; } .act-top-mob { top: -18px; }
 
         .dealer-mob { width: 16px; height: 16px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 9px; display: flex; justify-content: center; align-items: center; border: 1px solid #bfa006; position: absolute; z-index: 15; box-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
+        
+        .chip-container { position: absolute; z-index: 25; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+        .chip-mob { width: 14px; height: 14px; background: #111; border: 2px dashed #d32f2f; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .bet-txt { font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 3px; border-radius: 4px; margin-top: -5px; z-index: 20; text-transform: lowercase;}
 
         .hero-mob { position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 30; background: #222; padding: 4px 8px; border-radius: 12px; border: 1px solid #ffc107; }
         .card-mob { width: 38px; height: 54px; background: white; border-radius: 4px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
@@ -86,7 +90,7 @@ def show():
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
         
         .rng-badge { position: absolute; top: 50%; right: -36px; transform: translateY(-50%); width: 28px; height: 28px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
-        .info-badge-mob { position: absolute; top: 50%; left: -36px; transform: translateY(-50%); width: 28px; height: 28px; background: #17a2b8; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; text-decoration: none; }
+        .info-badge-mob { position: absolute; top: 50%; left: -48px; transform: translateY(-50%); width: 28px; height: 28px; background: #17a2b8; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; text-decoration: none; }
         
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
@@ -248,6 +252,16 @@ def show():
         return {0: "bottom: 25px; left: 60%;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
                 3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
 
+    def get_chip_style(idx):
+        return {
+            0: "bottom: 75px; left: 50%; transform: translateX(-50%);", 
+            1: "bottom: 20%; left: 10%;", 
+            2: "top: 20%; left: 10%;",
+            3: "top: 35px; left: 50%; transform: translateX(-50%);", 
+            4: "top: 20%; right: 10%;", 
+            5: "bottom: 20%; right: 10%;"
+        }.get(idx, "")
+
     opp_html = ""; chips_html = ""
 
     for i in range(1, 6):
@@ -258,15 +272,24 @@ def show():
         ss = get_seat_style(i)
         
         v_act_html = ""
+        is_bet = villain_act and ("BET" in villain_act.upper() or "RAISE" in villain_act.upper())
+        
         if p == villain_pos and villain_act:
-            pos_class = "act-bottom-mob" if i in [2, 3, 4] else "act-top-mob"
-            v_act_html = f'<div class="villain-act-badge-mob {pos_class}">{villain_act}</div>'
+            if not is_bet:
+                pos_class = "act-bottom-mob" if i in [2, 3, 4] else "act-top-mob"
+                v_act_html = f'<div class="villain-act-badge-mob {pos_class}">{villain_act}</div>'
             
         opp_html += f'<div class="seat {cls}" style="{ss}">{cards}<span class="seat-label">{p}</span>{v_act_html}</div>'
 
         if p == btn_pos:
             bs = get_btn_style(i)
             chips_html += f'<div class="dealer-mob" style="{bs}">D</div>'
+            
+        if p == villain_pos and is_bet:
+            cs = get_chip_style(i)
+            bet_amount_str = villain_act.upper().replace("BET", "").replace("RAISE", "").strip().lower()
+            bet_txt = f'<div class="bet-txt">{bet_amount_str}</div>'
+            chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-mob"></div>{bet_txt}</div>'
 
     if rot[0] == btn_pos:
         hero_bs = get_btn_style(0)
