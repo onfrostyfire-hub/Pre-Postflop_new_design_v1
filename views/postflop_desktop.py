@@ -15,29 +15,45 @@ def get_suit_color_class(s):
     if s == '♣': return "suit-green"
     return "suit-black"
 
+def pf_parse_range(r_str):
+    if not r_str: return []
+    return [x.split(':')[0].strip() for x in r_str.split(',')]
+
+def pf_get_weight(hand, r_str):
+    if not r_str: return 0.0
+    items = [x.strip() for x in r_str.split(',')]
+    for item in items:
+        if not item: continue
+        parts = item.split(':')
+        h = parts[0].strip()
+        w = float(parts[1])*100 if len(parts)>1 and float(parts[1])<=1.0 else (float(parts[1]) if len(parts)>1 else 100.0)
+        if h == hand: return w
+    return 0.0
+
 def show():
     st.markdown("""
     <style>
         .stApp { background-color: #1a1c20; color: #e9ecef; }
         .game-area { position: relative; width: 100%; max-width: 700px; height: 440px; margin: 0 auto; background: radial-gradient(ellipse at center, #1e5e2f 0%, #0d3b1a 100%); border: 12px solid #2c1a1a; border-radius: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); transition: box-shadow 0.3s, border-color 0.3s; }
         .mastery-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; z-index: 1; transition: box-shadow 0.5s ease; }
-        .mastery-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); z-index: 30; }
-        .rusty-True { filter: grayscale(100%) opacity(0.6); }
-        .mastery-bar-bg { width: 100px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); z-index: 30; }
-        .mastery-bar-fill { height: 100%; transition: width 0.3s; }
         .crest-left { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .crest-right { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         
-        .table-info { position: absolute; top: 62%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
-        .info-spot { font-size: 18px; font-weight: 800; color: rgba(255,255,255,0.2); z-index: 30; position: relative; margin-bottom: -5px; }
-        .info-src { font-size: 11px; color: #aaa; z-index: 30; position: relative; }
-        
-        .board-container { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); display: flex; gap: 8px; z-index: 20; background: rgba(0,0,0,0.4); padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .center-column { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; z-index: 20; }
+        .info-spot { font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.3); text-transform: uppercase; line-height: 1; }
+        .info-src { font-size: 11px; color: #888; margin-top: -6px; margin-bottom: 2px; }
+        .pot-badge { background: #111; color: #ffc107; font-weight: bold; font-size: 14px; padding: 4px 16px; border-radius: 20px; border: 1px solid #ffc107; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .board-container { display: flex; gap: 8px; background: rgba(0,0,0,0.4); padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .mastery-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); }
+        .rusty-True { filter: grayscale(100%) opacity(0.6); }
+        .mastery-bar-bg { width: 120px; height: 4px; background: #111; border-radius: 2px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
+        .mastery-bar-fill { height: 100%; transition: width 0.3s; }
+        .hands-left { font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: bold; margin-top: -2px; }
+
         .board-card { width: 52px; height: 74px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); font-family: sans-serif; }
         .bc-tl { position: absolute; top: 3px; left: 4px; font-weight: bold; font-size: 16px; line-height: 1; }
         .bc-c { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 28px; }
         
-        .pot-badge { position: absolute; top: 25%; left: 50%; transform: translateX(-50%); background: #111; color: #ffc107; font-weight: bold; font-size: 14px; padding: 4px 16px; border-radius: 20px; border: 1px solid #ffc107; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 20; }
         .onenote-link { position: absolute; top: 25px; right: 40px; background: #6f42c1; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; text-decoration: none; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.6); z-index: 50; transition: transform 0.2s; }
         .onenote-link:hover { transform: scale(1.1); color: white; }
 
@@ -142,17 +158,13 @@ def show():
         st.session_state.pf_current_spot_key = chosen_key
         data = pf_db[chosen_key]
         t_range = data.get("ranges", {}).get("training", "")
-        poss = utils.parse_range_to_list(t_range)
+        poss = pf_parse_range(t_range)
         srs = utils.load_srs_data(is_postflop=True)
         w = [srs.get(f"{chosen_key}_{h}".replace(" ","_"), 100) for h in poss]
         
         if sum(w) == 0: w = [100]*len(poss)
         st.session_state.pf_hand = random.choices(poss, weights=w, k=1)[0]
         st.session_state.pf_rng = random.randint(0, 99)
-        
-        ps = ['♠','♥','♦','♣']
-        s1 = random.choice(ps)
-        st.session_state.pf_suits = [s1, s1 if 's' in st.session_state.pf_hand else random.choice([x for x in ps if x!=s1])]
 
     chosen_key = st.session_state.pf_current_spot_key
     data = pf_db[chosen_key]
@@ -170,7 +182,7 @@ def show():
     ranges = data.get("ranges", {})
 
     h_val = st.session_state.pf_hand
-    action_weights = {act: utils.get_weight(h_val, ranges.get(act, "")) for act in actions}
+    action_weights = {act: pf_get_weight(h_val, ranges.get(act, "")) for act in actions}
     
     correct_act = actions[0]
     cumulative = 0
@@ -180,7 +192,14 @@ def show():
             break
         cumulative += action_weights[act]
 
-    s1, s2 = st.session_state.pf_suits
+    # Парсинг 4 символов масти
+    if len(h_val) == 4:
+        r1, s1_raw, r2, s2_raw = h_val[0], h_val[1], h_val[2], h_val[3]
+        s1, s2 = map_suit(s1_raw), map_suit(s2_raw)
+    else:
+        r1, r2 = h_val[0] if len(h_val)>0 else 'X', h_val[1] if len(h_val)>1 else 'X'
+        s1, s2 = map_suit('s'), map_suit('s')
+        
     c1, c2 = get_suit_color_class(s1), get_suit_color_class(s2)
 
     stats_data = utils.load_user_stats(is_postflop=True)
@@ -192,7 +211,12 @@ def show():
     combo_cls = f"combo-glow-{max([v for v in [5,10,25,50,100] if c >= v] + [0])}" if c >= 5 else ""
 
     try: mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(chosen_key, {}))
-    except: mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "#6c757d", "is_rusty": False, "prog_pct": 0, "svg": ""}
+    except: mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "#6c757d", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100, "svg": ""}
+
+    m_total = mastery.get("total", 0)
+    m_next = mastery.get("next", 100)
+    if mastery.get("rank", 0) >= 5: hands_left_text = "MAX RANK"
+    else: hands_left_text = f"Remaining: {max(0, m_next - m_total)} hands"
 
     order = ["EP", "MP", "CO", "BTN", "SB", "BB"]
     try: hero_idx = order.index(hero_pos)
@@ -238,7 +262,7 @@ def show():
         rank = card[:-1].upper()
         suit = map_suit(card[-1])
         sc = get_suit_color_class(suit)
-        board_html += f'<div class="board-card"><div class="bc-tl {sc}">{rank}<br>{suit}</div><div class="bc-c {sc}">{suit}</div></div>'
+        board_html += f'<div class="board-card"><div class="bc-tl {sc}">{rank}</div><div class="bc-c {sc}">{suit}</div></div>'
         
     link_html = f'<a href="{info_link}" target="_blank" class="onenote-link" title="Open Strategy in OneNote">ℹ️</a>' if info_link else ""
 
@@ -247,19 +271,20 @@ def show():
         <div class="crest-left">{mastery.get("svg","")}</div><div class="crest-right">{mastery.get("svg","")}</div>
         <div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery.get("color","#888")};"></div>
         {link_html}
-        <div class="pot-badge">Pot: {pot_size} bb</div>
-        <div class="board-container">{board_html}</div>
-        <div class="table-info">
-            <div class="info-src">{parts[0]} | {parts[1]} | {parts[2]}</div>
+        <div class="center-column">
             <div class="info-spot">{parts[3]}</div>
+            <div class="info-src">{parts[0]} | {parts[1]} | {parts[2]}</div>
+            <div class="pot-badge">Pot: {pot_size} bb</div>
+            <div class="board-container">{board_html}</div>
             <div class="mastery-badge rusty-{mastery.get("is_rusty",False)}" style="color:{mastery.get("color")}; border-color:{mastery.get("color")};">{mastery.get("icon")} {mastery.get("name")}</div>
             <div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width:{mastery.get("prog_pct",0)}%; background:{mastery.get("color")};"></div></div>
+            <div class="hands-left">{hands_left_text}</div>
         </div>
         {opp_html}{chips_html}
         <div class="hero-panel">
             <div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div>
-            <div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div>
-            <div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div>
+            <div class="card"><div class="tl {c1}">{r1}<br>{s1}</div><div class="cent {c1}">{s1}</div></div>
+            <div class="card"><div class="tl {c2}">{r2}<br>{s2}</div><div class="cent {c2}">{s2}</div></div>
             <div class="rng-desktop">{st.session_state.pf_rng}</div>
         </div>
     </div>
@@ -289,7 +314,7 @@ def show():
         else:
             st.session_state.pf_combo = 0
             st.session_state.pf_last_error = True
-            st.session_state.msg = f"❌ ОШИБКА! Ты нажал {action}, но правильный экшен: {correct_act}"
+            st.session_state.msg = f"❌ ОШИБКА! Правильно: {correct_act}"
             
         try:
             alerts = utils.process_gamification(corr, st.session_state.pf_combo, st.session_state.pf_session_hands, chosen_key, is_postflop=True)
