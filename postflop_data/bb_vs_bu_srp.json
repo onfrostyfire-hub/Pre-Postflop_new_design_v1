@@ -22,7 +22,7 @@
     "btn_pos": "BTN",
     "active_players": ["BTN", "BB"],
     "board_cards": ["Kh", "8d", "7h"],
-    "pot_size": 7.2,
+    "pot_size": 5.5,
     "villain_action": "BET 1.7bb",
     "info_link": "https://onenote.com/твоя_ссылка",
     "actions": ["Fold", "Call", "Raise"],
