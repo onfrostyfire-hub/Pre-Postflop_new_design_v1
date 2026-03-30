@@ -1,5 +1,6 @@
 import streamlit as st
 from views import mobile, desktop, compare, stats
+from views import postflop_desktop, postflop_mobile
 
 st.set_page_config(page_title="Poker Trainer", layout="wide", initial_sidebar_state="collapsed")
 
@@ -48,15 +49,15 @@ def main():
     """, unsafe_allow_html=True)
 
     if "actual_app_mode" not in st.session_state:
-        st.session_state.actual_app_mode = "🎮 Trainer"
+        st.session_state.actual_app_mode = "🎮 Preflop"
     if "actual_view_type" not in st.session_state:
-        st.session_state.actual_view_type = "📱 Mobile"
+        st.session_state.actual_view_type = "💻 Desktop"
 
     st.markdown('<div class="compact-tabs"></div>', unsafe_allow_html=True)
     nav_mode = st.radio(
         "Nav", 
-        ["🎮 Trainer", "🔬 Range Lab", "📊 Stats"], 
-        index=["🎮 Trainer", "🔬 Range Lab", "📊 Stats"].index(st.session_state.actual_app_mode),
+        ["🎮 Preflop", "🃏 Postflop", "🔬 Range Lab", "📊 Stats"], 
+        index=["🎮 Preflop", "🃏 Postflop", "🔬 Range Lab", "📊 Stats"].index(st.session_state.actual_app_mode),
         horizontal=True, 
         label_visibility="collapsed"
     )
@@ -68,6 +69,11 @@ def main():
         compare.show()
     elif st.session_state.actual_app_mode == "📊 Stats":
         stats.show()
+    elif st.session_state.actual_app_mode == "🃏 Postflop":
+        if st.session_state.actual_view_type == "📱 Mobile":
+            postflop_mobile.show()
+        else:
+            postflop_desktop.show()
     else:
         if st.session_state.actual_view_type == "📱 Mobile":
             mobile.show()
