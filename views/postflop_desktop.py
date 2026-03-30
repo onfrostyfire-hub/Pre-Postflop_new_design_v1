@@ -19,7 +19,7 @@ def show():
     st.markdown("""
     <style>
         .stApp { background-color: #1a1c20; color: #e9ecef; }
-        .game-area { position: relative; width: 100%; max-width: 700px; height: 420px; margin: 0 auto; background: radial-gradient(ellipse at center, #1e5e2f 0%, #0d3b1a 100%); border: 12px solid #2c1a1a; border-radius: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); transition: box-shadow 0.3s, border-color 0.3s; }
+        .game-area { position: relative; width: 100%; max-width: 700px; height: 440px; margin: 0 auto; background: radial-gradient(ellipse at center, #1e5e2f 0%, #0d3b1a 100%); border: 12px solid #2c1a1a; border-radius: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); transition: box-shadow 0.3s, border-color 0.3s; }
         .mastery-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; z-index: 1; transition: box-shadow 0.5s ease; }
         .mastery-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); z-index: 30; }
         .rusty-True { filter: grayscale(100%) opacity(0.6); }
@@ -27,17 +27,17 @@ def show():
         .mastery-bar-fill { height: 100%; transition: width 0.3s; }
         .crest-left { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .crest-right { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
-        .table-info { position: absolute; top: 12%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
-        .info-spot { font-size: 20px; font-weight: 800; color: rgba(255,255,255,0.2); z-index: 30; position: relative;}
-        .info-src { font-size: 12px; color: #aaa; z-index: 30; position: relative; }
         
-        .board-container { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); display: flex; gap: 6px; z-index: 20; background: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
-        .board-card { width: 42px; height: 60px; background: white; border-radius: 4px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); font-family: sans-serif; }
-        .bc-tl { position: absolute; top: 2px; left: 3px; font-weight: bold; font-size: 14px; line-height: 1; }
-        .bc-c { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 22px; }
+        .table-info { position: absolute; top: 62%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
+        .info-spot { font-size: 18px; font-weight: 800; color: rgba(255,255,255,0.2); z-index: 30; position: relative; margin-bottom: -5px; }
+        .info-src { font-size: 11px; color: #aaa; z-index: 30; position: relative; }
         
-        .pot-badge { position: absolute; top: 65%; left: 50%; transform: translateX(-50%); background: #111; color: #ffc107; font-weight: bold; font-size: 14px; padding: 4px 12px; border-radius: 20px; border: 1px solid #ffc107; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 20; }
-        .villain-action { position: absolute; top: 28%; left: 50%; transform: translateX(-50%); background: #dc3545; color: #fff; font-weight: bold; font-size: 12px; padding: 3px 10px; border-radius: 6px; border: 1px solid #ffaaaa; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 20; text-transform: uppercase; }
+        .board-container { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); display: flex; gap: 8px; z-index: 20; background: rgba(0,0,0,0.4); padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .board-card { width: 52px; height: 74px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); font-family: sans-serif; }
+        .bc-tl { position: absolute; top: 3px; left: 4px; font-weight: bold; font-size: 16px; line-height: 1; }
+        .bc-c { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 28px; }
+        
+        .pot-badge { position: absolute; top: 25%; left: 50%; transform: translateX(-50%); background: #111; color: #ffc107; font-weight: bold; font-size: 14px; padding: 4px 16px; border-radius: 20px; border: 1px solid #ffc107; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 20; }
         .onenote-link { position: absolute; top: 25px; right: 40px; background: #6f42c1; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; text-decoration: none; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.6); z-index: 50; transition: transform 0.2s; }
         .onenote-link:hover { transform: scale(1.1); color: white; }
 
@@ -45,9 +45,15 @@ def show():
         .seat-label { font-size: 11px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 4px; }
         .seat-active { border-color: #ffc107; background: #343a40; }
         .seat-folded { opacity: 0.4; border-color: #212529; }
+        
         .opp-cards-desk { position: absolute; top: -15px; display: flex; z-index: 20; }
         .opp-card-desk { width: 22px; height: 32px; background: #fff; border-radius: 3px; border: 1px solid #777; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
         .opp-card-desk.right { margin-left: -8px; transform: rotate(12deg) translateY(2px); }
+
+        .villain-act-badge { position: absolute; background: #dc3545; color: #fff; font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 6px; border: 1px solid #ffaaaa; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 25; text-transform: uppercase; white-space: nowrap; left: 50%; transform: translateX(-50%); }
+        .act-bottom { bottom: -24px; } .act-top { top: -24px; }
+
+        .dealer-button { width: 24px; height: 24px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; z-index: 15; position: absolute; border: 1px solid #bfa006; box-shadow: 1px 1px 3px rgba(0,0,0,0.7); }
 
         .hero-panel { position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%); background: #212529; border: 2px solid #ffc107; border-radius: 12px; padding: 6px 18px; display: flex; gap: 8px; z-index: 30; align-items: center; }
         .card { width: 50px; height: 70px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-family: sans-serif; }
@@ -153,6 +159,8 @@ def show():
     parts = [p.strip() for p in chosen_key.split('|')]
     
     hero_pos = data.get("hero_pos", "BTN")
+    villain_pos = data.get("villain_pos", "BB")
+    btn_pos = data.get("btn_pos", "BTN")
     active_players = data.get("active_players", ["BTN", "BB"])
     board_raw = data.get("board_cards", [])
     pot_size = data.get("pot_size", 0)
@@ -186,7 +194,6 @@ def show():
     try: mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(chosen_key, {}))
     except: mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "#6c757d", "is_rusty": False, "prog_pct": 0, "svg": ""}
 
-    # Логика рассадки 6-max
     order = ["EP", "MP", "CO", "BTN", "SB", "BB"]
     try: hero_idx = order.index(hero_pos)
     except ValueError: hero_idx = 0
@@ -196,14 +203,33 @@ def show():
         return {0: "bottom: -20px; left: 50%; transform: translateX(-50%);", 1: "bottom: 15%; left: 0%;", 2: "top: 15%; left: 0%;", 
                 3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 15%; right: 0%;", 5: "bottom: 15%; right: 0%;"}.get(idx, "")
 
-    opp_html = ""
+    def get_btn_style(idx):
+        return {0: "bottom: 10%; left: 60%;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
+                3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
+
+    opp_html = ""; chips_html = ""
+
     for i in range(1, 6):
         p = rot[i]
         has_cards = (p in active_players)
         cls = "seat-active" if has_cards else "seat-folded"
         cards = '<div class="opp-cards-desk"><div class="opp-card-desk"></div><div class="opp-card-desk right"></div></div>' if has_cards else ""
         ss = get_seat_style(i)
-        opp_html += f'<div class="seat {cls}" style="{ss}">{cards}<span class="seat-label">{p}</span></div>'
+        
+        v_act_html = ""
+        if p == villain_pos and villain_act:
+            pos_class = "act-bottom" if i in [2, 3, 4] else "act-top"
+            v_act_html = f'<div class="villain-act-badge {pos_class}">{villain_act}</div>'
+            
+        opp_html += f'<div class="seat {cls}" style="{ss}">{cards}<span class="seat-label">{p}</span>{v_act_html}</div>'
+
+        if p == btn_pos:
+            bs = get_btn_style(i)
+            chips_html += f'<div class="dealer-button" style="{bs}">D</div>'
+
+    if rot[0] == btn_pos:
+        hero_bs = get_btn_style(0)
+        chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
     st.markdown(f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin: 0 auto 20px auto; padding:10px 20px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data["xp"]} XP</div></div><div style="flex:1; text-align:center;"><span style="font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c>=5 else 0}px {glow_color};">🔥 {c}</span></div><div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Hands: {st.session_state.pf_session_hands}</div></div></div>', unsafe_allow_html=True)
     
@@ -214,10 +240,30 @@ def show():
         sc = get_suit_color_class(suit)
         board_html += f'<div class="board-card"><div class="bc-tl {sc}">{rank}<br>{suit}</div><div class="bc-c {sc}">{suit}</div></div>'
         
-    villain_html = f'<div class="villain-action">{villain_act}</div>' if villain_act else ""
     link_html = f'<a href="{info_link}" target="_blank" class="onenote-link" title="Open Strategy in OneNote">ℹ️</a>' if info_link else ""
 
-    html = f'<div class="game-area {combo_cls}"><div class="crest-left">{mastery.get("svg","")}</div><div class="crest-right">{mastery.get("svg","")}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery.get("color","#888")};"></div>{link_html}<div class="table-info"><div class="info-src">{parts[0]} | {parts[1]} | {parts[2]}</div><div class="info-spot">{parts[3]}</div><div class="mastery-badge rusty-{mastery.get("is_rusty",False)}" style="color:{mastery.get("color")}; border-color:{mastery.get("color")};">{mastery.get("icon")} {mastery.get("name")}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width:{mastery.get("prog_pct",0)}%; background:{mastery.get("color")};"></div></div></div>{villain_html}<div class="board-container">{board_html}</div><div class="pot-badge">Pot: {pot_size} bb</div>{opp_html}<div class="hero-panel"><div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{st.session_state.pf_rng}</div></div></div>'
+    html = f'''
+    <div class="game-area {combo_cls}">
+        <div class="crest-left">{mastery.get("svg","")}</div><div class="crest-right">{mastery.get("svg","")}</div>
+        <div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery.get("color","#888")};"></div>
+        {link_html}
+        <div class="pot-badge">Pot: {pot_size} bb</div>
+        <div class="board-container">{board_html}</div>
+        <div class="table-info">
+            <div class="info-src">{parts[0]} | {parts[1]} | {parts[2]}</div>
+            <div class="info-spot">{parts[3]}</div>
+            <div class="mastery-badge rusty-{mastery.get("is_rusty",False)}" style="color:{mastery.get("color")}; border-color:{mastery.get("color")};">{mastery.get("icon")} {mastery.get("name")}</div>
+            <div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width:{mastery.get("prog_pct",0)}%; background:{mastery.get("color")};"></div></div>
+        </div>
+        {opp_html}{chips_html}
+        <div class="hero-panel">
+            <div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div>
+            <div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div>
+            <div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div>
+            <div class="rng-desktop">{st.session_state.pf_rng}</div>
+        </div>
+    </div>
+    '''
     
     st.markdown(html, unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
