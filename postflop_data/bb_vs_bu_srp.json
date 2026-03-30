@@ -2,7 +2,8 @@
   "BBvsBU srp | Hero IP | Flop | cbet | Kh8d7h": {
     "board_cards": ["Kh", "8d", "7h"],
     "pot_size": 5.5,
-    "info_link": "https://onenote.com/твоя_ссылка_на_стратегию",
+    "villain_action": "CHECK", 
+    "info_link": "https://onenote.com/твоя_ссылка",
     "actions": ["Check", "Bet 1.7bb", "Bet 3.6bb"],
     "ranges": {
       "Check": "AA,KK,QQ,JTs",
