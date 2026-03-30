@@ -4,6 +4,20 @@ from views import postflop_desktop, postflop_mobile
 
 st.set_page_config(page_title="Poker Trainer", layout="wide", initial_sidebar_state="collapsed")
 
+def detect_mobile():
+    try:
+        if hasattr(st, "context") and hasattr(st.context, "headers"):
+            ua = st.context.headers.get("User-Agent", "").lower()
+            return "mobi" in ua or "android" in ua or "iphone" in ua
+    except: pass
+    try:
+        from streamlit.web.server.websocket_headers import _get_websocket_headers
+        headers = _get_websocket_headers()
+        ua = headers.get("User-Agent", "").lower()
+        return "mobi" in ua or "android" in ua or "iphone" in ua
+    except: pass
+    return False
+
 def main():
     st.markdown("""
     <style>
@@ -48,10 +62,11 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
+    if "actual_view_type" not in st.session_state:
+        st.session_state.actual_view_type = "📱 Mobile" if detect_mobile() else "💻 Desktop"
+        
     if "actual_app_mode" not in st.session_state:
         st.session_state.actual_app_mode = "🎮 Preflop"
-    if "actual_view_type" not in st.session_state:
-        st.session_state.actual_view_type = "💻 Desktop"
 
     st.markdown('<div class="compact-tabs"></div>', unsafe_allow_html=True)
     nav_mode = st.radio(
