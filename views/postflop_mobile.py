@@ -85,8 +85,8 @@ def show():
         .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 20px; }
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
         
-        .rng-badge { position: absolute; bottom: 40px; right: -15px; width: 28px; height: 28px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
-        .info-badge-mob { position: absolute; bottom: 40px; left: -15px; width: 28px; height: 28px; background: #17a2b8; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; text-decoration: none; }
+        .rng-badge { position: absolute; top: 50%; right: -36px; transform: translateY(-50%); width: 28px; height: 28px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
+        .info-badge-mob { position: absolute; top: 50%; left: -36px; transform: translateY(-50%); width: 28px; height: 28px; background: #17a2b8; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; text-decoration: none; }
         
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
@@ -279,7 +279,6 @@ def show():
         sc = get_suit_color_class(suit)
         board_html += f'<div class="board-card-mob"><div class="bc-tl-mob {sc}">{rank}</div><div class="bc-c-mob {sc}">{suit}</div></div>'
         
-    # Deep link для мобилок
     mobile_link = info_link
     if mobile_link and mobile_link.startswith("https://"):
         mobile_link = "onenote:" + mobile_link
