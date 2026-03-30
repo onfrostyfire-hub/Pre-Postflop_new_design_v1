@@ -1,5 +1,7 @@
 {
   "BBvsBU srp | Hero IP | Flop | cbet | Kh8d7h": {
+    "hero_pos": "BTN",
+    "active_players": ["BTN", "BB"],
     "board_cards": ["Kh", "8d", "7h"],
     "pot_size": 5.5,
     "villain_action": "CHECK", 
