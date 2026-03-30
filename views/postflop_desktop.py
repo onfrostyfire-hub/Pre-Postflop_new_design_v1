@@ -39,7 +39,7 @@ def show():
         .crest-left { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .crest-right { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         
-        .center-column { position: absolute; top: 10%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; z-index: 20; }
+        .center-column { position: absolute; top: 16%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; z-index: 20; }
         .info-spot { font-size: 20px; font-weight: 900; color: rgba(255,255,255,0.3); text-transform: uppercase; line-height: 1; }
         .info-src { font-size: 11px; color: #888; margin-top: -6px; margin-bottom: 2px; }
         .pot-badge { background: #111; color: #ffc107; font-weight: bold; font-size: 14px; padding: 4px 16px; border-radius: 20px; border: 1px solid #ffc107; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
@@ -53,9 +53,6 @@ def show():
         .board-card { width: 52px; height: 74px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); font-family: sans-serif; }
         .bc-tl { position: absolute; top: 3px; left: 4px; font-weight: bold; font-size: 16px; line-height: 1; }
         .bc-c { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 28px; }
-        
-        .onenote-link { position: absolute; top: 25px; right: 40px; background: #6f42c1; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; text-decoration: none; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.6); z-index: 50; transition: transform 0.2s; }
-        .onenote-link:hover { transform: scale(1.1); color: white; }
 
         .seat { position: absolute; width: 65px; height: 65px; background: #343a40; border: 2px solid #495057; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
         .seat-label { font-size: 11px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 4px; }
@@ -76,7 +73,10 @@ def show():
         .tl { position: absolute; top: 2px; left: 4px; font-weight: bold; font-size: 16px; line-height: 1.1; }
         .cent { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; }
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #212529; } .suit-green { color: #198754; }
+        
         .rng-desktop { position: absolute; right: -50px; top: 15px; width: 40px; height: 40px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 16px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+        .info-badge { position: absolute; left: -50px; top: 15px; width: 40px; height: 40px; background: #17a2b8; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 20px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.6); text-decoration: none; transition: transform 0.2s; }
+        .info-badge:hover { transform: scale(1.1); color: white; }
         
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
@@ -192,7 +192,6 @@ def show():
             break
         cumulative += action_weights[act]
 
-    # Парсинг 4 символов масти
     if len(h_val) == 4:
         r1, s1_raw, r2, s2_raw = h_val[0], h_val[1], h_val[2], h_val[3]
         s1, s2 = map_suit(s1_raw), map_suit(s2_raw)
@@ -207,6 +206,11 @@ def show():
     c = st.session_state.pf_combo
     progress_pct = int((stats_data["xp"] / next_xp) * 100) if next_xp != "MAX" else 100
     
+    sh = st.session_state.pf_session_hands
+    scorr = st.session_state.pf_session_correct
+    wr = int((scorr / sh * 100)) if sh > 0 else 0
+    wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
+
     glow_color = '#00ff00' if c >= 1000 else '#ff00ff' if c >= 500 else '#00e5ff' if c >= 200 else '#6f42c1' if c >= 100 else '#dc3545' if c >= 50 else '#fd7e14' if c >= 25 else '#ffc107' if c >= 10 else '#0dcaf0' if c >= 5 else '#888'
     combo_cls = f"combo-glow-{max([v for v in [5,10,25,50,100] if c >= v] + [0])}" if c >= 5 else ""
 
@@ -255,7 +259,8 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
-    st.markdown(f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin: 0 auto 20px auto; padding:10px 20px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data["xp"]} XP</div></div><div style="flex:1; text-align:center;"><span style="font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c>=5 else 0}px {glow_color};">🔥 {c}</span></div><div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Hands: {st.session_state.pf_session_hands}</div></div></div>', unsafe_allow_html=True)
+    header_html = f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;"><div style="height: 4px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data["xp"]} / {next_xp} XP</div></div><div style="flex:1; text-align:center;"><span style="font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c>=5 else 0}px {glow_color};">🔥 {c}</span></div><div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Winrate: {wr}% | Hands: {sh}</div></div></div></div>'
+    st.markdown(header_html, unsafe_allow_html=True)
     
     board_html = ""
     for card in board_raw:
@@ -264,13 +269,12 @@ def show():
         sc = get_suit_color_class(suit)
         board_html += f'<div class="board-card"><div class="bc-tl {sc}">{rank}</div><div class="bc-c {sc}">{suit}</div></div>'
         
-    link_html = f'<a href="{info_link}" target="_blank" class="onenote-link" title="Open Strategy in OneNote">ℹ️</a>' if info_link else ""
+    link_html = f'<a href="{info_link}" target="_blank" class="info-badge" title="Open in OneNote">ℹ️</a>' if info_link else ""
 
     html = f'''
     <div class="game-area {combo_cls}">
         <div class="crest-left">{mastery.get("svg","")}</div><div class="crest-right">{mastery.get("svg","")}</div>
         <div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery.get("color","#888")};"></div>
-        {link_html}
         <div class="center-column">
             <div class="info-spot">{parts[3]}</div>
             <div class="info-src">{parts[0]} | {parts[1]} | {parts[2]}</div>
@@ -282,6 +286,7 @@ def show():
         </div>
         {opp_html}{chips_html}
         <div class="hero-panel">
+            {link_html}
             <div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div>
             <div class="card"><div class="tl {c1}">{r1}<br>{s1}</div><div class="cent {c1}">{s1}</div></div>
             <div class="card"><div class="tl {c2}">{r2}<br>{s2}</div><div class="cent {c2}">{s2}</div></div>
