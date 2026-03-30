@@ -51,7 +51,7 @@ def show():
         .crest-left-mob { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 75px; height: 75px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .crest-right-mob { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 75px; height: 75px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         
-        .center-column-mob { position: absolute; top: 5%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; z-index: 20; }
+        .center-column-mob { position: absolute; top: 12%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; z-index: 20; }
         .mob-info-spot { font-size: 16px; font-weight: 900; color: rgba(255,255,255,0.3); text-transform: uppercase; line-height: 1; }
         .pot-badge-mob { background: #111; color: #ffc107; font-weight: bold; font-size: 11px; padding: 2px 10px; border-radius: 12px; border: 1px solid #ffc107; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .board-container-mob { display: flex; gap: 4px; background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
@@ -64,8 +64,6 @@ def show():
         .board-card-mob { width: 38px; height: 54px; background: white; border-radius: 3px; position: relative; color: black; box-shadow: 0 1px 3px rgba(0,0,0,0.5); font-family: sans-serif; }
         .bc-tl-mob { position: absolute; top: 2px; left: 3px; font-weight: bold; font-size: 12px; line-height: 1; }
         .bc-c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 20px; }
-        
-        .onenote-link-mob { position: absolute; bottom: 55px; right: 15px; background: #6f42c1; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 14px; text-decoration: none; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.6); z-index: 50; }
 
         .seat { position: absolute; width: 44px; height: 44px; background: #222; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
         .seat-label { font-size: 9px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 2px; }
@@ -86,7 +84,15 @@ def show():
         .tl-mob { position: absolute; top: 1px; left: 3px; font-weight: bold; font-size: 12px; line-height: 1; }
         .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 20px; }
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
+        
         .rng-badge { position: absolute; bottom: 40px; right: -15px; width: 28px; height: 28px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
+        .info-badge-mob { position: absolute; bottom: 40px; left: -15px; width: 28px; height: 28px; background: #17a2b8; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; text-decoration: none; }
+        
+        .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
+        .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
+        .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; }
+        .combo-glow-50 { border-color: #dc3545 !important; box-shadow: 0 0 30px rgba(220, 53, 69, 0.7), 0 4px 15px rgba(0,0,0,0.8) !important; }
+        .combo-glow-100 { border-color: #6f42c1 !important; box-shadow: 0 0 40px rgba(111, 66, 193, 0.8), 0 4px 15px rgba(0,0,0,0.8) !important; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -205,6 +211,12 @@ def show():
     rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
     c = st.session_state.pf_combo
     progress_pct = int((stats_data["xp"] / next_xp) * 100) if next_xp != "MAX" else 100
+    
+    sh = st.session_state.pf_session_hands
+    scorr = st.session_state.pf_session_correct
+    wr = int((scorr / sh * 100)) if sh > 0 else 0
+    wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
+
     glow_color = '#00ff00' if c >= 1000 else '#ff00ff' if c >= 500 else '#00e5ff' if c >= 200 else '#6f42c1' if c >= 100 else '#dc3545' if c >= 50 else '#fd7e14' if c >= 25 else '#ffc107' if c >= 10 else '#0dcaf0' if c >= 5 else '#888'
     combo_cls = f"combo-glow-{max([v for v in [5,10,25,50,100] if c >= v] + [0])}" if c >= 5 else ""
 
@@ -220,7 +232,7 @@ def show():
     mult_html = f'<span style="background: rgba(255,255,255,0.2); color:#fff; font-size:9px; font-weight:900; margin-left:4px; padding: 1px 4px; border-radius: 6px;">x{multiplier}</span>' if multiplier > 1.0 else ''
     combo_badge = f'<div style="flex:1; display:flex; justify-content:center; align-items:center;"><div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center;"><span style="font-size:14px; font-weight:900; color:{glow_color};">🔥 {c}</span>{mult_html}</div></div>'
 
-    header_html = f'<div style="background:#111; border-radius:10px; margin-bottom:5px; border:1px solid #333; overflow:hidden;"><div style="padding:6px 12px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:4px; border-radius:2px; margin-top:3px; width:100%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div></div></div><div style="font-size:10px; color:#aaa; margin-left:10px; font-weight:bold;">{stats_data["xp"]} / {next_xp} XP</div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px;">{combo_badge}</div></div>'
+    header_html = f'<div style="background:#111; border-radius:10px; margin-bottom:5px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 3px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:6px 12px 0 12px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:4px; border-radius:2px; margin-top:3px; width:100%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div></div></div><div style="font-size:10px; color:#aaa; margin-left:10px; font-weight:bold;">{stats_data["xp"]} / {next_xp} XP</div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px;"><div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Winrate</div><div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}%</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Hands</div><div style="font-size:13px; font-weight:bold; color:#fff;">{sh}</div></div></div></div>'
     st.markdown(header_html, unsafe_allow_html=True)
 
     order = ["EP", "MP", "CO", "BTN", "SB", "BB"]
@@ -267,13 +279,17 @@ def show():
         sc = get_suit_color_class(suit)
         board_html += f'<div class="board-card-mob"><div class="bc-tl-mob {sc}">{rank}</div><div class="bc-c-mob {sc}">{suit}</div></div>'
         
-    link_html = f'<a href="{info_link}" target="_blank" class="onenote-link-mob">ℹ️</a>' if info_link else ""
+    # Deep link для мобилок
+    mobile_link = info_link
+    if mobile_link and mobile_link.startswith("https://"):
+        mobile_link = "onenote:" + mobile_link
+    
+    link_html = f'<a href="{mobile_link}" target="_blank" class="info-badge-mob" title="Open in OneNote">ℹ️</a>' if info_link else ""
 
     html = f'''
     <div class="mobile-game-area {combo_cls}">
         <div class="crest-left-mob">{mastery.get("svg","")}</div><div class="crest-right-mob">{mastery.get("svg","")}</div>
         <div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery.get("color","#888")};"></div>
-        {link_html}
         <div class="center-column-mob">
             <div class="mob-info-spot">{parts[3]}</div>
             <div class="pot-badge-mob">Pot: {pot_size} bb</div>
@@ -284,6 +300,7 @@ def show():
         </div>
         {opp_html}{chips_html}
         <div class="hero-mob">
+            {link_html}
             <div class="card-mob"><div class="tl-mob {c1}">{r1}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div>
             <div class="card-mob"><div class="tl-mob {c2}">{r2}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div>
             <div class="rng-badge">{st.session_state.pf_rng}</div>
