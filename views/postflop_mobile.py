@@ -6,13 +6,13 @@ import poker_utils as utils
 ACTION_COLORS = ["#28a745", "#d63384", "#0dcaf0", "#ffc107", "#6f42c1"]
 
 def map_suit(s):
-    mapping = {'h': '♥', 'd': '♦', 'c': '♣', 's': '♠'}
-    return mapping.get(s.lower(), '♠')
+    mapping = {'h': '♥\ufe0e', 'd': '♦\ufe0e', 'c': '♣\ufe0e', 's': '♠\ufe0e'}
+    return mapping.get(s.lower(), '♠\ufe0e')
 
 def get_suit_color_class(s):
-    if s == '♥': return "suit-red"
-    if s == '♦': return "suit-blue"
-    if s == '♣': return "suit-green"
+    if '♥' in s: return "suit-red"
+    if '♦' in s: return "suit-blue"
+    if '♣' in s: return "suit-green"
     return "suit-black"
 
 def pf_parse_range(r_str):
@@ -52,7 +52,7 @@ def show():
         .crest-right-mob { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 75px; height: 75px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         
         .center-column-mob { position: absolute; top: 12%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; z-index: 20; }
-        .mob-info-spot { font-size: 16px; font-weight: 900; color: rgba(255,255,255,0.3); text-transform: uppercase; line-height: 1; }
+        .mob-info-spot { font-size: 16px; font-weight: 900; color: rgba(255,255,255,0.3); text-transform: uppercase; line-height: 1; text-align: center; }
         .pot-badge-mob { background: #111; color: #ffc107; font-weight: bold; font-size: 11px; padding: 2px 10px; border-radius: 12px; border: 1px solid #ffc107; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .board-container-mob { display: flex; gap: 4px; background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
         .mastery-badge { font-size: 9px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 8px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); }
@@ -61,9 +61,9 @@ def show():
         .mastery-bar-fill { height: 100%; transition: width 0.3s; }
         .hands-left-mob { font-size: 8px; color: #aaa; text-transform: uppercase; font-weight: bold; margin-top: -2px; }
 
-        .board-card-mob { width: 38px; height: 54px; background: white; border-radius: 3px; position: relative; color: black; box-shadow: 0 1px 3px rgba(0,0,0,0.5); font-family: sans-serif; }
+        .board-card-mob { width: 38px; height: 54px; background: white; border-radius: 3px; position: relative; color: black; box-shadow: 0 1px 3px rgba(0,0,0,0.5); font-family: Arial, sans-serif !important; }
         .bc-tl-mob { position: absolute; top: 2px; left: 3px; font-weight: bold; font-size: 12px; line-height: 1; }
-        .bc-c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 20px; }
+        .bc-c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 20px; line-height: 1; }
 
         .seat { position: absolute; width: 44px; height: 44px; background: #222; border: 1px solid #444; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
         .seat-label { font-size: 9px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 2px; }
@@ -84,13 +84,17 @@ def show():
         .bet-txt { font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 3px; border-radius: 4px; margin-top: -5px; z-index: 20; text-transform: lowercase;}
 
         .hero-mob { position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 30; background: #222; padding: 4px 8px; border-radius: 12px; border: 1px solid #ffc107; }
-        .card-mob { width: 38px; height: 54px; background: white; border-radius: 4px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .card-mob { width: 38px; height: 54px; background: white; border-radius: 4px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); font-family: Arial, sans-serif !important; }
         .tl-mob { position: absolute; top: 1px; left: 3px; font-weight: bold; font-size: 12px; line-height: 1; }
-        .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 20px; }
-        .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
+        .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 20px; line-height: 1; }
+        
+        .suit-red { color: #d32f2f !important; font-family: Arial, sans-serif !important; } 
+        .suit-blue { color: #0056b3 !important; font-family: Arial, sans-serif !important; } 
+        .suit-black { color: #111 !important; font-family: Arial, sans-serif !important; } 
+        .suit-green { color: #198754 !important; font-family: Arial, sans-serif !important; }
         
         .rng-badge { position: absolute; top: 50%; right: -36px; transform: translateY(-50%); width: 28px; height: 28px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
-        .info-badge-mob { position: absolute; top: 50%; left: -48px; transform: translateY(-50%); width: 28px; height: 28px; background: #17a2b8; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; text-decoration: none; }
+        .info-badge-mob { position: absolute; top: 50%; left: -36px; transform: translateY(-50%); width: 28px; height: 28px; background: #17a2b8; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; text-decoration: none; }
         
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
@@ -123,26 +127,58 @@ def show():
         st.markdown("<hr style='margin: 5px 0;'>", unsafe_allow_html=True)
 
         saved = utils.load_user_settings(is_postflop=True)
-        sel_spot = st.selectbox("1. Spot", sorted(list(tree.keys())), index=0 if tree else None)
-        sel_hero, sel_street, sel_branch = None, None, None
-        sel_spots_keys = []
         
-        if sel_spot:
-            sel_hero = st.selectbox("2. Position", sorted(list(tree[sel_spot].keys())), index=0 if tree[sel_spot] else None)
-        if sel_hero:
-            sel_street = st.selectbox("3. Street", sorted(list(tree[sel_spot][sel_hero].keys())), index=0 if tree[sel_spot][sel_hero] else None)
-        if sel_street:
-            sel_branch = st.selectbox("4. Branch", sorted(list(tree[sel_spot][sel_hero][sel_street].keys())), index=0 if tree[sel_spot][sel_hero][sel_street] else None)
-            
-        if sel_branch:
+        all_spots = sorted(list(tree.keys()))
+        sel_spots = st.multiselect("1. Spot(s)", all_spots, default=[x for x in saved.get("pf_sel_spots", []) if x in all_spots])
+        
+        avail_heroes = set()
+        for sp in sel_spots: avail_heroes.update(tree[sp].keys())
+        avail_heroes = sorted(list(avail_heroes))
+        sel_heroes = st.multiselect("2. Position(s)", avail_heroes, default=[x for x in saved.get("pf_sel_heroes", []) if x in avail_heroes])
+        
+        avail_streets = set()
+        for sp in sel_spots:
+            for h in sel_heroes:
+                if h in tree[sp]: avail_streets.update(tree[sp][h].keys())
+        avail_streets = sorted(list(avail_streets))
+        sel_streets = st.multiselect("3. Street(s)", avail_streets, default=[x for x in saved.get("pf_sel_streets", []) if x in avail_streets])
+        
+        avail_branches = set()
+        for sp in sel_spots:
+            for h in sel_heroes:
+                if h in tree[sp]:
+                    for st_ in sel_streets:
+                        if st_ in tree[sp][h]: avail_branches.update(tree[sp][h][st_].keys())
+        avail_branches = sorted(list(avail_branches))
+        sel_branches = st.multiselect("4. Branch(es)", avail_branches, default=[x for x in saved.get("pf_sel_branches", []) if x in avail_branches])
+        
+        sel_spots_keys = []
+        if sel_branches:
             st.markdown("**5. Boards:**")
-            saved_spots = saved.get("pf_spots", [])
-            for board_name, full_key in tree[sel_spot][sel_hero][sel_street][sel_branch]:
-                is_checked = (full_key in saved_spots) if "pf_spots" in saved else True
-                if st.checkbox(board_name, value=is_checked, key=f"pf_chk_m_{full_key}"):
+            saved_boards = saved.get("pf_spots", [])
+            
+            matching_boards = []
+            for sp in sel_spots:
+                for h in sel_heroes:
+                    if h in tree[sp]:
+                        for st_ in sel_streets:
+                            if st_ in tree[sp][h]:
+                                for br in sel_branches:
+                                    if br in tree[sp][h][st_]:
+                                        matching_boards.extend(tree[sp][h][st_][br])
+            
+            for board_name, full_key in matching_boards:
+                is_checked = (full_key in saved_boards) if "pf_spots" in saved else True
+                parts = full_key.split('|')
+                short_lbl = f"{board_name} ({parts[0].strip()} | {parts[3].strip()})"
+                if st.checkbox(short_lbl, value=is_checked, key=f"pf_chk_m_{full_key}"):
                     sel_spots_keys.append(full_key)
         
         if st.button("🚀 Apply Filters", use_container_width=True):
+            saved["pf_sel_spots"] = sel_spots
+            saved["pf_sel_heroes"] = sel_heroes
+            saved["pf_sel_streets"] = sel_streets
+            saved["pf_sel_branches"] = sel_branches
             saved["pf_spots"] = sel_spots_keys
             utils.save_user_settings(saved, is_postflop=True)
             st.session_state.pf_hand = None
