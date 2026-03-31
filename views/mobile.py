@@ -20,7 +20,7 @@ def show():
 
         .mobile-game-area { 
             position: relative; width: 100%; height: 250px; 
-            margin: 35px auto 35px auto; 
+            margin: 35px auto 55px auto; 
             background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); 
             border: 6px solid #3e2723; border-radius: 125px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
@@ -69,7 +69,7 @@ def show():
         .dealer-mob { width: 16px; height: 16px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 9px; display: flex; justify-content: center; align-items: center; border: 1px solid #bfa006; position: absolute; z-index: 35; }
         .bet-txt { font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 3px; border-radius: 4px; margin-top: -5px; z-index: 20; }
         
-        .hero-mob { position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 30; background: #222; padding: 5px 10px; border-radius: 12px; border: 1px solid #ffc107; }
+        .hero-mob { position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 30; background: #222; padding: 5px 10px; border-radius: 12px; border: 1px solid #ffc107; }
         .card-mob { width: 45px; height: 64px; background: white; border-radius: 4px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .tl-mob { position: absolute; top: 1px; left: 3px; font-weight: bold; font-size: 14px; line-height: 1; }
         .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; }
