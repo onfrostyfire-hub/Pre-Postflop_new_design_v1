@@ -81,8 +81,14 @@ def show():
         
         .rage-bar-container { width: 100%; max-width: 700px; margin: 0 auto 15px auto; background: rgba(0,0,0,0.6); border: 2px solid #333; border-radius: 20px; padding: 4px; display: flex; align-items: center; position: relative; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); height: 32px; }
         .rage-bar-fill { height: 100%; border-radius: 16px; transition: width 0.3s ease-out; position: relative; overflow: hidden; box-shadow: inset 0 2px 5px rgba(255,255,255,0.3), inset 0 -2px 5px rgba(0,0,0,0.4); }
-        .rage-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.6) 2px, transparent 3px), radial-gradient(circle at 30% 70%, rgba(255,255,255,0.4) 1px, transparent 2px), radial-gradient(circle at 70% 30%, rgba(255,255,255,0.5) 2px, transparent 3px); background-size: 20px 20px, 15px 15px, 25px 25px; animation: bubblesChaotic 1.5s infinite linear; }
-        @keyframes bubblesChaotic { 0% { background-position: 0px 0px, 0px 0px, 0px 0px; } 100% { background-position: 40px -20px, 30px -15px, 50px -25px; } }
+        
+        /* Хаотичные пузырьки */
+        .rage-bar-fill::before, .rage-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 2px), radial-gradient(circle, rgba(255,255,255,0.5) 2px, transparent 3px), radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 2px); z-index: 1; pointer-events: none; }
+        .rage-bar-fill::before { background-size: 20px 25px, 35px 40px, 15px 20px; animation: bubbleRise1 1.2s infinite linear; }
+        .rage-bar-fill::after { background-size: 25px 30px, 45px 50px, 22px 28px; animation: bubbleRise2 1.7s infinite linear; opacity: 0.6; }
+        @keyframes bubbleRise1 { 0% { background-position: 0px 25px, 0px 40px, 0px 20px; } 50% { background-position: 5px 12.5px, -5px 20px, 3px 10px; } 100% { background-position: 0px 0px, 0px 0px, 0px 0px; } }
+        @keyframes bubbleRise2 { 0% { background-position: 0px 30px, 0px 50px, 0px 28px; } 50% { background-position: -6px 15px, 6px 25px, -4px 14px; } 100% { background-position: 0px 0px, 0px 0px, 0px 0px; } }
+
         .rage-labels { position: absolute; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; font-weight: 900; font-size: 14px; color: #fff; text-shadow: 0 1px 3px #000, 0 0 5px #000; pointer-events: none; z-index: 2; top: 50%; transform: translateY(-50%); }
         .rage-pulse { animation: ragePulse 0.4s infinite alternate; }
         @keyframes ragePulse { 0% { filter: brightness(1); box-shadow: 0 0 5px #dc3545; } 100% { filter: brightness(1.3); box-shadow: 0 0 25px #dc3545, inset 0 0 10px #fff; } }
@@ -330,7 +336,7 @@ def show():
 
     def get_chip_style(idx):
         return {
-            0: "bottom: 22px; left: 50%; transform: translateX(-50%);", 
+            0: "bottom: 35px; left: 50%; transform: translateX(-50%);", 
             1: "bottom: 20%; left: 10%;", 
             2: "top: 20%; left: 10%;",
             3: "top: 35px; left: 50%; transform: translateX(-50%);", 
