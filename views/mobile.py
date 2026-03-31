@@ -20,7 +20,7 @@ def show():
 
         .mobile-game-area { 
             position: relative; width: 100%; height: 250px; 
-            margin: 35px auto 10px auto; 
+            margin: 35px auto 35px auto; 
             background: radial-gradient(ellipse at center, #1b5e20 0%, #0a2e0b 100%); 
             border: 6px solid #3e2723; border-radius: 125px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.8); 
@@ -66,10 +66,10 @@ def show():
         .chip-container { position: absolute; z-index: 25; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
         .chip-mob { width: 14px; height: 14px; background: #111; border: 2px dashed #d32f2f; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         .chip-3bet { width: 16px; height: 16px; background: #d32f2f; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
-        .dealer-mob { width: 16px; height: 16px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 9px; display: flex; justify-content: center; align-items: center; border: 1px solid #bfa006; position: absolute; z-index: 11; }
+        .dealer-mob { width: 16px; height: 16px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 9px; display: flex; justify-content: center; align-items: center; border: 1px solid #bfa006; position: absolute; z-index: 35; }
         .bet-txt { font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 3px; border-radius: 4px; margin-top: -5px; z-index: 20; }
         
-        .hero-mob { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 20; background: #222; padding: 5px 10px; border-radius: 12px; border: 1px solid #ffc107; }
+        .hero-mob { position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 30; background: #222; padding: 5px 10px; border-radius: 12px; border: 1px solid #ffc107; }
         .card-mob { width: 45px; height: 64px; background: white; border-radius: 4px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .tl-mob { position: absolute; top: 1px; left: 3px; font-weight: bold; font-size: 14px; line-height: 1; }
         .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; }
@@ -216,15 +216,6 @@ def show():
     m_icon = mastery.get("icon", "")
     m_name = mastery.get("name", "")
     m_pct = mastery.get("prog_pct", 0)
-    m_total = mastery.get("total", 0)
-    m_next = mastery.get("next", 100)
-    m_rank = mastery.get("rank", 0)
-    
-    if m_rank >= 5:
-        hands_left_text = "MAX RANK"
-    else:
-        h_left = max(0, m_next - m_total)
-        hands_left_text = f"Remaining: {h_left} hands"
 
     multiplier = st.session_state.get("xp_multiplier", 1.0)
     if multiplier >= 10.0:
@@ -276,7 +267,7 @@ def show():
 
     def get_chip_style(idx):
         return {
-            0: "bottom: 75px; left: 50%; transform: translateX(-50%);", 
+            0: "bottom: 35px; left: 50%; transform: translateX(-50%);", 
             1: "bottom: 20%; left: 10%;", 
             2: "top: 20%; left: 10%;",
             3: "top: 35px; left: 50%; transform: translateX(-50%);", 
@@ -285,7 +276,7 @@ def show():
         }.get(idx, "")
 
     def get_btn_style(idx):
-        return {0: "bottom: 25px; left: 60%;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
+        return {0: "bottom: -10px; left: 65%; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
                 3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
 
     opp_html = ""; chips_html = ""
@@ -325,7 +316,7 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div style="font-size:8px; color:#aaa; margin-top:2px; text-transform:uppercase; font-weight:bold;">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
+    html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
 
