@@ -8,7 +8,6 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 SPOTS_DIR = 'spots_data'
-POSTFLOP_DIR = 'postflop_data'
 RANKS = 'AKQJT98765432'
 
 # --- GOOGLE SHEETS CORE ---
@@ -33,20 +32,15 @@ def get_gspread_client():
 def get_worksheets():
     client = get_gspread_client()
     sh = client.open_by_key(SPREADSHEET_ID)
-    sheets = {
+    return {
         "Settings": sh.worksheet("Settings"),
         "History": sh.worksheet("History")
     }
-    try:
-        sheets["PostflopHistory"] = sh.worksheet("PostflopHistory")
-    except: pass
-    return sheets
 
 @st.cache_data(ttl=60)
-def load_history(is_postflop=False):
+def load_history():
     try:
-        sheet_name = "PostflopHistory" if is_postflop else "History"
-        vals = get_worksheets()[sheet_name].get_all_values()
+        vals = get_worksheets()["History"].get_all_values()
         if not vals or len(vals) < 2: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
         
         headers = vals[0]
@@ -58,8 +52,8 @@ def load_history(is_postflop=False):
         return df
     except: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
 
-def rebuild_srs_from_history(is_postflop=False):
-    df = load_history(is_postflop)
+def rebuild_srs_from_history():
+    df = load_history()
     weights = {}
     
     if df.empty or "Spot" not in df.columns or "Result" not in df.columns:
@@ -70,14 +64,18 @@ def rebuild_srs_from_history(is_postflop=False):
     for _, row in df.iterrows():
         spot = str(row.get("Spot", ""))
         hand = str(row.get("Hand", ""))
-        try: result = int(float(row.get("Result", 0)))
-        except: continue
+        try:
+            result = int(float(row.get("Result", 0)))
+        except:
+            continue
             
         key = f"{spot}_{hand}"
         w = weights.get(key, 100)
         
-        if result == 1: w = int(w * 0.8)
-        else: w = int((w * 1.5) + (20 if w < 50 else 50))
+        if result == 1:
+            w = int(w * 0.8)
+        else:
+            w = int((w * 1.5) + (20 if w < 50 else 50))
             
         weights[key] = max(10, min(w, 2000))
         
@@ -87,35 +85,31 @@ def init_cloud_data():
     if "app_initialized" not in st.session_state:
         sheets = get_worksheets()
         
-        # Preflop State
-        try: st.session_state["srs_data"] = rebuild_srs_from_history(is_postflop=False)
-        except Exception as e: st.session_state["srs_data"] = {}; print(f"Preflop SRS Error: {e}")
-            
+        try:
+            st.session_state["srs_data"] = rebuild_srs_from_history()
+        except Exception as e:
+            st.error(f"🚨 Ошибка динамической сборки SRS: {e}")
+            st.session_state["srs_data"] = {}
+        
         try:
             set_val = sheets["Settings"].acell('A1').value
-            st.session_state["user_settings"] = json.loads(set_val) if set_val else {}
-        except Exception as e: st.session_state["user_settings"] = {}; print(f"Preflop Settings Error: {e}")
+            if set_val:
+                st.session_state["user_settings"] = json.loads(set_val)
+            else:
+                st.session_state["user_settings"] = {}
+        except Exception as e:
+            st.error(f"🚨 Ошибка чтения Settings: {e}")
+            st.stop()
             
-        # Postflop State
-        try: st.session_state["pf_srs_data"] = rebuild_srs_from_history(is_postflop=True)
-        except Exception as e: st.session_state["pf_srs_data"] = {}; print(f"Postflop SRS Error: {e}")
-
-        try:
-            pf_val = sheets["Settings"].acell('A2').value
-            st.session_state["pf_user_settings"] = json.loads(pf_val) if pf_val else {}
-        except Exception as e: st.session_state["pf_user_settings"] = {}; print(f"Postflop Settings Error: {e}")
-
         st.session_state["history_buffer"] = []
-        st.session_state["pf_history_buffer"] = []
         st.session_state["unsaved_count"] = 0
         st.session_state["settings_changed"] = False
-        st.session_state["pf_settings_changed"] = False
         st.session_state["app_initialized"] = True
 
 # --- GAMIFICATION CORE ---
-def load_user_stats(is_postflop=False):
+def load_user_stats():
     init_cloud_data()
-    sets = st.session_state.get("pf_user_settings" if is_postflop else "user_settings", {})
+    sets = st.session_state.get("user_settings", {})
     stats = sets.get("stats", {})
     if "xp" not in stats: stats["xp"] = 0
     if "streak" not in stats: stats["streak"] = 0
@@ -126,10 +120,10 @@ def load_user_stats(is_postflop=False):
     if "spot_mastery" not in stats: stats["spot_mastery"] = {}
     return stats
 
-def save_user_stats(stats, is_postflop=False):
-    sets = st.session_state.get("pf_user_settings" if is_postflop else "user_settings", {})
+def save_user_stats(stats):
+    sets = st.session_state.get("user_settings", {})
     sets["stats"] = stats
-    save_user_settings(sets, is_postflop)
+    save_user_settings(sets)
 
 def get_rank_info(xp):
     tiers = [
@@ -153,7 +147,8 @@ def generate_dailies():
     ]
 
 def get_spot_mastery_info(spot_data_dict):
-    if not isinstance(spot_data_dict, dict): spot_data_dict = {}
+    if not isinstance(spot_data_dict, dict):
+        spot_data_dict = {}
 
     total = spot_data_dict.get("t", 0)
     hist = spot_data_dict.get("h", "")
@@ -180,11 +175,49 @@ def get_spot_mastery_info(spot_data_dict):
 
     rank = max(0, rank - penalty)
 
-    svg_basic = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.35;pointer-events:none;filter:drop-shadow(0 0 10px #28a745);"><circle cx="50" cy="50" r="35" fill="#111" stroke="#28a745" stroke-width="4"/><circle cx="50" cy="50" r="25" fill="none" stroke="#28a745" stroke-width="2" stroke-dasharray="5 5"/><circle cx="50" cy="50" r="10" fill="#28a745" opacity="0.7"/><path d="M50 5 V20 M50 95 V80 M5 50 H20 M95 50 H80" stroke="#28a745" stroke-width="4" stroke-linecap="round"/></svg>'''
-    svg_solid = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.45;pointer-events:none;filter:drop-shadow(0 0 12px #0dcaf0);"><path d="M20 20 L50 5 L80 20 L80 60 C80 80 50 95 50 95 C50 95 20 80 20 60 Z" fill="#111" stroke="#0dcaf0" stroke-width="4"/><path d="M50 5 V95 C80 80 80 60 80 20 L50 5 Z" fill="#0dcaf0" opacity="0.3"/><polygon points="50,30 70,50 50,70 30,50" fill="none" stroke="#0dcaf0" stroke-width="4"/><polygon points="50,40 60,50 50,60 40,50" fill="#0dcaf0" opacity="0.9"/></svg>'''
-    svg_unexp = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.55;pointer-events:none;filter:drop-shadow(0 0 15px #6f42c1);"><g stroke="#6f42c1" stroke-width="4" stroke-linecap="round"><line x1="10" y1="90" x2="90" y2="10"/><line x1="10" y1="10" x2="90" y2="90"/></g><path d="M20 25 L50 10 L80 25 L80 55 C80 80 50 95 50 95 C50 95 20 80 20 55 Z" fill="#111" stroke="#6f42c1" stroke-width="4"/><path d="M50 10 V95 C80 80 80 55 80 25 L50 10 Z" fill="#6f42c1" opacity="0.4"/></svg>'''
-    svg_elite = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.75;pointer-events:none;filter:drop-shadow(0 0 18px #dc3545);"><path d="M 45 95 C 5 90, -5 40, 25 15" fill="none" stroke="#dc3545" stroke-width="4" stroke-dasharray="6 4" stroke-linecap="round"/><path d="M 55 95 C 95 90, 105 40, 75 15" fill="none" stroke="#dc3545" stroke-width="4" stroke-dasharray="6 4" stroke-linecap="round"/><g stroke="#dc3545" stroke-width="4" stroke-linecap="round"><line x1="25" y1="75" x2="75" y2="25"/><line x1="25" y1="25" x2="75" y2="75"/></g><path d="M30 40 L50 25 L70 40 L70 65 C70 80 50 90 50 90 C50 90 30 80 30 65 Z" fill="#111" stroke="#dc3545" stroke-width="3"/><path d="M35 35 L42 15 L50 25 L58 15 L65 35 Z" fill="#dc3545" stroke="#111" stroke-width="2"/></svg>'''
-    svg_solver = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.95;pointer-events:none;filter:drop-shadow(0 0 20px #ffc107) drop-shadow(0 0 5px #ffffff);"><path d="M 45 98 C 0 95, -10 35, 25 5" fill="none" stroke="#ffc107" stroke-width="5" stroke-dasharray="8 6" stroke-linecap="round"/><path d="M 55 98 C 100 95, 110 35, 75 5" fill="none" stroke="#ffc107" stroke-width="5" stroke-dasharray="8 6" stroke-linecap="round"/><polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="#111" stroke="#ffc107" stroke-width="3"/><polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="#ffc107" opacity="0.2"/><line x1="50" y1="15" x2="50" y2="85" stroke="#ffc107" stroke-width="2"/><line x1="20" y1="32" x2="80" y2="68" stroke="#ffc107" stroke-width="2"/><line x1="20" y1="68" x2="80" y2="32" stroke="#ffc107" stroke-width="2"/><circle cx="50" cy="50" r="16" fill="#ffc107"/><circle cx="50" cy="50" r="6" fill="#111"/></svg>'''
+    svg_basic = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.35;pointer-events:none;filter:drop-shadow(0 0 10px #28a745);">
+      <circle cx="50" cy="50" r="35" fill="#111" stroke="#28a745" stroke-width="4"/>
+      <circle cx="50" cy="50" r="25" fill="none" stroke="#28a745" stroke-width="2" stroke-dasharray="5 5"/>
+      <circle cx="50" cy="50" r="10" fill="#28a745" opacity="0.7"/>
+      <path d="M50 5 V20 M50 95 V80 M5 50 H20 M95 50 H80" stroke="#28a745" stroke-width="4" stroke-linecap="round"/>
+    </svg>'''
+
+    svg_solid = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.45;pointer-events:none;filter:drop-shadow(0 0 12px #0dcaf0);">
+      <path d="M20 20 L50 5 L80 20 L80 60 C80 80 50 95 50 95 C50 95 20 80 20 60 Z" fill="#111" stroke="#0dcaf0" stroke-width="4"/>
+      <path d="M50 5 V95 C80 80 80 60 80 20 L50 5 Z" fill="#0dcaf0" opacity="0.3"/>
+      <polygon points="50,30 70,50 50,70 30,50" fill="none" stroke="#0dcaf0" stroke-width="4"/>
+      <polygon points="50,40 60,50 50,60 40,50" fill="#0dcaf0" opacity="0.9"/>
+    </svg>'''
+
+    svg_unexp = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.55;pointer-events:none;filter:drop-shadow(0 0 15px #6f42c1);">
+      <g stroke="#6f42c1" stroke-width="4" stroke-linecap="round">
+        <line x1="10" y1="90" x2="90" y2="10"/><line x1="10" y1="10" x2="90" y2="90"/>
+      </g>
+      <path d="M20 25 L50 10 L80 25 L80 55 C80 80 50 95 50 95 C50 95 20 80 20 55 Z" fill="#111" stroke="#6f42c1" stroke-width="4"/>
+      <path d="M50 10 V95 C80 80 80 55 80 25 L50 10 Z" fill="#6f42c1" opacity="0.4"/>
+    </svg>'''
+
+    svg_elite = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.75;pointer-events:none;filter:drop-shadow(0 0 18px #dc3545);">
+      <path d="M 45 95 C 5 90, -5 40, 25 15" fill="none" stroke="#dc3545" stroke-width="4" stroke-dasharray="6 4" stroke-linecap="round"/>
+      <path d="M 55 95 C 95 90, 105 40, 75 15" fill="none" stroke="#dc3545" stroke-width="4" stroke-dasharray="6 4" stroke-linecap="round"/>
+      <g stroke="#dc3545" stroke-width="4" stroke-linecap="round">
+        <line x1="25" y1="75" x2="75" y2="25"/><line x1="25" y1="25" x2="75" y2="75"/>
+      </g>
+      <path d="M30 40 L50 25 L70 40 L70 65 C70 80 50 90 50 90 C50 90 30 80 30 65 Z" fill="#111" stroke="#dc3545" stroke-width="3"/>
+      <path d="M35 35 L42 15 L50 25 L58 15 L65 35 Z" fill="#dc3545" stroke="#111" stroke-width="2"/>
+    </svg>'''
+
+    svg_solver = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.95;pointer-events:none;filter:drop-shadow(0 0 20px #ffc107) drop-shadow(0 0 5px #ffffff);">
+      <path d="M 45 98 C 0 95, -10 35, 25 5" fill="none" stroke="#ffc107" stroke-width="5" stroke-dasharray="8 6" stroke-linecap="round"/>
+      <path d="M 55 98 C 100 95, 110 35, 75 5" fill="none" stroke="#ffc107" stroke-width="5" stroke-dasharray="8 6" stroke-linecap="round"/>
+      <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="#111" stroke="#ffc107" stroke-width="3"/>
+      <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="#ffc107" opacity="0.2"/>
+      <line x1="50" y1="15" x2="50" y2="85" stroke="#ffc107" stroke-width="2"/>
+      <line x1="20" y1="32" x2="80" y2="68" stroke="#ffc107" stroke-width="2"/>
+      <line x1="20" y1="68" x2="80" y2="32" stroke="#ffc107" stroke-width="2"/>
+      <circle cx="50" cy="50" r="16" fill="#ffc107"/>
+      <circle cx="50" cy="50" r="6" fill="#111"/>
+    </svg>'''
 
     ranks_info = [
         {"n": "Sandbox", "i": "⚪", "c": "#6c757d", "nt": 100, "req_wr": 75, "svg": ""},
@@ -197,36 +230,53 @@ def get_spot_mastery_info(spot_data_dict):
     
     info = ranks_info[rank]
 
-    if rank == 5: prog_pct = 100
+    if rank == 5:
+        prog_pct = 100
     else:
         target_hands = info["nt"]
         target_wr = info["req_wr"]
-        prog_pct = int((total / target_hands) * 100) if target_hands > 0 else 100
-        if prog_pct >= 100: prog_pct = 99 if wr_100 < target_wr else 100
+        
+        if target_hands > 0:
+            prog_pct = int((total / target_hands) * 100)
+        else:
+            prog_pct = 100
+            
+        if prog_pct >= 100:
+            if wr_100 < target_wr:
+                prog_pct = 99
+            else:
+                prog_pct = 100
+                
     if prog_pct > 100: prog_pct = 100
 
     name = info["n"]
-    if is_rusty: name += " (Rusty)"
+    if is_rusty:
+        name += " (Rusty)"
 
     return {
         "rank": rank, "name": name, "icon": info["i"], "color": info["c"],
         "is_rusty": is_rusty, "prog_pct": prog_pct, "total": total, "next": info["nt"], "svg": info["svg"]
     }
 
-def process_gamification(is_correct, combo, session_total_hands, spot_key=None, is_postflop=False):
-    stats = load_user_stats(is_postflop)
+def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
+    stats = load_user_stats()
     now_date = datetime.now().date()
     now_date_str = now_date.strftime("%Y-%m-%d")
     alerts = []
     
+    m_rank = 0
+    if spot_key:
+        s_data = stats.get("spot_mastery", {}).get(spot_key, {})
+        m_info = get_spot_mastery_info(s_data)
+        m_rank = m_info["rank"]
+
     multiplier = 1.0
-    if is_correct:
-        if combo >= 500: multiplier = 10.0
-        elif combo >= 250: multiplier = 5.0
-        elif combo >= 100: multiplier = 4.0
-        elif combo >= 50: multiplier = 3.0
-        elif combo >= 25: multiplier = 2.0
-        elif combo >= 10: multiplier = 1.5
+    if combo >= 500: multiplier = 10.0
+    elif combo >= 250: multiplier = 5.0
+    elif combo >= 100: multiplier = 4.0
+    elif combo >= 50: multiplier = 3.0
+    elif combo >= 25: multiplier = 2.0
+    elif combo >= 10: multiplier = 1.5
     
     st.session_state["xp_multiplier"] = multiplier
 
@@ -241,7 +291,21 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None, 
     stats["last_date"] = now_date_str
     
     stats["total_hands"] += 1
-    if is_correct: stats["xp"] += int(10 * multiplier)
+    
+    reward_val = 0
+    if is_correct:
+        reward_val = int(10 * multiplier)
+    else:
+        if m_rank == 0:
+            reward_val = 0
+        elif m_rank == 1:
+            reward_val = -int(10 * multiplier)
+        else:
+            reward_val = -int(20 * multiplier)
+            
+    stats["xp"] += reward_val
+    if stats["xp"] < 0: stats["xp"] = 0
+    
     if combo > stats.get("max_combo", 0): stats["max_combo"] = combo
     
     if stats["dailies"].get("date") != now_date_str:
@@ -257,12 +321,13 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None, 
                 q["progress"] = q["target"]
                 q["done"] = True
                 stats["xp"] += q["xp"]
-                alerts.append(f"🎯 Daily: {q['desc']} (+{q['xp']} XP)")
+                alerts.append(f"🎯 Daily: {q['desc']} (+${q['xp']})")
 
     if spot_key:
         if "spot_mastery" not in stats: stats["spot_mastery"] = {}
         s_data = stats["spot_mastery"].get(spot_key)
-        if not isinstance(s_data, dict): s_data = {"h": "", "t": 0, "d": ""}
+        if not isinstance(s_data, dict):
+            s_data = {"h": "", "t": 0, "d": ""}
         
         s_data["t"] += 1
         s_data["d"] = now_date_str
@@ -271,53 +336,51 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None, 
         if len(s_data["h"]) > 100: s_data["h"] = s_data["h"][-100:]
         stats["spot_mastery"][spot_key] = s_data
 
-    save_user_stats(stats, is_postflop)
-    return alerts
+    save_user_stats(stats)
+    return alerts, reward_val
 
 # --- ADAPTIVE SRS ALGORITHM ---
-def load_srs_data(is_postflop=False):
+def load_srs_data():
     init_cloud_data()
-    return st.session_state.get("pf_srs_data" if is_postflop else "srs_data", {})
+    return st.session_state.get("srs_data", {})
 
-def update_srs_auto(spot_id, hand, is_correct, is_postflop=False):
+def update_srs_auto(spot_id, hand, is_correct):
     init_cloud_data()
-    data = st.session_state["pf_srs_data" if is_postflop else "srs_data"]
+    data = st.session_state["srs_data"]
     key = f"{spot_id}_{hand}"
     w = data.get(key, 100)
     
-    if is_correct: w = int(w * 0.8)
-    else: w = int((w * 1.5) + (20 if w < 50 else 50))
+    if is_correct:
+        w = int(w * 0.8)
+    else:
+        w = int((w * 1.5) + (20 if w < 50 else 50))
             
     data[key] = max(10, min(w, 2000))
     st.session_state["unsaved_count"] += 1
     check_auto_sync()
 
-def load_user_settings(is_postflop=False):
+def load_user_settings():
     init_cloud_data()
-    return st.session_state.get("pf_user_settings" if is_postflop else "user_settings", {})
+    return st.session_state.get("user_settings", {})
 
-def save_user_settings(settings, is_postflop=False):
+def save_user_settings(settings):
     init_cloud_data()
-    if is_postflop:
-        st.session_state["pf_user_settings"] = settings
-        st.session_state["pf_settings_changed"] = True
-    else:
-        st.session_state["user_settings"] = settings
-        st.session_state["settings_changed"] = True
+    st.session_state["user_settings"] = settings
+    st.session_state["settings_changed"] = True
     st.session_state["unsaved_count"] += 1
     check_auto_sync()
 
-def save_to_history(record, is_postflop=False):
+def save_to_history(record):
     init_cloud_data()
     row = [
-        str(record.get("Date", "")), str(record.get("Spot", "")), 
-        str(record.get("Hand", "")), str(record.get("Result", "")), 
-        str(record.get("CorrectAction", "")), str(record.get("UserAction", ""))
+        str(record.get("Date", "")), 
+        str(record.get("Spot", "")), 
+        str(record.get("Hand", "")), 
+        str(record.get("Result", "")), 
+        str(record.get("CorrectAction", "")),
+        str(record.get("UserAction", ""))
     ]
-    if is_postflop:
-        st.session_state["pf_history_buffer"].append(row)
-    else:
-        st.session_state["history_buffer"].append(row)
+    st.session_state["history_buffer"].append(row)
     st.session_state["unsaved_count"] += 1
     check_auto_sync()
 
@@ -325,67 +388,52 @@ def check_auto_sync():
     if st.session_state.get("unsaved_count", 0) >= 3: 
         force_sync()
 
+# --- ИЗОЛИРОВАННОЕ СОХРАНЕНИЕ ---
 def force_sync():
     if st.session_state.get("unsaved_count", 0) == 0: return
     sheets = get_worksheets()
     sync_success = True
 
-    # Preflop Buffer
     if "history_buffer" in st.session_state and st.session_state["history_buffer"]:
         try:
             sheets["History"].append_rows(st.session_state["history_buffer"])
             st.session_state["history_buffer"] = []
             load_history.clear()
-        except Exception as e: sync_success = False; print(f"History Sync err: {e}")
+        except Exception as e:
+            sync_success = False
+            print(f"History Sync error: {e}")
 
-    # Postflop Buffer
-    if "pf_history_buffer" in st.session_state and st.session_state["pf_history_buffer"]:
-        try:
-            if "PostflopHistory" in sheets:
-                sheets["PostflopHistory"].append_rows(st.session_state["pf_history_buffer"])
-                st.session_state["pf_history_buffer"] = []
-                load_history.clear()
-        except Exception as e: sync_success = False; print(f"PF History Sync err: {e}")
-
-    # Settings Sync
     if st.session_state.get("settings_changed"):
         try:
             sheets["Settings"].update_acell('A1', json.dumps(st.session_state["user_settings"]))
             st.session_state["settings_changed"] = False
-        except Exception as e: sync_success = False; print(f"Set Sync err: {e}")
-        
-    if st.session_state.get("pf_settings_changed"):
-        try:
-            sheets["Settings"].update_acell('A2', json.dumps(st.session_state["pf_user_settings"]))
-            st.session_state["pf_settings_changed"] = False
-        except Exception as e: sync_success = False; print(f"PF Set Sync err: {e}")
-
+        except Exception as e:
+            sync_success = False
+            print(f"Settings Sync error: {e}")
+            
     st.session_state["unsaved_count"] = 0
-    if sync_success: st.toast("☁️ История сохранена", icon="✅")
+    if sync_success:
+        st.toast("☁️ История сохранена", icon="✅")
 
-def delete_history(days=None, is_postflop=False):
+def delete_history(days=None):
     try:
         sheets = get_worksheets()
-        sheet_name = "PostflopHistory" if is_postflop else "History"
         headers = ["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"]
-        
         if days is None:
-            sheets[sheet_name].clear()
-            sheets[sheet_name].append_row(headers)
+            sheets["History"].clear()
+            sheets["History"].append_row(headers)
         else:
-            df = load_history(is_postflop)
+            df = load_history()
             if df.empty: return
             df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
             now = datetime.now()
             cutoff = now - timedelta(days=days)
             df_new = df[df["Date"] >= cutoff] 
-            sheets[sheet_name].clear()
+            sheets["History"].clear()
             rows = [headers] + df_new.astype(str).values.tolist()
-            sheets[sheet_name].update(values=rows, range_name="A1")
-            
+            sheets["History"].update(values=rows, range_name="A1")
         load_history.clear()
-        buf_name = "pf_history_buffer" if is_postflop else "history_buffer"
-        if buf_name in st.session_state: st.session_state[buf_name] = []
+        if "history_buffer" in st.session_state: st.session_state["history_buffer"] = []
     except Exception as e: st.error(f"Error clearing history: {e}")
 
 @st.cache_data(ttl=0)
@@ -403,19 +451,6 @@ def load_ranges():
                     if sc not in db[src]: db[src][sc] = {}
                     db[src][sc].update(data.get("spots", {}))
                 except Exception as e: st.error(f"Read error {file}: {e}")
-    return db
-
-@st.cache_data(ttl=0)
-def load_postflop_ranges():
-    db = {}
-    if not os.path.exists(POSTFLOP_DIR): return db
-    for file in os.listdir(POSTFLOP_DIR):
-        if file.endswith('.json'):
-            with open(os.path.join(POSTFLOP_DIR, file), 'r', encoding='utf-8') as f:
-                try:
-                    data = json.load(f)
-                    db.update(data)
-                except Exception as e: st.error(f"PF Read error {file}: {e}")
     return db
 
 ALL_HANDS = []
@@ -532,9 +567,13 @@ def _get_fuzzy_weight(srs_data, src, sc, sp, h):
         f"{sc}_{sp}_{h}".replace(" ", "_")
     ]
     for k in exact_keys:
-        if k in srs_data: return srs_data[k]
+        if k in srs_data:
+            return srs_data[k]
+            
     for k, v in srs_data.items():
-        if sp in k and h in k: return v
+        if sp in k and h in k:
+            return v
+            
     return 100
 
 def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
@@ -557,12 +596,18 @@ def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
             style = f"aspect-ratio:1;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:default;color:#fff;background:{bg};"
             if target_hand and h == target_hand: style += "border:1.5px solid #ffc107;z-index:10;box-shadow: 0 0 4px #ffc107;"
             
-            grid_html += f'<div style="{style}" title="{h} | Weight: {w}"><div style="font-size:9px; font-weight:bold; line-height:1;">{h}</div><div style="font-size:7px; color:#ffc107; margin-top:2px; font-weight:bold;">{w}</div></div>'
+            grid_html += f'<div style="{style}" title="{h} | Weight: {w}">'
+            grid_html += f'<div style="font-size:9px; font-weight:bold; line-height:1;">{h}</div>'
+            grid_html += f'<div style="font-size:7px; color:#ffc107; margin-top:2px; font-weight:bold;">{w}</div>'
+            grid_html += '</div>'
             
     grid_html += '</div>'
-    grid_html += '''<div style="display:flex; justify-content:center; gap:10px; margin-top:10px; font-size:10px; color:#aaa; font-family:sans-serif; text-transform:uppercase; font-weight:bold;">
+    
+    grid_html += '''
+    <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; font-size:10px; color:#aaa; font-family:sans-serif; text-transform:uppercase; font-weight:bold;">
         <div style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;background:#0f5132;border-radius:2px;"></div>Mastered</div>
         <div style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;background:#2c3034;border-radius:2px;"></div>Default</div>
         <div style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;background:#dc3545;border-radius:2px;"></div>Leak</div>
-    </div>'''
+    </div>
+    '''
     return grid_html
