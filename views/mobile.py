@@ -32,6 +32,7 @@ def show():
         .rusty-True { filter: grayscale(100%) opacity(0.6); }
         .mastery-bar-bg { width: 80px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); z-index: 30; }
         .mastery-bar-fill { height: 100%; transition: width 0.3s; }
+        .hands-left-mob { font-size: 8px; color: #aaa; text-transform: uppercase; font-weight: bold; margin-top: 2px; }
         
         .crest-left-mob { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 75px; height: 75px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .crest-right-mob { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 75px; height: 75px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
@@ -216,6 +217,12 @@ def show():
     m_icon = mastery.get("icon", "")
     m_name = mastery.get("name", "")
     m_pct = mastery.get("prog_pct", 0)
+    
+    m_total = mastery.get("total", 0)
+    m_next = mastery.get("next", 100)
+    m_rank = mastery.get("rank", 0)
+    if m_rank >= 5: hands_left_text = "MAX RANK"
+    else: hands_left_text = f"Remaining: {max(0, m_next - m_total)} hands"
 
     multiplier = st.session_state.get("xp_multiplier", 1.0)
     if multiplier >= 10.0:
@@ -267,17 +274,17 @@ def show():
 
     def get_chip_style(idx):
         return {
-            0: "bottom: 35px; left: 50%; transform: translateX(-50%);", 
-            1: "bottom: 20%; left: 10%;", 
-            2: "top: 20%; left: 10%;",
-            3: "top: 35px; left: 50%; transform: translateX(-50%);", 
-            4: "top: 20%; right: 10%;", 
-            5: "bottom: 20%; right: 10%;"
+            0: "bottom: 60px; left: 50%; transform: translateX(-50%);", 
+            1: "bottom: 25%; left: 16%;", 
+            2: "top: 25%; left: 16%;",
+            3: "top: 40px; left: 50%; transform: translateX(-50%);", 
+            4: "top: 25%; right: 16%;", 
+            5: "bottom: 25%; right: 16%;"
         }.get(idx, "")
 
     def get_btn_style(idx):
-        return {0: "bottom: -10px; left: 65%; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
-                3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
+        return {0: "bottom: -5px; left: 66%; z-index: 35;", 1: "bottom: 10%; left: 14%;", 2: "top: 10%; left: 14%;",
+                3: "top: 5px; left: 62%;", 4: "top: 10%; right: 14%;", 5: "bottom: 10%; right: 14%;"}.get(idx, "")
 
     opp_html = ""; chips_html = ""
 
@@ -316,7 +323,7 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
+    html = f'<div class="mobile-game-area {combo_cls}"><div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div class="hands-left-mob">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
 
