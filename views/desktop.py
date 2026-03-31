@@ -15,6 +15,7 @@ def show():
         .rusty-True { filter: grayscale(100%) opacity(0.6); }
         .mastery-bar-bg { width: 100px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); z-index: 30; }
         .mastery-bar-fill { height: 100%; transition: width 0.3s; }
+        .hands-left { font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: bold; margin-top: 3px; }
         
         .crest-left { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .crest-right { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
@@ -28,7 +29,7 @@ def show():
         .combo-glow-500 { border-color: #ff00ff !important; box-shadow: 0 0 60px rgba(255, 0, 255, 0.9), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-matrix 0.8s infinite alternate; }
         .combo-glow-1000 { border-color: #00ff00 !important; box-shadow: 0 0 80px rgba(0, 255, 0, 1.0), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-god 0.5s infinite alternate; }
         
-        .table-info { position: absolute; top: 18%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
+        .table-info { position: absolute; top: 16%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
         .info-spot { font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); z-index: 30; position: relative;}
         .info-src { z-index: 30; position: relative; }
         .seat { position: absolute; width: 65px; height: 65px; background: #343a40; border: 2px solid #495057; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
@@ -197,6 +198,12 @@ def show():
     m_icon = mastery.get("icon", "")
     m_name = mastery.get("name", "")
     m_pct = mastery.get("prog_pct", 0)
+    
+    m_total = mastery.get("total", 0)
+    m_next = mastery.get("next", 100)
+    m_rank = mastery.get("rank", 0)
+    if m_rank >= 5: hands_left_text = "MAX RANK"
+    else: hands_left_text = f"Remaining: {max(0, m_next - m_total)} hands"
 
     multiplier = st.session_state.get("xp_multiplier", 1.0)
     if multiplier >= 10.0:
@@ -250,12 +257,12 @@ def show():
                     3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 15%; right: 0%;", 5: "bottom: 15%; right: 0%;"}.get(idx, "")
 
         def get_chip_style(idx):
-            return {0: "bottom: 10%; left: 50%; transform: translateX(-50%);", 1: "bottom: 22%; left: 22%;", 2: "top: 22%; left: 22%;",
-                    3: "top: 25%; left: 50%; transform: translateX(-50%);", 4: "top: 22%; right: 22%;", 5: "bottom: 22%; right: 22%;"}.get(idx, "")
+            return {0: "bottom: 25%; left: 50%; transform: translateX(-50%);", 1: "bottom: 22%; left: 20%;", 2: "top: 22%; left: 20%;",
+                    3: "top: 25%; left: 50%; transform: translateX(-50%);", 4: "top: 22%; right: 20%;", 5: "bottom: 22%; right: 20%;"}.get(idx, "")
 
         def get_btn_style(idx):
-            return {0: "bottom: -15px; left: 62%; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
-                    3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
+            return {0: "bottom: -5px; left: 62%; z-index: 35;", 1: "bottom: 8%; left: 16%;", 2: "top: 8%; left: 16%;",
+                    3: "top: 8%; left: 58%;", 4: "top: 8%; right: 16%;", 5: "bottom: 8%; right: 16%;"}.get(idx, "")
 
         opp_html = ""; chips_html = ""
 
@@ -296,7 +303,7 @@ def show():
             hero_bs = get_btn_style(0)
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
-        html = f'<div class="game-area {combo_cls}"><div class="crest-left">{m_svg}</div><div class="crest-right">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-panel"><div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{rng}</div></div></div>'
+        html = f'<div class="game-area {combo_cls}"><div class="crest-left">{m_svg}</div><div class="crest-right">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div class="hands-left">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-panel"><div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{rng}</div></div></div>'
         
         st.markdown(html, unsafe_allow_html=True)
         
