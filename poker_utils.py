@@ -258,7 +258,7 @@ def get_spot_mastery_info(spot_data_dict):
         "is_rusty": is_rusty, "prog_pct": prog_pct, "total": total, "next": info["nt"], "svg": info["svg"]
     }
 
-def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
+def process_gamification(is_correct, combo, session_total_hands, spot_key=None, shield_used=False):
     stats = load_user_stats()
     now_date = datetime.now().date()
     now_date_str = now_date.strftime("%Y-%m-%d")
@@ -293,15 +293,18 @@ def process_gamification(is_correct, combo, session_total_hands, spot_key=None):
     stats["total_hands"] += 1
     
     reward_val = 0
-    if is_correct:
-        reward_val = int(10 * multiplier)
+    if shield_used:
+        reward_val = 0
     else:
-        if m_rank == 0:
-            reward_val = 0
-        elif m_rank == 1:
-            reward_val = -int(10 * multiplier)
+        if is_correct:
+            reward_val = int(10 * multiplier)
         else:
-            reward_val = -int(20 * multiplier)
+            if m_rank == 0:
+                reward_val = 0
+            elif m_rank == 1:
+                reward_val = -int(10 * multiplier)
+            else:
+                reward_val = -int(20 * multiplier)
             
     stats["xp"] += reward_val
     if stats["xp"] < 0: stats["xp"] = 0
@@ -385,7 +388,7 @@ def save_to_history(record):
     check_auto_sync()
 
 def check_auto_sync():
-    if st.session_state.get("unsaved_count", 0) >= 3: 
+    if st.session_state.get("unsaved_count", 0) >= 6: 
         force_sync()
 
 # --- ИЗОЛИРОВАННОЕ СОХРАНЕНИЕ ---
