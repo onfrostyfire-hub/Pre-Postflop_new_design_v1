@@ -76,8 +76,6 @@ def show():
         .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
         .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         
-        .shield-badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #0dcaf0; font-weight: bold; font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid #0dcaf0; z-index: 40; box-shadow: 0 0 10px rgba(13,202,240,0.5); display: flex; align-items: center; gap: 4px; }
-        
         .glass-shatter { position: absolute; top:0; left:0; right:0; bottom:0; z-index:999; pointer-events: none; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 12px), repeating-linear-gradient(-45deg, transparent, transparent 15px, rgba(255,255,255,0.3) 15px, rgba(255,255,255,0.3) 18px); animation: shatterAnim 0.8s ease-out forwards; }
         @keyframes shatterAnim { 0% {opacity:1; transform: scale(1);} 100% {opacity:0; transform: scale(1.1);} }
 
@@ -141,7 +139,8 @@ def show():
     if 'toast_msgs' not in st.session_state: st.session_state.toast_msgs = []
     if st.session_state.toast_msgs:
         for msg in st.session_state.toast_msgs:
-            st.toast(msg, icon="🔥" if "Combo" in msg else "🎯")
+            msg_str = str(msg)
+            st.toast(msg_str, icon="🔥" if "Combo" in msg_str else "🎯")
         st.session_state.toast_msgs = []
 
     if 'hand' not in st.session_state: st.session_state.hand = None
@@ -230,27 +229,6 @@ def show():
         h_left = max(0, m_next - m_total)
         hands_left_text = f"Remaining: {h_left} hands"
 
-    if m_rank <= 1:
-        table_bg = "radial-gradient(ellipse at center, #4b6b50 0%, #2a3c2d 100%)"
-        table_border = "#3b3b3b"
-        hero_bg = "#495057"
-        hero_border = "#6c757d"
-        hero_shadow = "none"
-    elif m_rank <= 4:
-        table_bg = "radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%)"
-        table_border = "#4a1c1c"
-        hero_bg = "#212529"
-        hero_border = "#adb5bd"
-        hero_shadow = "0 0 10px #adb5bd"
-    else:
-        table_bg = "radial-gradient(ellipse at center, #2b1b3d 0%, #11081a 100%)"
-        table_border = "#1a1a1a"
-        hero_bg = "#111"
-        hero_border = "#ffc107"
-        hero_shadow = "0 0 25px #ffc107, inset 0 0 15px #ffc107"
-
-    st.markdown(f"<style>.mobile-game-area {{ background: {table_bg} !important; border-color: {table_border} !important; }} .hero-mob {{ background: {hero_bg} !important; border: 2px solid {hero_border} !important; box-shadow: {hero_shadow} !important; }}</style>", unsafe_allow_html=True)
-
     combo_cls = ""
     if c >= 1000: combo_cls = "combo-glow-1000"
     elif c >= 500: combo_cls = "combo-glow-500"
@@ -261,8 +239,12 @@ def show():
     elif c >= 10: combo_cls = "combo-glow-10"
     elif c >= 5: combo_cls = "combo-glow-5"
 
-    shatter_html = '<div class="glass-shatter"></div>' if st.session_state.pop("shield_break_anim", False) else ""
-    shield_html = f'<div class="shield-badge">🛡️ x{st.session_state.shields}</div>' if st.session_state.shields > 0 else ""
+    shield_display = f'<span style="font-size:12px; margin-left:6px; display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span>'
+    combo_badge = f'<div style="flex:1; display:flex; justify-content:center; align-items:center;"><div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center;"><span style="font-size:14px; font-weight:900; color:{glow_color};">🔥 {c}</span>{shield_display}</div></div>'
+
+    header_html = f'<div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 3px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:6px 12px 0 12px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="font-size:10px; color:#aaa; margin-top:2px; font-weight:bold;">${stats_data["xp"]} / ${next_xp}</div></div><div style="flex:1; text-align:center;">{combo_badge}</div><div style="flex:1; text-align:right;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Winrate / Hands</div><div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}% / {sh}</div></div></div></div>'
+    
+    st.markdown(header_html, unsafe_allow_html=True)
 
     order = ["EP", "MP", "CO", "BTN", "SB", "BB"]
     try: hero_idx = order.index(hero_pos)
@@ -275,7 +257,7 @@ def show():
 
     def get_chip_style(idx):
         return {
-            0: "bottom: 22px; left: 50%; transform: translateX(-50%);", 
+            0: "bottom: 35px; left: 50%; transform: translateX(-50%);", 
             1: "bottom: 20%; left: 10%;", 
             2: "top: 20%; left: 10%;",
             3: "top: 35px; left: 50%; transform: translateX(-50%);", 
@@ -284,7 +266,7 @@ def show():
         }.get(idx, "")
 
     def get_btn_style(idx):
-        return {0: "bottom: -40px; left: 50%; margin-left: -75px; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
+        return {0: "bottom: -5px; left: 50%; margin-left: -70px; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
                 3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
 
     opp_html = ""; chips_html = ""
@@ -324,7 +306,9 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    html = f'<div class="mobile-game-area {combo_cls}">{shatter_html}{shield_html}<div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div class="hands-left-mob">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
+    shatter_html = '<div class="glass-shatter"></div>' if st.session_state.pop("shield_break_anim", False) else ""
+
+    html = f'<div class="mobile-game-area {combo_cls}">{shatter_html}<div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div class="hands-left-mob">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob"><div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
 
@@ -347,11 +331,13 @@ def show():
             "CorrectAction": correct_act, "UserAction": action
         })
         
+        shield_used = False
         if corr:
             st.session_state.session_correct += 1
             st.session_state.combo += 1
             if st.session_state.combo in [100, 250, 500, 1000]:
                 st.session_state.shields += 1
+                st.session_state.toast_msgs.append(f"Combo x{st.session_state.combo}! +1 🛡️ Shield!")
                 
             st.session_state.last_error = False
             st.session_state.hand = None
@@ -359,9 +345,9 @@ def show():
             if st.session_state.combo in [10, 25, 50, 100, 250, 500, 1000]:
                 msgs = {
                     10: "Combo x10! Warming up.", 25: "Combo x25! Reading them like a book.",
-                    50: "Combo x50! Sniper.", 100: "Combo x100! +1 🛡️ Shield!",
-                    250: "Combo x250! +1 🛡️ Shield!", 500: "Combo x500! +1 🛡️ Shield!",
-                    1000: "Combo x1000! +1 🛡️ Shield!"
+                    50: "Combo x50! Sniper.", 100: "Combo x100! Machine.",
+                    250: "Combo x250! Are you even human?", 500: "Combo x500! God Mode activated.",
+                    1000: "Combo x1000! Solvers fear you."
                 }
                 st.session_state.toast_msgs.append(msgs.get(st.session_state.combo, "Unstoppable!"))
         else:
@@ -369,6 +355,7 @@ def show():
                 st.session_state.shields -= 1
                 st.session_state.shield_break_anim = True
                 st.session_state.last_error = True
+                shield_used = True
                 st.session_state.msg = f"🛡️ ЩИТ СЛОМАН! Защита от мисклика. GTO: {correct_act}"
             else:
                 st.session_state.combo = 0
@@ -376,7 +363,19 @@ def show():
                 st.session_state.msg = f"❌ WRONG! You chose {action}, but GTO is {correct_act}"
             
         try:
-            alerts = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key)
+            import inspect
+            sig = inspect.signature(utils.process_gamification)
+            if 'shield_used' in sig.parameters:
+                res = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key, shield_used=shield_used)
+            else:
+                res = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key)
+            
+            if isinstance(res, tuple):
+                alerts = res[0]
+                st.session_state.anim_reward = res[1]
+            else:
+                alerts = res
+                
             if alerts: st.session_state.toast_msgs.extend(alerts)
         except Exception: pass
         
