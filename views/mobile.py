@@ -70,17 +70,11 @@ def show():
         .bet-txt { font-size: 10px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 3px; border-radius: 4px; margin-top: -5px; z-index: 20; }
         
         .hero-mob { position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 30; padding: 5px 10px; border-radius: 12px; transition: all 0.5s ease; }
-        .card-mob { width: 45px; height: 64px; background: white; border-radius: 4px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); font-family: Arial, sans-serif !important; }
+        .card-mob { width: 45px; height: 64px; background: white; border-radius: 4px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .tl-mob { position: absolute; top: 1px; left: 3px; font-weight: bold; font-size: 14px; line-height: 1; }
-        .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; line-height: 1; }
-        
-        .suit-red { color: #d32f2f !important; font-family: Arial, sans-serif !important; } 
-        .suit-blue { color: #0056b3 !important; font-family: Arial, sans-serif !important; } 
-        .suit-black { color: #111 !important; font-family: Arial, sans-serif !important; } 
-        .suit-green { color: #198754 !important; font-family: Arial, sans-serif !important; }
-        
-        .rng-badge { position: absolute; top: 50%; right: -36px; transform: translateY(-50%); width: 28px; height: 28px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
-        .info-badge-mob { position: absolute; top: 50%; left: -36px; transform: translateY(-50%); width: 28px; height: 28px; background: #17a2b8; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 14px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; text-decoration: none; }
+        .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; }
+        .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #111; } .suit-green { color: #198754; }
+        .rng-badge { position: absolute; bottom: 50px; right: -15px; width: 30px; height: 30px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 12px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 40; }
         
         .floating-reward { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 24px; font-weight: 900; text-shadow: 0px 2px 5px rgba(0,0,0,0.9), 0px 0px 2px #000; z-index: 100; pointer-events: none; animation: floatUpFade 1.2s ease-out forwards; }
         @keyframes floatUpFade { 0% { opacity: 1; transform: translate(-50%, 0) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -15px) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -80px) scale(1); } }
@@ -88,6 +82,7 @@ def show():
         .rage-bar-container { width: 100%; max-width: 700px; margin: 0 auto 15px auto; background: rgba(0,0,0,0.6); border: 2px solid #333; border-radius: 20px; padding: 4px; display: flex; align-items: center; position: relative; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); height: 32px; }
         .rage-bar-fill { height: 100%; border-radius: 16px; transition: width 0.3s ease-out; position: relative; overflow: hidden; box-shadow: inset 0 2px 5px rgba(255,255,255,0.3), inset 0 -2px 5px rgba(0,0,0,0.4); }
         
+        /* Хаотичные пузырьки */
         .rage-bar-fill::before, .rage-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 2px), radial-gradient(circle, rgba(255,255,255,0.5) 2px, transparent 3px), radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 2px); z-index: 1; pointer-events: none; }
         .rage-bar-fill::before { background-size: 20px 25px, 35px 40px, 15px 20px; animation: bubbleRise1 1.2s infinite linear; }
         .rage-bar-fill::after { background-size: 25px 30px, 45px 50px, 22px 28px; animation: bubbleRise2 1.7s infinite linear; opacity: 0.6; }
@@ -341,7 +336,7 @@ def show():
 
     def get_chip_style(idx):
         return {
-            0: "bottom: 22px; left: 50%; transform: translateX(-50%);", 
+            0: "bottom: 35px; left: 50%; transform: translateX(-50%);", 
             1: "bottom: 20%; left: 10%;", 
             2: "top: 20%; left: 10%;",
             3: "top: 35px; left: 50%; transform: translateX(-50%);", 
@@ -390,7 +385,7 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    html = f'<div class="mobile-game-area" style="background: {table_bg}; border-color: {table_border};">{shatter_html}<div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div class="hands-left-mob">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob" style="background: {hero_bg}; border-color: {hero_border}; box-shadow: {hero_shadow};">{anim_html}<div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
+    html = f'<div class="mobile-game-area">{shatter_html}<div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div class="hands-left-mob">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob">{anim_html}<div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
 
@@ -506,4 +501,3 @@ def show():
                 if st.button("FOLD", key="f"): handle_action("FOLD")
             with c2:
                 if st.button("RAISE", key="r"): handle_action("RAISE")
-
