@@ -345,7 +345,7 @@ def show():
         }.get(idx, "")
 
     def get_btn_style(idx):
-        return {0: "bottom: -5px; left: 15%; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
+        return {0: "bottom: -10px; left: 50%; margin-left: -75px; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
                 3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
 
     opp_html = ""; chips_html = ""
