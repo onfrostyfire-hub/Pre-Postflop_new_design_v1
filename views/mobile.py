@@ -71,8 +71,8 @@ def show():
         
         .hero-mob { position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 30; padding: 5px 10px; border-radius: 12px; transition: all 0.5s ease; }
         .card-mob { width: 45px; height: 64px; background: white; border-radius: 4px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.5); font-family: Arial, sans-serif !important; }
-        .tl-mob { position: absolute; top: 1px; left: 3px; font-weight: bold; font-size: 12px; line-height: 1; }
-        .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 20px; line-height: 1; }
+        .tl-mob { position: absolute; top: 1px; left: 3px; font-weight: bold; font-size: 14px; line-height: 1; }
+        .c-mob { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; line-height: 1; }
         
         .suit-red { color: #d32f2f !important; font-family: Arial, sans-serif !important; } 
         .suit-blue { color: #0056b3 !important; font-family: Arial, sans-serif !important; } 
@@ -269,6 +269,8 @@ def show():
         hero_bg = "#111"
         hero_border = "#ffc107"
         hero_shadow = "0 0 25px #ffc107, inset 0 0 15px #ffc107"
+
+    st.markdown(f"<style>.mobile-game-area {{ background: {table_bg} !important; border-color: {table_border} !important; }} .hero-mob {{ background: {hero_bg} !important; border: 2px solid {hero_border} !important; box-shadow: {hero_shadow} !important; }}</style>", unsafe_allow_html=True)
 
     tiers = [(0, 1.0), (10, 1.5), (25, 2.0), (50, 3.0), (100, 4.0), (250, 5.0), (500, 10.0)]
     curr_mult = 1.0; next_mult = 1.5; prev_req = 0; next_req = 10
@@ -504,3 +506,4 @@ def show():
                 if st.button("FOLD", key="f"): handle_action("FOLD")
             with c2:
                 if st.button("RAISE", key="r"): handle_action("RAISE")
+
