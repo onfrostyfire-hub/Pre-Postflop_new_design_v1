@@ -388,7 +388,7 @@ def save_to_history(record):
     check_auto_sync()
 
 def check_auto_sync():
-    if st.session_state.get("unsaved_count", 0) >= 6: 
+    if st.session_state.get("unsaved_count", 0) >= 8: 
         force_sync()
 
 # --- ИЗОЛИРОВАННОЕ СОХРАНЕНИЕ ---
