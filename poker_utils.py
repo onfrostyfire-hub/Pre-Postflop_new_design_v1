@@ -1,552 +1,616 @@
 import streamlit as st
+import json
+import pandas as pd
+import os
 import random
-from datetime import datetime
-import poker_utils as utils
-import inspect
+from datetime import datetime, timedelta
+import gspread
+from google.oauth2.service_account import Credentials
 
-def show():
-    st.markdown("""
-    <style>
-        .stApp { background-color: #212529; color: #e9ecef; }
-        .block-container { padding-top: 4.5rem !important; }
-        .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto 50px auto; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: background 0.5s, box-shadow 0.5s, border-color 0.5s; border-style: solid; border-width: 15px; }
-        
-        .mastery-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; z-index: 1; transition: box-shadow 0.5s ease; }
-        .mastery-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); z-index: 30; }
-        .rusty-True { filter: grayscale(100%) opacity(0.6); }
-        .mastery-bar-bg { width: 100px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); z-index: 30; }
-        .mastery-bar-fill { height: 100%; transition: width 0.3s; }
-        .hands-left { font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: bold; margin-top: 3px; }
-        
-        .crest-left { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
-        .crest-right { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
-        
-        .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
-        .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
-        .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-slow 2s infinite; }
-        .combo-glow-50 { border-color: #dc3545 !important; box-shadow: 0 0 30px rgba(220, 53, 69, 0.7), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-menace 1.5s infinite; }
-        .combo-glow-100 { border-color: #6f42c1 !important; box-shadow: 0 0 40px rgba(111, 66, 193, 0.8), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-neon 1s infinite; }
-        .combo-glow-200 { border-color: #00e5ff !important; box-shadow: 0 0 50px rgba(0, 229, 255, 0.8), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-plasma 1s infinite alternate; }
-        .combo-glow-500 { border-color: #ff00ff !important; box-shadow: 0 0 60px rgba(255, 0, 255, 0.9), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-matrix 0.8s infinite alternate; }
-        .combo-glow-1000 { border-color: #00ff00 !important; box-shadow: 0 0 80px rgba(0, 255, 0, 1.0), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-god 0.5s infinite alternate; }
-        
-        @keyframes pulse-slow { 0% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } 50% { box-shadow: 0 0 25px rgba(253, 126, 20, 0.7); } 100% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } }
-        @keyframes pulse-menace { 0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } 50% { box-shadow: 0 0 40px rgba(220, 53, 69, 0.9); } 100% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } }
-        @keyframes pulse-neon { 0% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } 50% { box-shadow: 0 0 60px rgba(111, 66, 193, 1.0); } 100% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } }
-        @keyframes pulse-plasma { 0% { box-shadow: 0 0 30px rgba(0, 229, 255, 0.6); } 100% { box-shadow: 0 0 70px rgba(0, 229, 255, 1.0); } }
-        @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
-        @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
+SPOTS_DIR = 'spots_data'
+RANKS = 'AKQJT98765432'
 
-        .table-info { position: absolute; top: 16%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
-        .info-spot { font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); z-index: 30; position: relative;}
-        .info-src { z-index: 30; position: relative; }
-        .seat { position: absolute; width: 65px; height: 65px; background: #343a40; border: 2px solid #495057; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
-        .seat-label { font-size: 11px; color: #fff; font-weight: bold; margin-top: auto; margin-bottom: 4px; }
-        .seat-active { border-color: #ffc107; background: #343a40; }
-        .seat-folded { opacity: 0.4; border-color: #212529; }
-        
-        .opp-cards-desk { position: absolute; top: -15px; display: flex; z-index: 20; }
-        .opp-card-desk { width: 22px; height: 32px; background: #fff; border-radius: 3px; border: 1px solid #777; background-image: repeating-linear-gradient(45deg, #b71c1c 0, #b71c1c 2px, #fff 2px, #fff 4px); box-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
-        .opp-card-desk.right { margin-left: -8px; transform: rotate(12deg) translateY(2px); }
+# --- GOOGLE SHEETS CORE ---
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
+SPREADSHEET_ID = '15ouWJYZuQET1-sy7k5Wrn1fAzNUX6ssk5K8SOM9uYOc'
 
-        .chip-container { position: absolute; z-index: 10; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
-        .poker-chip { width: 22px; height: 22px; background: #222; border: 3px dashed #d32f2f; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
-        .chip-3bet { width: 24px; height: 24px; background: #d32f2f; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.6); }
-        .dealer-button { width: 24px; height: 24px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; z-index: 35; position: absolute; border: 1px solid #bfa006; }
-        .bet-txt { font-size: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 4px; border-radius: 4px; margin-top: -5px; z-index: 20; }
-        
-        .hero-panel { position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); background: #212529; border: 2px solid #ffc107; border-radius: 12px; padding: 6px 18px; display: flex; gap: 8px; z-index: 30; align-items: center; transition: all 0.5s ease; }
-        .card { width: 50px; height: 70px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-family: Arial, sans-serif !important; }
-        .tl { position: absolute; top: 2px; left: 4px; font-weight: bold; font-size: 16px; line-height: 1.1; }
-        .cent { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; line-height: 1; }
-        
-        .suit-red { color: #d32f2f !important; font-family: Arial, sans-serif !important; } 
-        .suit-blue { color: #0056b3 !important; font-family: Arial, sans-serif !important; } 
-        .suit-black { color: #111 !important; font-family: Arial, sans-serif !important; } 
-        .suit-green { color: #198754 !important; font-family: Arial, sans-serif !important; }
-        
-        .rng-desktop { position: absolute; right: -50px; top: 15px; width: 40px; height: 40px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 16px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
-        .rng-hint-box { text-align: center; color: #888; font-size: 13px; font-family: monospace; margin-top: 60px; margin-bottom: 10px; background: #2b2b2b; padding: 5px; border-radius: 6px; border: 1px solid #444; width: 100%; }
-        
-        .floating-reward { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 26px; font-weight: 900; text-shadow: 0px 2px 5px rgba(0,0,0,0.9), 0px 0px 2px #000; z-index: 100; pointer-events: none; animation: floatUpFade 1.2s ease-out forwards; }
-        @keyframes floatUpFade { 0% { opacity: 1; transform: translate(-50%, 0) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -15px) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -80px) scale(1); } }
-        
-        .rage-bar-container { width: 100%; max-width: 700px; margin: 0 auto 15px auto; background: rgba(0,0,0,0.6); border: 2px solid #333; border-radius: 20px; padding: 4px; display: flex; align-items: center; position: relative; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); height: 32px; }
-        .rage-bar-fill { height: 100%; border-radius: 16px; transition: width 0.3s ease-out; position: relative; overflow: hidden; box-shadow: inset 0 2px 5px rgba(255,255,255,0.3), inset 0 -2px 5px rgba(0,0,0,0.4); }
-        
-        /* Хаотичные пузырьки */
-        .rage-bar-fill::before, .rage-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 2px), radial-gradient(circle, rgba(255,255,255,0.5) 2px, transparent 3px), radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 2px); z-index: 1; pointer-events: none; }
-        .rage-bar-fill::before { background-size: 20px 25px, 35px 40px, 15px 20px; animation: bubbleRise1 1.2s infinite linear; }
-        .rage-bar-fill::after { background-size: 25px 30px, 45px 50px, 22px 28px; animation: bubbleRise2 1.7s infinite linear; opacity: 0.6; }
-        @keyframes bubbleRise1 { 0% { background-position: 0px 25px, 0px 40px, 0px 20px; } 50% { background-position: 5px 12.5px, -5px 20px, 3px 10px; } 100% { background-position: 0px 0px, 0px 0px, 0px 0px; } }
-        @keyframes bubbleRise2 { 0% { background-position: 0px 30px, 0px 50px, 0px 28px; } 50% { background-position: -6px 15px, 6px 25px, -4px 14px; } 100% { background-position: 0px 0px, 0px 0px, 0px 0px; } }
-
-        .rage-labels { position: absolute; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; font-weight: 900; font-size: 14px; color: #fff; text-shadow: 0 1px 3px #000, 0 0 5px #000; pointer-events: none; z-index: 2; top: 50%; transform: translateY(-50%); }
-        .rage-pulse { animation: ragePulse 0.4s infinite alternate; }
-        @keyframes ragePulse { 0% { filter: brightness(1); box-shadow: 0 0 5px #dc3545; } 100% { filter: brightness(1.3); box-shadow: 0 0 25px #dc3545, inset 0 0 10px #fff; } }
-        .rage-flash { animation: whiteFlash 0.6s ease-out; }
-        @keyframes whiteFlash { 0% { box-shadow: 0 0 50px #fff, inset 0 0 50px #fff; background: #fff; border-color: #fff; } 100% { box-shadow: 0 0 0 transparent; } }
-
-        .glass-shatter { position: absolute; top:0; left:0; right:0; bottom:0; z-index:999; pointer-events: none; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 12px), repeating-linear-gradient(-45deg, transparent, transparent 15px, rgba(255,255,255,0.3) 15px, rgba(255,255,255,0.3) 18px); animation: shatterAnim 0.8s ease-out forwards; }
-        @keyframes shatterAnim { 0% {opacity:1; transform: scale(1);} 100% {opacity:0; transform: scale(1.1);} }
-
-        div.stButton > button { width: 100%; height: 60px !important; font-size: 18px !important; font-weight: 700; border-radius: 8px; text-transform: uppercase; transition: all 0.2s; }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # Безопасная загрузка базы (подхватит любую версию poker_utils)
+@st.cache_resource
+def get_gspread_client():
     try:
-        if hasattr(utils, 'load_ranges'):
-            ranges_db = utils.load_ranges()
-        elif hasattr(utils, 'load_preflop_ranges'):
-            ranges_db = utils.load_preflop_ranges()
-        else:
-            st.error("Функция загрузки ренджей не найдена в poker_utils.py")
-            return
+        creds_dict = json.loads(st.secrets["GOOGLE_JSON"])
+        creds_dict["private_key"] = creds_dict["private_key"].replace('\\n', '\n')
+        credentials = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+        return gspread.authorize(credentials)
     except Exception as e:
-        st.error(f"Ошибка загрузки базы: {e}")
-        return
-
-    if not ranges_db: st.error("Ranges database is empty."); return
-    
-    scenario_map = {}
-    for src, sc_dict in ranges_db.items():
-        for sc, sp_dict in sc_dict.items():
-            if sc not in scenario_map: scenario_map[sc] = []
-            for sp in sp_dict.keys():
-                scenario_map[sc].append((sp, f"{src}|{sc}|{sp}"))
-    
-    all_scenarios = sorted(list(scenario_map.keys()))
-
-    with st.sidebar:
-        st.header("⚙️ Settings")
-        dv_btn = st.radio("Interface Mode", ["📱 Mobile", "💻 Desktop"], index=0 if st.session_state.actual_view_type=="📱 Mobile" else 1)
-        if dv_btn != st.session_state.actual_view_type:
-            st.session_state.actual_view_type = dv_btn
-            st.rerun()
-            
-        st.markdown("---")
-        saved = utils.load_user_settings()
-        
-        saved_sc = [s for s in saved.get("scenarios", []) if s in all_scenarios]
-        sel_sc = st.multiselect("Scenario", all_scenarios, default=saved_sc if saved_sc else (all_scenarios[:1] if all_scenarios else []))
-        
-        sel_spots_keys = []
-        if sel_sc:
-            st.markdown("**Spots for training:**")
-            saved_spots = saved.get("spots", [])
-            for sc in sel_sc:
-                st.markdown(f"<div style='color:#ffc107; font-size:14px; font-weight:bold; margin-top:8px;'>{sc}</div>", unsafe_allow_html=True)
-                for sp_name, sp_key in scenario_map[sc]:
-                    is_checked = (sp_key in saved_spots) if "spots" in saved else True
-                    if st.checkbox(sp_name, value=is_checked, key=f"d_chk_{sp_key}"):
-                        sel_spots_keys.append(sp_key)
-        
-        if st.button("🚀 Apply Settings", use_container_width=True):
-            saved["scenarios"] = sel_sc
-            saved["spots"] = sel_spots_keys
-            utils.save_user_settings(saved)
-            st.session_state.hand = None
-            st.rerun()
-
-    pool = sel_spots_keys
-    if not pool:
-        st.warning("⚠️ No spots selected. Check menu on the left.")
+        st.error(f"Google Sheets Connection Error: {e}")
         st.stop()
 
-    if 'combo' not in st.session_state: st.session_state.combo = 0
-    if 'shields' not in st.session_state: st.session_state.shields = 0
-    if 'shield_break_anim' not in st.session_state: st.session_state.shield_break_anim = False
-    if 'session_hands' not in st.session_state: st.session_state.session_hands = 0
-    if 'session_correct' not in st.session_state: st.session_state.session_correct = 0
-    
-    if 'toast_msgs' not in st.session_state: st.session_state.toast_msgs = []
-    if st.session_state.toast_msgs:
-        for msg in st.session_state.toast_msgs:
-            msg_str = str(msg)
-            st.toast(msg_str, icon="🔥" if "Combo" in msg_str else "🎯")
-        st.session_state.toast_msgs = []
+@st.cache_resource
+def get_worksheets():
+    client = get_gspread_client()
+    sh = client.open_by_key(SPREADSHEET_ID)
+    return {
+        "Settings": sh.worksheet("Settings"),
+        "History": sh.worksheet("History")
+    }
 
-    if 'hand' not in st.session_state: st.session_state.hand = None
-    if 'rng' not in st.session_state: st.session_state.rng = 0
-    if 'suits' not in st.session_state: st.session_state.suits = None
-    if 'current_spot_key' not in st.session_state: st.session_state.current_spot_key = None
-    if 'last_error' not in st.session_state: st.session_state.last_error = False
-    
-    if st.session_state.hand is None or st.session_state.current_spot_key is None or st.session_state.current_spot_key not in pool:
-        chosen = random.choice(pool)
-        st.session_state.current_spot_key = chosen
-        src, sc, sp = chosen.split('|')
-        data = ranges_db[src][sc][sp]
-        r_data = data.get("ranges", data)
-        t_range = r_data.get("training", r_data.get("source", r_data.get("full", "")))
-        poss = utils.parse_range_to_list(t_range)
-        srs = utils.load_srs_data()
-        w = [srs.get(f"{src}_{sc}_{sp}_{h}".replace(" ","_"), 100) for h in poss]
-        
-        if sum(w) == 0: w = [100]*len(poss)
-            
-        st.session_state.hand = random.choices(poss, weights=w, k=1)[0]
-        st.session_state.rng = random.randint(0, 99)
-        ps = ['♠','♥','♦','♣']; s1 = random.choice(ps)
-        st.session_state.suits = [s1, s1 if 's' in st.session_state.hand else random.choice([x for x in ps if x!=s1])]
-
-    src, sc, sp = st.session_state.current_spot_key.split('|')
-    data = ranges_db[src][sc][sp]
-    r_data = data.get("ranges", data)
-    
-    setup = data.get("setup", {})
-    hero_pos = setup.get("hero_pos", "EP")
-    villain_pos = setup.get("villain_pos")
-    btn_pos = setup.get("btn_pos", "BTN")
-    cards_in_play = setup.get("active_players", [])
-    bets_on_table = setup.get("table_bets", {})
-    display_hero_bet = setup.get("hero_bet")
-    is_3bet_pot = setup.get("is_3bet_pot", False)
-
-    is_defense = bool(villain_pos is not None or "call" in r_data or "Call" in r_data)
-
-    rng = st.session_state.rng
-    correct_act = "FOLD"
-    r_call = r_data.get("call", r_data.get("Call", ""))
-    r_raise = r_data.get("4bet", r_data.get("3bet", r_data.get("Raise", "")))
-    r_full = r_data.get("full", r_data.get("Full", ""))
-
-    if is_defense:
-        w_c = utils.get_weight(st.session_state.hand, r_call)
-        w_raise_val = utils.get_weight(st.session_state.hand, r_raise)
-        if rng < w_raise_val: correct_act = "RAISE"
-        elif rng < (w_raise_val + w_c): correct_act = "CALL"
-    else:
-        w = utils.get_weight(st.session_state.hand, r_full)
-        if rng < w: correct_act = "RAISE"
-
-    h_val = st.session_state.hand; s1, s2 = st.session_state.suits
-    
-    mapping = {'h': '♥', 'd': '♦', 'c': '♣', 's': '♠'}
-    s1_icon = mapping.get(s1.lower(), s1)
-    s2_icon = mapping.get(s2.lower(), s2)
-    
-    c1 = "suit-red" if '♥' in s1_icon else "suit-blue" if '♦' in s1_icon else "suit-green" if '♣' in s1_icon else "suit-black"
-    c2 = "suit-red" if '♥' in s2_icon else "suit-blue" if '♦' in s2_icon else "suit-green" if '♣' in s2_icon else "suit-black"
-
-    stats_data = utils.load_user_stats()
-    rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
-    c = st.session_state.combo
-    progress_pct = int((stats_data["xp"] / next_xp) * 100) if next_xp != "MAX" else 100
-    
-    sh = st.session_state.session_hands
-    scorr = st.session_state.session_correct
-    wr = int((scorr / sh * 100)) if sh > 0 else 0
-    wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
-
+@st.cache_data(ttl=60)
+def load_history():
     try:
-        spot_mastery_dict = stats_data.get("spot_mastery", {})
-        if isinstance(spot_mastery_dict, dict):
-            spot_data_mastery = spot_mastery_dict.get(st.session_state.current_spot_key, {})
-        else:
-            spot_data_mastery = {}
-        mastery = utils.get_spot_mastery_info(spot_data_mastery)
-    except Exception:
-        mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "#6c757d", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100, "svg": ""}
+        vals = get_worksheets()["History"].get_all_values()
+        if not vals or len(vals) < 2: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
         
-    m_color = mastery['color']
-    m_svg = mastery.get("svg", "")
-    m_rust = mastery.get("is_rusty", False)
-    m_icon = mastery.get("icon", "")
-    m_name = mastery.get("name", "")
-    m_pct = mastery.get("prog_pct", 0)
-    m_total = mastery.get("total", 0)
-    m_next = mastery.get("next", 100)
-    m_rank = mastery.get("rank", 0)
+        headers = vals[0]
+        if "UserAction" not in headers:
+            headers.append("UserAction")
+            for r in vals[1:]: r.append("UNKNOWN")
+            
+        df = pd.DataFrame(vals[1:], columns=headers)
+        return df
+    except: return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"])
+
+def rebuild_srs_from_history():
+    df = load_history()
+    weights = {}
     
-    if m_rank >= 5: hands_left_text = "MAX RANK"
-    else: hands_left_text = f"Remaining: {max(0, m_next - m_total)} hands"
+    if df.empty or "Spot" not in df.columns or "Result" not in df.columns:
+        return weights
 
-    if m_rank <= 1:
-        table_bg = "radial-gradient(ellipse at center, #4b6b50 0%, #2a3c2d 100%)"
-        table_border = "#3b3b3b"
-        hero_bg = "#495057"
-        hero_border = "#6c757d"
-        hero_shadow = "none"
-    elif m_rank <= 4:
-        table_bg = "radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%)"
-        table_border = "#4a1c1c"
-        hero_bg = "#212529"
-        hero_border = "#adb5bd"
-        hero_shadow = "0 0 10px #adb5bd"
-    else:
-        table_bg = "radial-gradient(ellipse at center, #2b1b3d 0%, #11081a 100%)"
-        table_border = "#1a1a1a"
-        hero_bg = "#111"
-        hero_border = "#ffc107"
-        hero_shadow = "0 0 25px #ffc107, inset 0 0 15px #ffc107"
+    df = df.sort_values("Date")
+    
+    for _, row in df.iterrows():
+        spot = str(row.get("Spot", ""))
+        hand = str(row.get("Hand", ""))
+        try:
+            result = int(float(row.get("Result", 0)))
+        except:
+            continue
+            
+        key = f"{spot}_{hand}"
+        w = weights.get(key, 100)
+        
+        if result == 1:
+            w = int(w * 0.8)
+        else:
+            w = int((w * 1.5) + (20 if w < 50 else 50))
+            
+        weights[key] = max(10, min(w, 2000))
+        
+    return weights
 
-    st.markdown(f"<style>.game-area {{ background: {table_bg} !important; border-color: {table_border} !important; }} .hero-panel {{ background: {hero_bg} !important; border: 2px solid {hero_border} !important; box-shadow: {hero_shadow} !important; }}</style>", unsafe_allow_html=True)
-
-    combo_cls = ""
-    if c >= 1000: combo_cls = "combo-glow-1000"
-    elif c >= 500: combo_cls = "combo-glow-500"
-    elif c >= 200: combo_cls = "combo-glow-200"
-    elif c >= 100: combo_cls = "combo-glow-100"
-    elif c >= 50: combo_cls = "combo-glow-50"
-    elif c >= 25: combo_cls = "combo-glow-25"
-    elif c >= 10: combo_cls = "combo-glow-10"
-    elif c >= 5: combo_cls = "combo-glow-5"
-
-    tiers = [(0, 1.0), (10, 1.5), (25, 2.0), (50, 3.0), (100, 4.0), (250, 5.0), (500, 10.0)]
-    curr_mult = 1.0; next_mult = 1.5; prev_req = 0; next_req = 10
-    for i in range(len(tiers)):
-        if c >= tiers[i][0]:
-            curr_mult = tiers[i][1]
-            prev_req = tiers[i][0]
-            if i + 1 < len(tiers):
-                next_req = tiers[i+1][0]
-                next_mult = tiers[i+1][1]
+def init_cloud_data():
+    if "app_initialized" not in st.session_state:
+        sheets = get_worksheets()
+        
+        try:
+            st.session_state["srs_data"] = rebuild_srs_from_history()
+        except Exception as e:
+            st.error(f"🚨 Ошибка динамической сборки SRS: {e}")
+            st.session_state["srs_data"] = {}
+        
+        try:
+            set_val = sheets["Settings"].acell('A1').value
+            if set_val:
+                st.session_state["user_settings"] = json.loads(set_val)
             else:
-                next_req = c 
-                next_mult = "MAX"
-                
-    if next_mult == "MAX":
-        rage_pct = 100
-        lbl_left = f"x{curr_mult}"; lbl_right = "MAX"
+                st.session_state["user_settings"] = {}
+        except Exception as e:
+            st.error(f"🚨 Ошибка чтения Settings: {e}")
+            st.stop()
+            
+        st.session_state["history_buffer"] = []
+        st.session_state["unsaved_count"] = 0
+        st.session_state["settings_changed"] = False
+        st.session_state["app_initialized"] = True
+
+# --- GAMIFICATION CORE ---
+def load_user_stats():
+    init_cloud_data()
+    sets = st.session_state.get("user_settings", {})
+    stats = sets.get("stats", {})
+    if "xp" not in stats: stats["xp"] = 0
+    if "streak" not in stats: stats["streak"] = 0
+    if "last_date" not in stats: stats["last_date"] = ""
+    if "max_combo" not in stats: stats["max_combo"] = 0
+    if "total_hands" not in stats: stats["total_hands"] = 0
+    if "dailies" not in stats: stats["dailies"] = {"date": "", "quests": []}
+    if "spot_mastery" not in stats: stats["spot_mastery"] = {}
+    return stats
+
+def save_user_stats(stats):
+    sets = st.session_state.get("user_settings", {})
+    sets["stats"] = stats
+    save_user_settings(sets)
+
+def get_rank_info(xp):
+    tiers = [
+        (0, "🐟 Fish"), (2000, "🪨 Nit"), (7500, "🚶 Reg"),
+        (20000, "⚔️ Grinder"), (50000, "🦈 Shark"), (100000, "🎩 High Roller"),
+        (250000, "👑 Boss"), (500000, "🤖 GTO Machine"), (1000000, "👽 Poker God")
+    ]
+    current_rank = tiers[0][1]
+    next_xp = tiers[1][0]
+    for i, (req_xp, name) in enumerate(tiers):
+        if xp >= req_xp:
+            current_rank = name
+            next_xp = tiers[i+1][0] if i+1 < len(tiers) else "MAX"
+    return current_rank, next_xp
+
+def generate_dailies():
+    return [
+        {"id": "play", "desc": "Play 100 hands", "target": 100, "progress": 0, "done": False, "xp": 500},
+        {"id": "correct", "desc": "50 correct answers", "target": 50, "progress": 0, "done": False, "xp": 500},
+        {"id": "combo", "desc": "Combo x15", "target": 15, "progress": 0, "done": False, "xp": 1000}
+    ]
+
+def get_spot_mastery_info(spot_data_dict):
+    if not isinstance(spot_data_dict, dict):
+        spot_data_dict = {}
+
+    total = spot_data_dict.get("t", 0)
+    hist = spot_data_dict.get("h", "")
+    last_date_str = spot_data_dict.get("d", "")
+
+    days_missed = 0
+    if last_date_str:
+        try:
+            last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date()
+            days_missed = (datetime.now().date() - last_date).days
+        except: pass
+
+    is_rusty = days_missed > 7
+    penalty = 1 if days_missed > 14 else 0
+
+    wr_100 = (hist.count('1') / len(hist) * 100) if len(hist) > 0 else 0.0
+
+    rank = 0
+    if total >= 5000 and wr_100 >= 95: rank = 5
+    elif total >= 3000 and wr_100 >= 92: rank = 4
+    elif total >= 1500 and wr_100 >= 88: rank = 3
+    elif total >= 500 and wr_100 >= 82: rank = 2
+    elif total >= 100 and wr_100 >= 75: rank = 1
+
+    rank = max(0, rank - penalty)
+
+    svg_basic = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.35;pointer-events:none;filter:drop-shadow(0 0 10px #28a745);">
+      <circle cx="50" cy="50" r="35" fill="#111" stroke="#28a745" stroke-width="4"/>
+      <circle cx="50" cy="50" r="25" fill="none" stroke="#28a745" stroke-width="2" stroke-dasharray="5 5"/>
+      <circle cx="50" cy="50" r="10" fill="#28a745" opacity="0.7"/>
+      <path d="M50 5 V20 M50 95 V80 M5 50 H20 M95 50 H80" stroke="#28a745" stroke-width="4" stroke-linecap="round"/>
+    </svg>'''
+
+    svg_solid = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.45;pointer-events:none;filter:drop-shadow(0 0 12px #0dcaf0);">
+      <path d="M20 20 L50 5 L80 20 L80 60 C80 80 50 95 50 95 C50 95 20 80 20 60 Z" fill="#111" stroke="#0dcaf0" stroke-width="4"/>
+      <path d="M50 5 V95 C80 80 80 60 80 20 L50 5 Z" fill="#0dcaf0" opacity="0.3"/>
+      <polygon points="50,30 70,50 50,70 30,50" fill="none" stroke="#0dcaf0" stroke-width="4"/>
+      <polygon points="50,40 60,50 50,60 40,50" fill="#0dcaf0" opacity="0.9"/>
+    </svg>'''
+
+    svg_unexp = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.55;pointer-events:none;filter:drop-shadow(0 0 15px #6f42c1);">
+      <g stroke="#6f42c1" stroke-width="4" stroke-linecap="round">
+        <line x1="10" y1="90" x2="90" y2="10"/><line x1="10" y1="10" x2="90" y2="90"/>
+      </g>
+      <path d="M20 25 L50 10 L80 25 L80 55 C80 80 50 95 50 95 C50 95 20 80 20 55 Z" fill="#111" stroke="#6f42c1" stroke-width="4"/>
+      <path d="M50 10 V95 C80 80 80 55 80 25 L50 10 Z" fill="#6f42c1" opacity="0.4"/>
+    </svg>'''
+
+    svg_elite = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.75;pointer-events:none;filter:drop-shadow(0 0 18px #dc3545);">
+      <path d="M 45 95 C 5 90, -5 40, 25 15" fill="none" stroke="#dc3545" stroke-width="4" stroke-dasharray="6 4" stroke-linecap="round"/>
+      <path d="M 55 95 C 95 90, 105 40, 75 15" fill="none" stroke="#dc3545" stroke-width="4" stroke-dasharray="6 4" stroke-linecap="round"/>
+      <g stroke="#dc3545" stroke-width="4" stroke-linecap="round">
+        <line x1="25" y1="75" x2="75" y2="25"/><line x1="25" y1="25" x2="75" y2="75"/>
+      </g>
+      <path d="M30 40 L50 25 L70 40 L70 65 C70 80 50 90 50 90 C50 90 30 80 30 65 Z" fill="#111" stroke="#dc3545" stroke-width="3"/>
+      <path d="M35 35 L42 15 L50 25 L58 15 L65 35 Z" fill="#dc3545" stroke="#111" stroke-width="2"/>
+    </svg>'''
+
+    svg_solver = '''<svg viewBox="0 0 100 100" style="width:100%;height:100%;opacity:0.95;pointer-events:none;filter:drop-shadow(0 0 20px #ffc107) drop-shadow(0 0 5px #ffffff);">
+      <path d="M 45 98 C 0 95, -10 35, 25 5" fill="none" stroke="#ffc107" stroke-width="5" stroke-dasharray="8 6" stroke-linecap="round"/>
+      <path d="M 55 98 C 100 95, 110 35, 75 5" fill="none" stroke="#ffc107" stroke-width="5" stroke-dasharray="8 6" stroke-linecap="round"/>
+      <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="#111" stroke="#ffc107" stroke-width="3"/>
+      <polygon points="50,15 80,32 80,68 50,85 20,68 20,32" fill="#ffc107" opacity="0.2"/>
+      <line x1="50" y1="15" x2="50" y2="85" stroke="#ffc107" stroke-width="2"/>
+      <line x1="20" y1="32" x2="80" y2="68" stroke="#ffc107" stroke-width="2"/>
+      <line x1="20" y1="68" x2="80" y2="32" stroke="#ffc107" stroke-width="2"/>
+      <circle cx="50" cy="50" r="16" fill="#ffc107"/>
+      <circle cx="50" cy="50" r="6" fill="#111"/>
+    </svg>'''
+
+    ranks_info = [
+        {"n": "Sandbox", "i": "⚪", "c": "#6c757d", "nt": 100, "req_wr": 75, "svg": ""},
+        {"n": "Basic", "i": "🟢", "c": "#28a745", "nt": 500, "req_wr": 82, "svg": svg_basic},
+        {"n": "Solid", "i": "🔵", "c": "#0dcaf0", "nt": 1500, "req_wr": 88, "svg": svg_solid},
+        {"n": "Unexploitable", "i": "🟣", "c": "#6f42c1", "nt": 3000, "req_wr": 92, "svg": svg_unexp},
+        {"n": "Elite", "i": "🔴", "c": "#dc3545", "nt": 5000, "req_wr": 95, "svg": svg_elite},
+        {"n": "Solver", "i": "☢️", "c": "#ffc107", "nt": 5000, "req_wr": 100, "svg": svg_solver},
+    ]
+    
+    info = ranks_info[rank]
+
+    if rank == 5:
+        prog_pct = 100
     else:
-        rage_pct = int((c - prev_req) / (next_req - prev_req) * 100)
-        lbl_left = f"x{curr_mult}"; lbl_right = f"x{next_mult}"
+        target_hands = info["nt"]
+        target_wr = info["req_wr"]
+        
+        if target_hands > 0:
+            prog_pct = int((total / target_hands) * 100)
+        else:
+            prog_pct = 100
+            
+        if prog_pct >= 100:
+            if wr_100 < target_wr:
+                prog_pct = 99
+            else:
+                prog_pct = 100
+                
+    if prog_pct > 100: prog_pct = 100
 
-    is_pulsing = "rage-pulse" if rage_pct >= 95 and next_mult != "MAX" else ""
-    is_flashing = "rage-flash" if st.session_state.pop("just_leveled_up", False) else ""
+    name = info["n"]
+    if is_rusty:
+        name += " (Rusty)"
+
+    return {
+        "rank": rank, "name": name, "icon": info["i"], "color": info["c"],
+        "is_rusty": is_rusty, "prog_pct": prog_pct, "total": total, "next": info["nt"], "svg": info["svg"]
+    }
+
+def process_gamification(is_correct, combo, session_total_hands, spot_key=None, shield_used=False):
+    stats = load_user_stats()
+    now_date = datetime.now().date()
+    now_date_str = now_date.strftime("%Y-%m-%d")
+    alerts = []
     
-    if curr_mult == 1.0: grad = "linear-gradient(90deg, #17a2b8, #0dcaf0)"
-    elif curr_mult == 1.5: grad = "linear-gradient(90deg, #0dcaf0, #28a745)"
-    elif curr_mult == 2.0: grad = "linear-gradient(90deg, #28a745, #ffc107)"
-    elif curr_mult == 3.0: grad = "linear-gradient(90deg, #ffc107, #fd7e14)"
-    elif curr_mult == 4.0: grad = "linear-gradient(90deg, #fd7e14, #dc3545)"
-    elif curr_mult == 5.0: grad = "linear-gradient(90deg, #dc3545, #6f42c1)"
-    else: grad = "linear-gradient(90deg, #6f42c1, #ff00ff)"
+    m_rank = 0
+    if spot_key:
+        s_data = stats.get("spot_mastery", {}).get(spot_key, {})
+        m_info = get_spot_mastery_info(s_data)
+        m_rank = m_info["rank"]
 
-    shield_display = f'<span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span>'
-    combo_badge = f'<div style="flex:1; display:flex; justify-content:center; align-items:center;"><div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center;"><span style="font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c>=5 else 0}px {glow_color};">🔥 {c}</span>{shield_display}</div></div>'
-
-    header_html = f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;"><div style="height: 4px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">${stats_data["xp"]} / ${next_xp}</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Winrate / Hands: {wr}% / {sh}</div></div></div></div>'
+    multiplier = 1.0
+    if combo >= 500: multiplier = 10.0
+    elif combo >= 250: multiplier = 5.0
+    elif combo >= 100: multiplier = 4.0
+    elif combo >= 50: multiplier = 3.0
+    elif combo >= 25: multiplier = 2.0
+    elif combo >= 10: multiplier = 1.5
     
-    rage_bar_html = f'''
-    <div class="rage-bar-container {is_flashing}">
-        <div class="rage-bar-fill {is_pulsing}" style="width: {rage_pct}%; background: {grad};"></div>
-        <div class="rage-labels">
-            <span>{lbl_left}</span>
-            <span>{lbl_right}</span>
-        </div>
+    st.session_state["xp_multiplier"] = multiplier
+
+    if stats["last_date"]:
+        try:
+            last_date = datetime.strptime(stats["last_date"], "%Y-%m-%d").date()
+            delta = (now_date - last_date).days
+            if delta == 1: stats["streak"] += 1
+            elif delta > 1: stats["streak"] = 1
+        except: stats["streak"] = 1
+    else: stats["streak"] = 1
+    stats["last_date"] = now_date_str
+    
+    stats["total_hands"] += 1
+    
+    reward_val = 0
+    if shield_used:
+        reward_val = 0
+    else:
+        if is_correct:
+            reward_val = int(10 * multiplier)
+        else:
+            if m_rank == 0:
+                reward_val = 0
+            elif m_rank == 1:
+                reward_val = -int(10 * multiplier)
+            else:
+                reward_val = -int(20 * multiplier)
+            
+    stats["xp"] += reward_val
+    if stats["xp"] < 0: stats["xp"] = 0
+    
+    if combo > stats.get("max_combo", 0): stats["max_combo"] = combo
+    
+    if stats["dailies"].get("date") != now_date_str:
+        stats["dailies"] = {"date": now_date_str, "quests": generate_dailies()}
+        
+    for q in stats["dailies"]["quests"]:
+        if not q["done"]:
+            if q["id"] == "play": q["progress"] += 1
+            elif q["id"] == "correct" and is_correct: q["progress"] += 1
+            elif q["id"] == "combo" and combo > q["progress"]: q["progress"] = combo
+            
+            if q["progress"] >= q["target"]:
+                q["progress"] = q["target"]
+                q["done"] = True
+                stats["xp"] += q["xp"]
+                alerts.append(f"🎯 Daily: {q['desc']} (+${q['xp']})")
+
+    if spot_key:
+        if "spot_mastery" not in stats: stats["spot_mastery"] = {}
+        s_data = stats["spot_mastery"].get(spot_key)
+        if not isinstance(s_data, dict):
+            s_data = {"h": "", "t": 0, "d": ""}
+        
+        s_data["t"] += 1
+        s_data["d"] = now_date_str
+        s_data["h"] += "1" if is_correct else "0"
+        
+        if len(s_data["h"]) > 100: s_data["h"] = s_data["h"][-100:]
+        stats["spot_mastery"][spot_key] = s_data
+
+    save_user_stats(stats)
+    return alerts, reward_val
+
+# --- ADAPTIVE SRS ALGORITHM ---
+def load_srs_data():
+    init_cloud_data()
+    return st.session_state.get("srs_data", {})
+
+def update_srs_auto(spot_id, hand, is_correct):
+    init_cloud_data()
+    data = st.session_state["srs_data"]
+    key = f"{spot_id}_{hand}"
+    w = data.get(key, 100)
+    
+    if is_correct:
+        w = int(w * 0.8)
+    else:
+        w = int((w * 1.5) + (20 if w < 50 else 50))
+            
+    data[key] = max(10, min(w, 2000))
+    st.session_state["unsaved_count"] += 1
+    check_auto_sync()
+
+def load_user_settings():
+    init_cloud_data()
+    return st.session_state.get("user_settings", {})
+
+def save_user_settings(settings):
+    init_cloud_data()
+    st.session_state["user_settings"] = settings
+    st.session_state["settings_changed"] = True
+    st.session_state["unsaved_count"] += 1
+    check_auto_sync()
+
+def save_to_history(record):
+    init_cloud_data()
+    row = [
+        str(record.get("Date", "")), 
+        str(record.get("Spot", "")), 
+        str(record.get("Hand", "")), 
+        str(record.get("Result", "")), 
+        str(record.get("CorrectAction", "")),
+        str(record.get("UserAction", ""))
+    ]
+    st.session_state["history_buffer"].append(row)
+    st.session_state["unsaved_count"] += 1
+    check_auto_sync()
+
+def check_auto_sync():
+    if st.session_state.get("unsaved_count", 0) >= 6: 
+        force_sync()
+
+# --- ИЗОЛИРОВАННОЕ СОХРАНЕНИЕ ---
+def force_sync():
+    if st.session_state.get("unsaved_count", 0) == 0: return
+    sheets = get_worksheets()
+    sync_success = True
+
+    if "history_buffer" in st.session_state and st.session_state["history_buffer"]:
+        try:
+            sheets["History"].append_rows(st.session_state["history_buffer"])
+            st.session_state["history_buffer"] = []
+            load_history.clear()
+        except Exception as e:
+            sync_success = False
+            print(f"History Sync error: {e}")
+
+    if st.session_state.get("settings_changed"):
+        try:
+            sheets["Settings"].update_acell('A1', json.dumps(st.session_state["user_settings"]))
+            st.session_state["settings_changed"] = False
+        except Exception as e:
+            sync_success = False
+            print(f"Settings Sync error: {e}")
+            
+    st.session_state["unsaved_count"] = 0
+    if sync_success:
+        st.toast("☁️ История сохранена", icon="✅")
+
+def delete_history(days=None):
+    try:
+        sheets = get_worksheets()
+        headers = ["Date", "Spot", "Hand", "Result", "CorrectAction", "UserAction"]
+        if days is None:
+            sheets["History"].clear()
+            sheets["History"].append_row(headers)
+        else:
+            df = load_history()
+            if df.empty: return
+            df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
+            now = datetime.now()
+            cutoff = now - timedelta(days=days)
+            df_new = df[df["Date"] >= cutoff] 
+            sheets["History"].clear()
+            rows = [headers] + df_new.astype(str).values.tolist()
+            sheets["History"].update(values=rows, range_name="A1")
+        load_history.clear()
+        if "history_buffer" in st.session_state: st.session_state["history_buffer"] = []
+    except Exception as e: st.error(f"Error clearing history: {e}")
+
+@st.cache_data(ttl=0)
+def load_ranges():
+    db = {}
+    if not os.path.exists(SPOTS_DIR): return db
+    for file in os.listdir(SPOTS_DIR):
+        if file.endswith('.json'):
+            with open(os.path.join(SPOTS_DIR, file), 'r', encoding='utf-8') as f:
+                try:
+                    data = json.load(f)
+                    src = data.get("source", "Unknown")
+                    sc = data.get("scenario", "Unknown")
+                    if src not in db: db[src] = {}
+                    if sc not in db[src]: db[src][sc] = {}
+                    db[src][sc].update(data.get("spots", {}))
+                except Exception as e: st.error(f"Read error {file}: {e}")
+    return db
+
+ALL_HANDS = []
+for i, r1 in enumerate(RANKS):
+    for j, r2 in enumerate(RANKS):
+        if i < j: ALL_HANDS.append(r1 + r2 + 's'); ALL_HANDS.append(r1 + r2 + 'o')
+        elif i == j: ALL_HANDS.append(r1 + r2)
+
+def get_weight(hand, range_str):
+    if not range_str or not isinstance(range_str, str): return 0.0
+    cleaned = range_str.replace('\n', ' ').replace('\r', '')
+    items = [x.strip() for x in cleaned.split(',')]
+    for item in items:
+        if ':' in item:
+            h_part, w_part = item.split(':')
+            try:
+                weight = float(w_part)
+                if weight <= 1.0: weight *= 100
+            except: weight = 100.0
+        else:
+            h_part = item
+            weight = 100.0
+        if h_part == hand: return weight
+        if len(h_part) == 2 and h_part[0] != h_part[1] and hand.startswith(h_part): return weight
+    return 0.0
+
+def parse_range_to_list(range_str):
+    if not range_str or not isinstance(range_str, str) or "22+" in range_str or range_str == "ALL": return ALL_HANDS.copy()
+    hand_list = []
+    cleaned = range_str.replace('\n', ' ').replace('\r', '')
+    items = [x.strip() for x in cleaned.split(',')]
+    for item in items:
+        if not item: continue
+        h = item.split(':')[0]
+        if h in ALL_HANDS: hand_list.append(h)
+        elif len(h) == 2:
+            if h[0] == h[1]: hand_list.append(h)
+            else: hand_list.extend([h+'s', h+'o'])
+    if not hand_list: return ALL_HANDS.copy()
+    return list(set(hand_list))
+
+def render_range_matrix(spot_data, target_hand=None):
+    ranges = spot_data.get("ranges", spot_data)
+    r_call = ranges.get("call", ranges.get("Call", ""))
+    r_raise = ranges.get("4bet", ranges.get("3bet", ranges.get("Raise", "")))
+    r_full = ranges.get("full", ranges.get("Full", ""))
+    
+    grid_html = '<div style="display:grid;grid-template-columns:repeat(13,1fr);gap:1px;background:#111;padding:1px;border:1px solid #444;">'
+    for r1 in RANKS:
+        for r2 in RANKS:
+            if RANKS.index(r1) == RANKS.index(r2): h = r1 + r2
+            elif RANKS.index(r1) < RANKS.index(r2): h = r1 + r2 + 's'
+            else: h = r2 + r1 + 'o'
+            
+            w_c = get_weight(h, r_call)
+            w_4 = get_weight(h, r_raise)
+            w_f = get_weight(h, r_full)
+            
+            raise_w = w_4 if w_4 > 0 else w_f
+            call_w = w_c
+            
+            total_w = raise_w + call_w
+            if total_w > 100:
+                raise_w = (raise_w / total_w) * 100
+                call_w = (call_w / total_w) * 100
+            
+            style = "aspect-ratio:1;display:flex;justify-content:center;align-items:center;font-size:7px;cursor:default;color:#fff;"
+            
+            if raise_w == 0 and call_w == 0:
+                bg = "#2c3034"
+                style += "color:#495057;"
+            elif raise_w >= 100: bg = "#d63384"
+            elif call_w >= 100: bg = "#28a745"
+            else:
+                stops = []
+                curr_pct = 0.0
+                if raise_w > 0:
+                    stops.append(f"#d63384 {curr_pct}%")
+                    curr_pct += raise_w
+                    stops.append(f"#d63384 {curr_pct}%")
+                if call_w > 0:
+                    stops.append(f"#28a745 {curr_pct}%")
+                    curr_pct += call_w
+                    stops.append(f"#28a745 {curr_pct}%")
+                if curr_pct < 100:
+                    stops.append(f"#2c3034 {curr_pct}%")
+                    stops.append(f"#2c3034 100%")
+                bg = f"linear-gradient(to right, {', '.join(stops)})"
+            
+            style += f"background:{bg};"
+            if target_hand and h == target_hand: style += "border:1.5px solid #ffc107;z-index:10;box-shadow: 0 0 4px #ffc107;"
+            grid_html += f'<div style="{style}" title="{h} | Raise: {raise_w:.0f}%, Call: {call_w:.0f}%">{h}</div>'
+    grid_html += '</div>'
+
+    stats = spot_data.get("stats", {})
+    if stats:
+        stats_html = '<div style="display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap; font-size:12px; font-weight:bold; font-family:sans-serif;">'
+        for k, v in stats.items():
+            kl = k.lower()
+            if "raise" in kl or "3bet" in kl or "4bet" in kl or "pfr" in kl: color = "#d63384" 
+            elif "call" in kl: color = "#28a745" 
+            elif "fold" in kl: color = "#6c757d" 
+            else: color = "#adb5bd" 
+            stats_html += f'<div style="background:#222; border:1px solid {color}; color:{color}; padding:4px 10px; border-radius:6px; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">{k} {v}</div>'
+        stats_html += '</div>'
+        grid_html += stats_html
+    return grid_html
+
+def _get_fuzzy_weight(srs_data, src, sc, sp, h):
+    exact_keys = [
+        f"{sp}_{h}",
+        f"{sp}_{h}".replace(" ", "_"),
+        f"{src}_{sc}_{sp}_{h}".replace(" ", "_"),
+        f"{sc}_{sp}_{h}".replace(" ", "_")
+    ]
+    for k in exact_keys:
+        if k in srs_data:
+            return srs_data[k]
+            
+    for k, v in srs_data.items():
+        if sp in k and h in k:
+            return v
+            
+    return 100
+
+def render_srs_matrix(spot_data, src, sc, sp, srs_data, target_hand=None):
+    grid_html = '<div style="display:grid;grid-template-columns:repeat(13,1fr);gap:1px;background:#111;padding:1px;border:1px solid #444;">'
+    for r1 in RANKS:
+        for r2 in RANKS:
+            if RANKS.index(r1) == RANKS.index(r2): h = r1 + r2
+            elif RANKS.index(r1) < RANKS.index(r2): h = r1 + r2 + 's'
+            else: h = r2 + r1 + 'o'
+            
+            w = _get_fuzzy_weight(srs_data, src, sc, sp, h)
+            
+            if w <= 10: bg = "#0f5132" 
+            elif w <= 50: bg = "#198754" 
+            elif w <= 150: bg = "#2c3034" 
+            elif w <= 500: bg = "#854000" 
+            elif w <= 1000: bg = "#fd7e14" 
+            else: bg = "#dc3545" 
+            
+            style = f"aspect-ratio:1;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:default;color:#fff;background:{bg};"
+            if target_hand and h == target_hand: style += "border:1.5px solid #ffc107;z-index:10;box-shadow: 0 0 4px #ffc107;"
+            
+            grid_html += f'<div style="{style}" title="{h} | Weight: {w}">'
+            grid_html += f'<div style="font-size:9px; font-weight:bold; line-height:1;">{h}</div>'
+            grid_html += f'<div style="font-size:7px; color:#ffc107; margin-top:2px; font-weight:bold;">{w}</div>'
+            grid_html += '</div>'
+            
+    grid_html += '</div>'
+    
+    grid_html += '''
+    <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; font-size:10px; color:#aaa; font-family:sans-serif; text-transform:uppercase; font-weight:bold;">
+        <div style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;background:#0f5132;border-radius:2px;"></div>Mastered</div>
+        <div style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;background:#2c3034;border-radius:2px;"></div>Default</div>
+        <div style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;background:#dc3545;border-radius:2px;"></div>Leak</div>
     </div>
     '''
-
-    anim_html = ""
-    anim_reward = st.session_state.pop("anim_reward", None)
-    if anim_reward is not None:
-        if anim_reward > 0: a_color = "#00ff00"; a_text = f"+${anim_reward}"
-        elif anim_reward < 0: a_color = "#ff0000"; a_text = f"-${abs(anim_reward)}"
-        else: a_color = "#888"; a_text = "$0"
-        anim_html = f'<div class="floating-reward" style="color: {a_color}">{a_text}</div>'
-        
-    shatter_html = '<div class="glass-shatter"></div>' if st.session_state.pop("shield_break_anim", False) else ""
-
-    col_center, col_right = st.columns([2, 1])
-    
-    with col_center:
-        st.markdown(header_html, unsafe_allow_html=True)
-        st.markdown(rage_bar_html, unsafe_allow_html=True)
-        
-        order = ["EP", "MP", "CO", "BTN", "SB", "BB"]
-        try: hero_idx = order.index(hero_pos)
-        except ValueError: hero_idx = 0
-        rot = order[hero_idx:] + order[:hero_idx]
-
-        def get_seat_style(idx):
-            return {0: "bottom: -20px; left: 50%; transform: translateX(-50%);", 1: "bottom: 15%; left: 0%;", 2: "top: 15%; left: 0%;", 
-                    3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 15%; right: 0%;", 5: "bottom: 15%; right: 0%;"}.get(idx, "")
-
-        def get_chip_style(idx):
-            return {0: "bottom: 25%; left: 50%; transform: translateX(-50%);", 1: "bottom: 22%; left: 22%;", 2: "top: 22%; left: 22%;",
-                    3: "top: 25%; left: 50%; transform: translateX(-50%);", 4: "top: 22%; right: 22%;", 5: "bottom: 22%; right: 22%;"}.get(idx, "")
-
-        def get_btn_style(idx):
-            return {0: "bottom: -15px; left: 50%; margin-left: -110px; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
-                    3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
-
-        opp_html = ""; chips_html = ""
-
-        for i in range(1, 6):
-            p = rot[i]
-            
-            has_cards = (p in cards_in_play)
-            cls = "seat-active" if has_cards else "seat-folded"
-            cards = '<div class="opp-cards-desk"><div class="opp-card-desk"></div><div class="opp-card-desk right"></div></div>' if has_cards else ""
-            ss = get_seat_style(i)
-            opp_html += f'<div class="seat {cls}" style="{ss}">{cards}<span class="seat-label">{p}</span></div>'
-            
-            cs = get_chip_style(i)
-            bet_amount = bets_on_table.get(p)
-            
-            if bet_amount is not None:
-                bet_txt = f'<div class="bet-txt">{bet_amount}bb</div>'
-                if bet_amount <= 1.0:
-                    if is_3bet_pot: chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div>{bet_txt}</div>'
-                    else: chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div>{bet_txt}</div>'
-                else:
-                    if is_3bet_pot: chips_html += f'<div class="chip-container" style="{cs}"><div class="chip-3bet"></div><div class="chip-3bet" style="margin-top:-15px;"></div>{bet_txt}</div>'
-                    else: chips_html += f'<div class="chip-container" style="{cs}"><div class="poker-chip"></div><div class="poker-chip" style="margin-top:-10px;"></div>{bet_txt}</div>'
-            
-            if p == btn_pos:
-                bs = get_btn_style(i)
-                chips_html += f'<div class="dealer-button" style="{bs}">D</div>'
-
-        hero_cs = get_chip_style(0)
-        if display_hero_bet is not None: 
-            bet_txt = f'<div class="bet-txt">{display_hero_bet}bb</div>'
-            if display_hero_bet <= 1.0:
-                chips_html += f'<div class="chip-container" style="{hero_cs}"><div class="poker-chip"></div>{bet_txt}</div>'
-            else:
-                chips_html += f'<div class="chip-container" style="{hero_cs}"><div class="poker-chip"></div><div class="poker-chip" style="margin-top:-10px"></div>{bet_txt}</div>'
-            
-        if rot[0] == btn_pos:
-            hero_bs = get_btn_style(0)
-            chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
-
-        html = f'<div class="game-area {combo_cls}" style="background: {table_bg}; border-color: {table_border};">{shatter_html}<div class="crest-left">{m_svg}</div><div class="crest-right">{m_svg}</div><div class="mastery-glow"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div class="hands-left">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-panel" style="background: {hero_bg}; border-color: {hero_border}; box-shadow: {hero_shadow};">{anim_html}<div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1_icon}</div><div class="cent {c1}">{s1_icon}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2_icon}</div><div class="cent {c2}">{s2_icon}</div></div><div class="rng-desktop">{rng}</div></div></div>'
-        
-        st.markdown(html, unsafe_allow_html=True)
-        
-        if not st.session_state.last_error:
-            if is_defense: st.markdown('<div class="rng-hint-box">📉 0..Freq → Action | 📈 Freq..100 → Fold</div>', unsafe_allow_html=True)
-            else: st.markdown('<div class="rng-hint-box">📉 0..Freq → Raise | 📈 Freq..100 → Fold</div>', unsafe_allow_html=True)
-
-        def handle_action(action):
-            corr = (correct_act == action)
-            st.session_state.session_hands += 1
-            
-            c_old = st.session_state.combo
-            old_mult = 1.0
-            if c_old >= 500: old_mult = 10.0
-            elif c_old >= 250: old_mult = 5.0
-            elif c_old >= 100: old_mult = 4.0
-            elif c_old >= 50: old_mult = 3.0
-            elif c_old >= 25: old_mult = 2.0
-            elif c_old >= 10: old_mult = 1.5
-            
-            k = f"{src}_{sc}_{sp}".replace(" ","_")
-            utils.update_srs_auto(k, st.session_state.hand, corr)
-            
-            utils.save_to_history({
-                "Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
-                "Spot": sp, "Hand": f"{h_val}", "Result": int(corr), 
-                "CorrectAction": correct_act, "UserAction": action
-            })
-            
-            shield_used = False
-            if corr:
-                st.session_state.session_correct += 1
-                st.session_state.combo += 1
-                
-                if st.session_state.combo in [100, 250, 500, 1000]:
-                    st.session_state.shields += 1
-                    st.session_state.toast_msgs.append(f"Combo x{st.session_state.combo}! +1 🛡️ Shield!")
-                    
-                st.session_state.last_error = False
-                st.session_state.hand = None
-                
-                if st.session_state.combo in [10, 25, 50, 100, 250, 500, 1000]:
-                    msgs = {
-                        10: "Combo x10! Warming up.", 25: "Combo x25! Reading them like a book.",
-                        50: "Combo x50! Sniper.", 100: "Combo x100! Machine.",
-                        250: "Combo x250! Are you even human?", 500: "Combo x500! God Mode activated.",
-                        1000: "Combo x1000! Solvers fear you."
-                    }
-                    st.session_state.toast_msgs.append(msgs.get(st.session_state.combo, "Unstoppable!"))
-            else:
-                if st.session_state.shields > 0:
-                    st.session_state.shields -= 1
-                    st.session_state.shield_break_anim = True
-                    st.session_state.last_error = True
-                    shield_used = True
-                    st.session_state.msg = f"🛡️ ЩИТ СЛОМАН! Защита от мисклика. GTO: {correct_act}"
-                else:
-                    st.session_state.combo = 0
-                    st.session_state.last_error = True
-                    st.session_state.msg = f"❌ WRONG! You chose {action}, but GTO is {correct_act}"
-                
-            c_new = st.session_state.combo
-            new_mult = 1.0
-            if c_new >= 500: new_mult = 10.0
-            elif c_new >= 250: new_mult = 5.0
-            elif c_new >= 100: new_mult = 4.0
-            elif c_new >= 50: new_mult = 3.0
-            elif c_new >= 25: new_mult = 2.0
-            elif c_new >= 10: new_mult = 1.5
-
-            if new_mult > old_mult:
-                st.session_state.just_leveled_up = True
-                
-            try:
-                sig = inspect.signature(utils.process_gamification)
-                if 'shield_used' in sig.parameters:
-                    res = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key, shield_used=shield_used)
-                else:
-                    res = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key)
-                
-                if isinstance(res, tuple):
-                    alerts = res[0]
-                    st.session_state.anim_reward = res[1]
-                else:
-                    alerts = res
-                    
-                if alerts: st.session_state.toast_msgs.extend(alerts)
-            except Exception: pass
-            
-            st.rerun()
-
-        if st.session_state.last_error:
-            st.markdown(f'<div style="background:#dc3545; color:white; padding:12px; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:15px; font-size:16px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">{st.session_state.msg}</div>', unsafe_allow_html=True)
-            
-            tab1, tab2 = st.tabs(["🎯 Correct Range", "🧠 SRS Matrix"])
-            with tab1:
-                st.markdown(utils.render_range_matrix(data, st.session_state.hand), unsafe_allow_html=True)
-            with tab2:
-                st.markdown(utils.render_srs_matrix(data, src, sc, sp, utils.load_srs_data(), st.session_state.hand), unsafe_allow_html=True)
-                
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("UNDERSTOOD, NEXT", type="primary", use_container_width=True):
-                st.session_state.last_error = False
-                st.session_state.hand = None
-                st.session_state.shield_break_anim = False
-                st.rerun()
-
-        else:
-            if is_defense:
-                st.markdown("""<style>
-                    div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 4px 0 #1d2124, 0 6px 10px rgba(0,0,0,0.3) !important; }
-                    div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #20c997, #198754) !important; color: #fff !important; box-shadow: 0 4px 0 #0f5132, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-                    div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 4px 0 #a02561, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-                </style>""", unsafe_allow_html=True)
-                c1, c2, c3 = st.columns(3)
-                with c1:
-                    if st.button("FOLD", key="f", use_container_width=True): handle_action("FOLD")
-                with c2:
-                    if st.button("CALL", key="c", use_container_width=True): handle_action("CALL")
-                with c3:
-                    if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
-            else:
-                st.markdown("""<style>
-                    div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 4px 0 #1d2124, 0 6px 10px rgba(0,0,0,0.3) !important; }
-                    div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 4px 0 #a02561, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-                </style>""", unsafe_allow_html=True)
-                c1, c2 = st.columns(2)
-                with c1:
-                    if st.button("FOLD", key="f", use_container_width=True): handle_action("FOLD")
-                with c2:
-                    if st.button("RAISE", key="r", use_container_width=True): handle_action("RAISE")
-
-    with col_right:
-        if not st.session_state.last_error:
-            st.markdown(f"<div style='text-align:center;font-weight:bold;margin-bottom:10px;'>{sp}</div>", unsafe_allow_html=True)
-            with st.expander("🫣 Peek Range", expanded=False):
-                st.markdown(utils.render_range_matrix(data, st.session_state.hand), unsafe_allow_html=True)
+    return grid_html
