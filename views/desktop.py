@@ -5,17 +5,16 @@ import poker_utils as utils
 
 def show():
     st.markdown("""
-    <style>
+        <style>
         .stApp { background-color: #212529; color: #e9ecef; }
         .block-container { padding-top: 4.5rem !important; }
-        .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto 50px auto; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: background 0.5s, box-shadow 0.5s, border-color 0.5s; border-style: solid; border-width: 15px; }
+        .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto 50px auto; background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%); border: 15px solid #4a1c1c; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: box-shadow 0.3s, border-color 0.3s; }
         
         .mastery-glow { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: inherit; pointer-events: none; z-index: 1; transition: box-shadow 0.5s ease; }
         .mastery-badge { font-size: 11px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 12px; display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); z-index: 30; }
         .rusty-True { filter: grayscale(100%) opacity(0.6); }
         .mastery-bar-bg { width: 100px; height: 3px; background: #111; border-radius: 2px; margin: 4px auto 0 auto; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); z-index: 30; }
         .mastery-bar-fill { height: 100%; transition: width 0.3s; }
-        .hands-left { font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: bold; margin-top: 3px; }
         
         .crest-left { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .crest-right { position: absolute; right: 30px; top: 50%; transform: translateY(-50%); width: 140px; height: 140px; z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center; }
@@ -29,7 +28,14 @@ def show():
         .combo-glow-500 { border-color: #ff00ff !important; box-shadow: 0 0 60px rgba(255, 0, 255, 0.9), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-matrix 0.8s infinite alternate; }
         .combo-glow-1000 { border-color: #00ff00 !important; box-shadow: 0 0 80px rgba(0, 255, 0, 1.0), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-god 0.5s infinite alternate; }
         
-        .table-info { position: absolute; top: 16%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
+        @keyframes pulse-slow { 0% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } 50% { box-shadow: 0 0 25px rgba(253, 126, 20, 0.7); } 100% { box-shadow: 0 0 15px rgba(253, 126, 20, 0.4); } }
+        @keyframes pulse-menace { 0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } 50% { box-shadow: 0 0 40px rgba(220, 53, 69, 0.9); } 100% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); } }
+        @keyframes pulse-neon { 0% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } 50% { box-shadow: 0 0 60px rgba(111, 66, 193, 1.0); } 100% { box-shadow: 0 0 30px rgba(111, 66, 193, 0.6); } }
+        @keyframes pulse-plasma { 0% { box-shadow: 0 0 30px rgba(0, 229, 255, 0.6); } 100% { box-shadow: 0 0 70px rgba(0, 229, 255, 1.0); } }
+        @keyframes pulse-matrix { 0% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.7); } 100% { box-shadow: 0 0 90px rgba(255, 0, 255, 1.0); } }
+        @keyframes pulse-god { 0% { box-shadow: 0 0 50px rgba(0, 255, 0, 0.8); } 100% { box-shadow: 0 0 120px rgba(0, 255, 0, 1.0); } }
+
+        .table-info { position: absolute; top: 18%; width: 100%; text-align: center; pointer-events: none; z-index: 15; }
         .info-spot { font-size: 24px; font-weight: 800; color: rgba(255,255,255,0.2); z-index: 30; position: relative;}
         .info-src { z-index: 30; position: relative; }
         .seat { position: absolute; width: 65px; height: 65px; background: #343a40; border: 2px solid #495057; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; }
@@ -47,7 +53,7 @@ def show():
         .dealer-button { width: 24px; height: 24px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; z-index: 15; position: absolute; border: 1px solid #bfa006; }
         .bet-txt { font-size: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 4px; border-radius: 4px; margin-top: -5px; z-index: 20; }
         
-        .hero-panel { position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); border-radius: 12px; padding: 6px 18px; display: flex; gap: 8px; z-index: 30; align-items: center; transition: all 0.5s ease; }
+        .hero-panel { position: absolute; bottom: -45px; left: 50%; transform: translateX(-50%); background: #212529; border: 2px solid #ffc107; border-radius: 12px; padding: 6px 18px; display: flex; gap: 8px; z-index: 30; align-items: center; }
         .card { width: 50px; height: 70px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
         .tl { position: absolute; top: 2px; left: 4px; font-weight: bold; font-size: 16px; line-height: 1.1; }
         .cent { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; }
@@ -55,24 +61,6 @@ def show():
         .rng-desktop { position: absolute; right: -50px; top: 15px; width: 40px; height: 40px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 16px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
         .rng-hint-box { text-align: center; color: #888; font-size: 13px; font-family: monospace; margin-top: 60px; margin-bottom: 10px; background: #2b2b2b; padding: 5px; border-radius: 6px; border: 1px solid #444; width: 100%; }
         
-        .floating-reward { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 26px; font-weight: 900; text-shadow: 0px 2px 5px rgba(0,0,0,0.9), 0px 0px 2px #000; z-index: 100; pointer-events: none; animation: floatUpFade 1.2s ease-out forwards; }
-        @keyframes floatUpFade { 0% { opacity: 1; transform: translate(-50%, 0) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -15px) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -80px) scale(1); } }
-        
-        .rage-bar-container { width: 100%; max-width: 700px; margin: 0 auto 15px auto; background: rgba(0,0,0,0.6); border: 2px solid #333; border-radius: 20px; padding: 4px; display: flex; align-items: center; position: relative; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); height: 32px; }
-        .rage-bar-fill { height: 100%; border-radius: 16px; transition: width 0.3s ease-out; position: relative; overflow: hidden; box-shadow: inset 0 2px 5px rgba(255,255,255,0.3), inset 0 -2px 5px rgba(0,0,0,0.4); }
-        
-        .rage-bar-fill::before, .rage-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 2px), radial-gradient(circle, rgba(255,255,255,0.5) 2px, transparent 3px), radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 2px); z-index: 1; pointer-events: none; }
-        .rage-bar-fill::before { background-size: 20px 25px, 35px 40px, 15px 20px; animation: bubbleRise1 1.2s infinite linear; }
-        .rage-bar-fill::after { background-size: 25px 30px, 45px 50px, 22px 28px; animation: bubbleRise2 1.7s infinite linear; opacity: 0.6; }
-        @keyframes bubbleRise1 { 0% { background-position: 0px 25px, 0px 40px, 0px 20px; } 50% { background-position: 5px 12.5px, -5px 20px, 3px 10px; } 100% { background-position: 0px 0px, 0px 0px, 0px 0px; } }
-        @keyframes bubbleRise2 { 0% { background-position: 0px 30px, 0px 50px, 0px 28px; } 50% { background-position: -6px 15px, 6px 25px, -4px 14px; } 100% { background-position: 0px 0px, 0px 0px, 0px 0px; } }
-
-        .rage-labels { position: absolute; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; font-weight: 900; font-size: 14px; color: #fff; text-shadow: 0 1px 3px #000, 0 0 5px #000; pointer-events: none; z-index: 2; top: 50%; transform: translateY(-50%); }
-        .rage-pulse { animation: ragePulse 0.4s infinite alternate; }
-        @keyframes ragePulse { 0% { filter: brightness(1); box-shadow: 0 0 5px #dc3545; } 100% { filter: brightness(1.3); box-shadow: 0 0 25px #dc3545, inset 0 0 10px #fff; } }
-        .rage-flash { animation: whiteFlash 0.6s ease-out; }
-        @keyframes whiteFlash { 0% { box-shadow: 0 0 50px #fff, inset 0 0 50px #fff; background: #fff; border-color: #fff; } 100% { box-shadow: 0 0 0 transparent; } }
-
         .glass-shatter { position: absolute; top:0; left:0; right:0; bottom:0; z-index:999; pointer-events: none; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 12px), repeating-linear-gradient(-45deg, transparent, transparent 15px, rgba(255,255,255,0.3) 15px, rgba(255,255,255,0.3) 18px); animation: shatterAnim 0.8s ease-out forwards; }
         @keyframes shatterAnim { 0% {opacity:1; transform: scale(1);} 100% {opacity:0; transform: scale(1.1);} }
 
@@ -130,13 +118,15 @@ def show():
 
     if 'combo' not in st.session_state: st.session_state.combo = 0
     if 'shields' not in st.session_state: st.session_state.shields = 0
+    if 'shield_break_anim' not in st.session_state: st.session_state.shield_break_anim = False
     if 'session_hands' not in st.session_state: st.session_state.session_hands = 0
     if 'session_correct' not in st.session_state: st.session_state.session_correct = 0
     
     if 'toast_msgs' not in st.session_state: st.session_state.toast_msgs = []
     if st.session_state.toast_msgs:
         for msg in st.session_state.toast_msgs:
-            st.toast(msg, icon="🔥" if "Combo" in msg else "🎯")
+            msg_str = str(msg)
+            st.toast(msg_str, icon="🔥" if "Combo" in msg_str else "🎯")
         st.session_state.toast_msgs = []
 
     if 'hand' not in st.session_state: st.session_state.hand = None
@@ -217,92 +207,26 @@ def show():
     m_icon = mastery.get("icon", "")
     m_name = mastery.get("name", "")
     m_pct = mastery.get("prog_pct", 0)
-    m_total = mastery.get("total", 0)
-    m_next = mastery.get("next", 100)
-    m_rank = mastery.get("rank", 0)
+
+    combo_cls = ""
+    if c >= 1000: combo_cls = "combo-glow-1000"
+    elif c >= 500: combo_cls = "combo-glow-500"
+    elif c >= 200: combo_cls = "combo-glow-200"
+    elif c >= 100: combo_cls = "combo-glow-100"
+    elif c >= 50: combo_cls = "combo-glow-50"
+    elif c >= 25: combo_cls = "combo-glow-25"
+    elif c >= 10: combo_cls = "combo-glow-10"
+    elif c >= 5: combo_cls = "combo-glow-5"
+
+    shield_display = f'<span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span>'
+    combo_badge = f'<div style="flex:1; display:flex; justify-content:center; align-items:center;"><div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center;"><span style="font-size:14px; font-weight:900; color:#fff;">🔥 {c}</span>{shield_display}</div></div>'
+
+    header_html = f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;"><div style="height: 4px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data["xp"]} / {next_xp} XP</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Winrate: {wr}% | Hands: {sh}</div></div></div></div>'
     
-    if m_rank >= 5: hands_left_text = "MAX RANK"
-    else: hands_left_text = f"Remaining: {max(0, m_next - m_total)} hands"
-
-    if m_rank <= 1:
-        table_bg = "radial-gradient(ellipse at center, #4b6b50 0%, #2a3c2d 100%)"
-        table_border = "#3b3b3b"
-        hero_bg = "#495057"
-        hero_border = "#6c757d"
-        hero_shadow = "none"
-    elif m_rank <= 4:
-        table_bg = "radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%)"
-        table_border = "#4a1c1c"
-        hero_bg = "#212529"
-        hero_border = "#adb5bd"
-        hero_shadow = "0 0 10px #adb5bd"
-    else:
-        table_bg = "radial-gradient(ellipse at center, #2b1b3d 0%, #11081a 100%)"
-        table_border = "#1a1a1a"
-        hero_bg = "#111"
-        hero_border = "#ffc107"
-        hero_shadow = "0 0 25px #ffc107, inset 0 0 15px #ffc107"
-
-    tiers = [(0, 1.0), (10, 1.5), (25, 2.0), (50, 3.0), (100, 4.0), (250, 5.0), (500, 10.0)]
-    curr_mult = 1.0; next_mult = 1.5; prev_req = 0; next_req = 10
-    for i in range(len(tiers)):
-        if c >= tiers[i][0]:
-            curr_mult = tiers[i][1]
-            prev_req = tiers[i][0]
-            if i + 1 < len(tiers):
-                next_req = tiers[i+1][0]
-                next_mult = tiers[i+1][1]
-            else:
-                next_req = c 
-                next_mult = "MAX"
-                
-    if next_mult == "MAX":
-        rage_pct = 100
-        lbl_left = f"x{curr_mult}"; lbl_right = "MAX"
-    else:
-        rage_pct = int((c - prev_req) / (next_req - prev_req) * 100)
-        lbl_left = f"x{curr_mult}"; lbl_right = f"x{next_mult}"
-
-    is_pulsing = "rage-pulse" if rage_pct >= 95 and next_mult != "MAX" else ""
-    is_flashing = "rage-flash" if st.session_state.pop("just_leveled_up", False) else ""
-    
-    if curr_mult == 1.0: grad = "linear-gradient(90deg, #17a2b8, #0dcaf0)"
-    elif curr_mult == 1.5: grad = "linear-gradient(90deg, #0dcaf0, #28a745)"
-    elif curr_mult == 2.0: grad = "linear-gradient(90deg, #28a745, #ffc107)"
-    elif curr_mult == 3.0: grad = "linear-gradient(90deg, #ffc107, #fd7e14)"
-    elif curr_mult == 4.0: grad = "linear-gradient(90deg, #fd7e14, #dc3545)"
-    elif curr_mult == 5.0: grad = "linear-gradient(90deg, #dc3545, #6f42c1)"
-    else: grad = "linear-gradient(90deg, #6f42c1, #ff00ff)"
-
-    header_html = f'<div style="background:#111; border-radius:12px; margin-bottom:10px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;"><div style="height: 4px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="font-size:11px; color:#aaa; margin-top:2px;">${stats_data["xp"]} / ${next_xp}</div></div><div style="flex:1; text-align:center;"><span style="font-size:20px; font-weight:900; color:#fff;">🔥 {c}</span><span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"" if st.session_state.shields > 0 else "none"}">🛡️x{st.session_state.shields}</span></div><div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Winrate: {wr}% | Hands: {sh}</div></div></div></div>'
-    
-    rage_bar_html = f'''
-    <div class="rage-bar-container {is_flashing}">
-        <div class="rage-bar-fill {is_pulsing}" style="width: {rage_pct}%; background: {grad};"></div>
-        <div class="rage-labels">
-            <span>{lbl_left}</span>
-            <span>{lbl_right}</span>
-        </div>
-    </div>
-    '''
-
-    anim_html = ""
-    anim_reward = st.session_state.pop("anim_reward", None)
-    if anim_reward is not None:
-        if anim_reward > 0: a_color = "#00ff00"; a_text = f"+${anim_reward}"
-        elif anim_reward < 0: a_color = "#ff0000"; a_text = f"-${abs(anim_reward)}"
-        else: a_color = "#888"; a_text = "$0"
-        anim_html = f'<div class="floating-reward" style="color: {a_color}">{a_text}</div>'
-        
-    shatter_html = ""
-    if st.session_state.pop("shield_break_anim", False):
-        shatter_html = '<div class="glass-shatter"></div>'
-
     col_center, col_right = st.columns([2, 1])
     
     with col_center:
         st.markdown(header_html, unsafe_allow_html=True)
-        st.markdown(rage_bar_html, unsafe_allow_html=True)
         
         order = ["EP", "MP", "CO", "BTN", "SB", "BB"]
         try: hero_idx = order.index(hero_pos)
@@ -314,11 +238,11 @@ def show():
                     3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 15%; right: 0%;", 5: "bottom: 15%; right: 0%;"}.get(idx, "")
 
         def get_chip_style(idx):
-            return {0: "bottom: 18px; left: 50%; transform: translateX(-50%);", 1: "bottom: 22%; left: 22%;", 2: "top: 22%; left: 22%;",
+            return {0: "bottom: 25%; left: 50%; transform: translateX(-50%);", 1: "bottom: 22%; left: 22%;", 2: "top: 22%; left: 22%;",
                     3: "top: 25%; left: 50%; transform: translateX(-50%);", 4: "top: 22%; right: 22%;", 5: "bottom: 22%; right: 22%;"}.get(idx, "")
 
         def get_btn_style(idx):
-            return {0: "bottom: -15px; left: 28%; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
+            return {0: "bottom: -15px; left: 50%; margin-left: -90px; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
                     3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
 
         opp_html = ""; chips_html = ""
@@ -360,7 +284,9 @@ def show():
             hero_bs = get_btn_style(0)
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
-        html = f'<div class="game-area" style="background: {table_bg}; border-color: {table_border};">{shatter_html}<div class="crest-left">{m_svg}</div><div class="crest-right">{m_svg}</div><div class="mastery-glow"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div class="hands-left">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-panel" style="background: {hero_bg}; border-color: {hero_border}; box-shadow: {hero_shadow};">{anim_html}<div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{rng}</div></div></div>'
+        shatter_html = '<div class="glass-shatter"></div>' if st.session_state.pop("shield_break_anim", False) else ""
+
+        html = f'<div class="game-area {combo_cls}">{shatter_html}<div class="crest-left">{m_svg}</div><div class="crest-right">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-panel"><div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{rng}</div></div></div>'
         
         st.markdown(html, unsafe_allow_html=True)
         
@@ -371,15 +297,6 @@ def show():
         def handle_action(action):
             corr = (correct_act == action)
             st.session_state.session_hands += 1
-            
-            c_old = st.session_state.combo
-            old_mult = 1.0
-            if c_old >= 500: old_mult = 10.0
-            elif c_old >= 250: old_mult = 5.0
-            elif c_old >= 100: old_mult = 4.0
-            elif c_old >= 50: old_mult = 3.0
-            elif c_old >= 25: old_mult = 2.0
-            elif c_old >= 10: old_mult = 1.5
             
             k = f"{src}_{sc}_{sp}".replace(" ","_")
             utils.update_srs_auto(k, st.session_state.hand, corr)
@@ -396,9 +313,19 @@ def show():
                 st.session_state.combo += 1
                 if st.session_state.combo in [100, 250, 500, 1000]:
                     st.session_state.shields += 1
-                    
+                    st.session_state.toast_msgs.append(f"Combo x{st.session_state.combo}! +1 🛡️ Shield!")
+                
                 st.session_state.last_error = False
                 st.session_state.hand = None
+                
+                if st.session_state.combo in [10, 25, 50, 100, 250, 500, 1000]:
+                    msgs = {
+                        10: "Combo x10! Warming up.", 25: "Combo x25! Reading them like a book.",
+                        50: "Combo x50! Sniper.", 100: "Combo x100! Machine.",
+                        250: "Combo x250! Are you even human?", 500: "Combo x500! God Mode activated.",
+                        1000: "Combo x1000! Solvers fear you."
+                    }
+                    st.session_state.toast_msgs.append(msgs.get(st.session_state.combo, "Unstoppable!"))
             else:
                 if st.session_state.shields > 0:
                     st.session_state.shields -= 1
@@ -411,21 +338,20 @@ def show():
                     st.session_state.last_error = True
                     st.session_state.msg = f"❌ WRONG! You chose {action}, but GTO is {correct_act}"
                 
-            c_new = st.session_state.combo
-            new_mult = 1.0
-            if c_new >= 500: new_mult = 10.0
-            elif c_new >= 250: new_mult = 5.0
-            elif c_new >= 100: new_mult = 4.0
-            elif c_new >= 50: new_mult = 3.0
-            elif c_new >= 25: new_mult = 2.0
-            elif c_new >= 10: new_mult = 1.5
-
-            if new_mult > old_mult:
-                st.session_state.just_leveled_up = True
-                
             try:
-                alerts, reward_val = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key, shield_used=shield_used)
-                st.session_state.anim_reward = reward_val
+                import inspect
+                sig = inspect.signature(utils.process_gamification)
+                if 'shield_used' in sig.parameters:
+                    res = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key, shield_used=shield_used)
+                else:
+                    res = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key)
+                
+                if isinstance(res, tuple):
+                    alerts = res[0]
+                    st.session_state.anim_reward = res[1]
+                else:
+                    alerts = res
+                    
                 if alerts: st.session_state.toast_msgs.extend(alerts)
             except Exception: pass
             
