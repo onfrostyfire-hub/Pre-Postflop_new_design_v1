@@ -5,7 +5,7 @@ import poker_utils as utils
 
 def show():
     st.markdown("""
-        <style>
+    <style>
         .stApp { background-color: #212529; color: #e9ecef; }
         .block-container { padding-top: 4.5rem !important; }
         .game-area { position: relative; width: 100%; max-width: 700px; height: 400px; margin: 0 auto 50px auto; background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%); border: 15px solid #4a1c1c; border-radius: 200px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: box-shadow 0.3s, border-color 0.3s; }
@@ -53,7 +53,7 @@ def show():
         .dealer-button { width: 24px; height: 24px; background: #ffc107; border-radius: 50%; color: #000; font-weight: bold; font-size: 11px; display: flex; justify-content: center; align-items: center; z-index: 15; position: absolute; border: 1px solid #bfa006; }
         .bet-txt { font-size: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 4px; border-radius: 4px; margin-top: -5px; z-index: 20; }
         
-        .hero-panel { position: absolute; bottom: -45px; left: 50%; transform: translateX(-50%); background: #212529; border: 2px solid #ffc107; border-radius: 12px; padding: 6px 18px; display: flex; gap: 8px; z-index: 30; align-items: center; }
+        .hero-panel { position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); background: #212529; border: 2px solid #ffc107; border-radius: 12px; padding: 6px 18px; display: flex; gap: 8px; z-index: 30; align-items: center; }
         .card { width: 50px; height: 70px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
         .tl { position: absolute; top: 2px; left: 4px; font-weight: bold; font-size: 16px; line-height: 1.1; }
         .cent { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; }
@@ -125,8 +125,7 @@ def show():
     if 'toast_msgs' not in st.session_state: st.session_state.toast_msgs = []
     if st.session_state.toast_msgs:
         for msg in st.session_state.toast_msgs:
-            msg_str = str(msg)
-            st.toast(msg_str, icon="🔥" if "Combo" in msg_str else "🎯")
+            st.toast(str(msg), icon="🔥" if "Combo" in str(msg) else "🎯")
         st.session_state.toast_msgs = []
 
     if 'hand' not in st.session_state: st.session_state.hand = None
@@ -190,24 +189,15 @@ def show():
     stats_data = utils.load_user_stats()
     rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
     c = st.session_state.combo
-    
+    progress_pct = int((stats_data["xp"] / next_xp) * 100) if next_xp != "MAX" else 100
+
     sh = st.session_state.session_hands
     scorr = st.session_state.session_correct
     wr = int((scorr / sh * 100)) if sh > 0 else 0
     wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
 
-    try:
-        mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(st.session_state.current_spot_key, {}))
-    except Exception as e:
-        mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "#6c757d", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100, "svg": ""}
-        
-    m_color = mastery['color']
-    m_svg = mastery.get("svg", "")
-    m_rust = mastery.get("is_rusty", False)
-    m_icon = mastery.get("icon", "")
-    m_name = mastery.get("name", "")
-    m_pct = mastery.get("prog_pct", 0)
-
+    glow_color = '#00ff00' if c >= 1000 else '#ff00ff' if c >= 500 else '#00e5ff' if c >= 200 else '#6f42c1' if c >= 100 else '#dc3545' if c >= 50 else '#fd7e14' if c >= 25 else '#ffc107' if c >= 10 else '#0dcaf0' if c >= 5 else '#888'
+    
     combo_cls = ""
     if c >= 1000: combo_cls = "combo-glow-1000"
     elif c >= 500: combo_cls = "combo-glow-500"
@@ -218,11 +208,16 @@ def show():
     elif c >= 10: combo_cls = "combo-glow-10"
     elif c >= 5: combo_cls = "combo-glow-5"
 
-    shield_display = f'<span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span>'
-    combo_badge = f'<div style="flex:1; display:flex; justify-content:center; align-items:center;"><div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center;"><span style="font-size:14px; font-weight:900; color:#fff;">🔥 {c}</span>{shield_display}</div></div>'
+    try:
+        mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(st.session_state.current_spot_key, {}))
+    except Exception:
+        mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "#6c757d", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100, "svg": ""}
 
-    header_html = f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;"><div style="height: 4px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data["xp"]} / {next_xp} XP</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Winrate: {wr}% | Hands: {sh}</div></div></div></div>'
-    
+    shatter_html = '<div class="glass-shatter"></div>' if st.session_state.pop("shield_break_anim", False) else ""
+    shield_display = f'<span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span>'
+
+    header_html = f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;"><div style="height: 4px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">{stats_data["xp"]} / {next_xp} XP</div></div><div style="flex:1; text-align:center;"><span style="font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c>=5 else 0}px {glow_color};">🔥 {c}</span>{shield_display}</div><div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Winrate: {wr}% | Hands: {sh}</div></div></div></div>'
+
     col_center, col_right = st.columns([2, 1])
     
     with col_center:
@@ -238,11 +233,11 @@ def show():
                     3: "top: -20px; left: 50%; transform: translateX(-50%);", 4: "top: 15%; right: 0%;", 5: "bottom: 15%; right: 0%;"}.get(idx, "")
 
         def get_chip_style(idx):
-            return {0: "bottom: 25%; left: 50%; transform: translateX(-50%);", 1: "bottom: 22%; left: 22%;", 2: "top: 22%; left: 22%;",
+            return {0: "bottom: 10%; left: 50%; transform: translateX(-50%);", 1: "bottom: 22%; left: 22%;", 2: "top: 22%; left: 22%;",
                     3: "top: 25%; left: 50%; transform: translateX(-50%);", 4: "top: 22%; right: 22%;", 5: "bottom: 22%; right: 22%;"}.get(idx, "")
 
         def get_btn_style(idx):
-            return {0: "bottom: -15px; left: 50%; margin-left: -90px; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
+            return {0: "bottom: -5px; left: 50%; margin-left: -95px; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
                     3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
 
         opp_html = ""; chips_html = ""
@@ -284,9 +279,7 @@ def show():
             hero_bs = get_btn_style(0)
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
-        shatter_html = '<div class="glass-shatter"></div>' if st.session_state.pop("shield_break_anim", False) else ""
-
-        html = f'<div class="game-area {combo_cls}">{shatter_html}<div class="crest-left">{m_svg}</div><div class="crest-right">{m_svg}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {m_color};"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}" style="color: {m_color}; border-color: {m_color};">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div></div>{opp_html}{chips_html}<div class="hero-panel"><div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{rng}</div></div></div>'
+        html = f'<div class="game-area {combo_cls}">{shatter_html}<div class="crest-left">{mastery.get("svg","")}</div><div class="crest-right">{mastery.get("svg","")}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery.get("color","#888")};"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{mastery.get("is_rusty",False)}" style="color: {mastery.get("color")}; border-color: {mastery.get("color")};">{mastery.get("icon")} {mastery.get("name")}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {mastery.get("prog_pct",0)}%; background: {mastery.get("color")};"></div></div></div>{opp_html}{chips_html}<div class="hero-panel"><div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{rng}</div></div></div>'
         
         st.markdown(html, unsafe_allow_html=True)
         
@@ -307,23 +300,22 @@ def show():
                 "CorrectAction": correct_act, "UserAction": action
             })
             
-            shield_used = False
             if corr:
                 st.session_state.session_correct += 1
                 st.session_state.combo += 1
+                
                 if st.session_state.combo in [100, 250, 500, 1000]:
                     st.session_state.shields += 1
-                    st.session_state.toast_msgs.append(f"Combo x{st.session_state.combo}! +1 🛡️ Shield!")
-                
+                    
                 st.session_state.last_error = False
                 st.session_state.hand = None
                 
                 if st.session_state.combo in [10, 25, 50, 100, 250, 500, 1000]:
                     msgs = {
                         10: "Combo x10! Warming up.", 25: "Combo x25! Reading them like a book.",
-                        50: "Combo x50! Sniper.", 100: "Combo x100! Machine.",
-                        250: "Combo x250! Are you even human?", 500: "Combo x500! God Mode activated.",
-                        1000: "Combo x1000! Solvers fear you."
+                        50: "Combo x50! Sniper.", 100: "Combo x100! +1 🛡️ Shield!",
+                        250: "Combo x250! +1 🛡️ Shield!", 500: "Combo x500! +1 🛡️ Shield!",
+                        1000: "Combo x1000! +1 🛡️ Shield!"
                     }
                     st.session_state.toast_msgs.append(msgs.get(st.session_state.combo, "Unstoppable!"))
             else:
@@ -331,7 +323,6 @@ def show():
                     st.session_state.shields -= 1
                     st.session_state.shield_break_anim = True
                     st.session_state.last_error = True
-                    shield_used = True
                     st.session_state.msg = f"🛡️ ЩИТ СЛОМАН! Защита от мисклика. GTO: {correct_act}"
                 else:
                     st.session_state.combo = 0
@@ -339,19 +330,7 @@ def show():
                     st.session_state.msg = f"❌ WRONG! You chose {action}, but GTO is {correct_act}"
                 
             try:
-                import inspect
-                sig = inspect.signature(utils.process_gamification)
-                if 'shield_used' in sig.parameters:
-                    res = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key, shield_used=shield_used)
-                else:
-                    res = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key)
-                
-                if isinstance(res, tuple):
-                    alerts = res[0]
-                    st.session_state.anim_reward = res[1]
-                else:
-                    alerts = res
-                    
+                alerts = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key)
                 if alerts: st.session_state.toast_msgs.extend(alerts)
             except Exception: pass
             
