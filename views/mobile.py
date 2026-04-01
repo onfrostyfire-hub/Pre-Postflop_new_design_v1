@@ -298,7 +298,7 @@ def show():
     elif curr_mult == 5.0: grad = "linear-gradient(90deg, #dc3545, #6f42c1)"
     else: grad = "linear-gradient(90deg, #6f42c1, #ff00ff)"
 
-    header_html = f'<div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 3px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:6px 12px 0 12px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="font-size:10px; color:#aaa; margin-top:2px; font-weight:bold;">${stats_data["xp"]} / ${next_xp}</div></div><div style="flex:1; text-align:center;"><span style="font-size:18px; font-weight:900; color:#fff;">🔥 {c}</span><span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"" if st.session_state.shields > 0 else "none"}">🛡️x{st.session_state.shields}</span></div><div style="flex:1; text-align:right;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Winrate</div><div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}%</div></div></div></div>'
+    header_html = f'<div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 3px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:6px 12px 0 12px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="font-size:10px; color:#aaa; margin-top:2px; font-weight:bold;">${stats_data["xp"]} / ${next_xp}</div></div><div style="flex:1; text-align:center;"><span style="font-size:18px; font-weight:900; color:#fff;">🔥 {c}</span><span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"}">🛡️x{st.session_state.shields}</span></div><div style="flex:1; text-align:right;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Winrate | Hands</div><div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}% <span style="color:#aaa;">|</span> <span style="color:#fff;">{sh}</span></div></div></div></div>'
     
     rage_bar_html = f'''
     <div class="rage-bar-container {is_flashing}">
@@ -345,7 +345,7 @@ def show():
         }.get(idx, "")
 
     def get_btn_style(idx):
-        return {0: "bottom: -10px; left: 50%; margin-left: -75px; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
+        return {0: "bottom: -10px; left: 50%; margin-left: -60px; z-index: 35;", 1: "bottom: 25%; left: 16%;", 2: "top: 10%; left: 16%;",
                 3: "top: 10%; left: 60%;", 4: "top: 10%; right: 16%;", 5: "bottom: 25%; right: 16%;"}.get(idx, "")
 
     opp_html = ""; chips_html = ""
