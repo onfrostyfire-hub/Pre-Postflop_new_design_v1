@@ -56,10 +56,15 @@ def show():
         .bet-txt { font-size: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; background: rgba(0,0,0,0.6); padding: 1px 4px; border-radius: 4px; margin-top: -5px; z-index: 20; }
         
         .hero-panel { position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); background: #212529; border: 2px solid #ffc107; border-radius: 12px; padding: 6px 18px; display: flex; gap: 8px; z-index: 30; align-items: center; transition: all 0.5s ease; }
-        .card { width: 50px; height: 70px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .card { width: 50px; height: 70px; background: white; border-radius: 5px; position: relative; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-family: Arial, sans-serif !important; }
         .tl { position: absolute; top: 2px; left: 4px; font-weight: bold; font-size: 16px; line-height: 1.1; }
-        .cent { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; }
-        .suit-red { color: #d32f2f; } .suit-blue { color: #0056b3; } .suit-black { color: #212529; } .suit-green { color: #198754; }
+        .cent { position: absolute; top: 55%; left: 50%; transform: translate(-50%,-50%); font-size: 26px; line-height: 1; }
+        
+        .suit-red { color: #d32f2f !important; font-family: Arial, sans-serif !important; } 
+        .suit-blue { color: #0056b3 !important; font-family: Arial, sans-serif !important; } 
+        .suit-black { color: #111 !important; font-family: Arial, sans-serif !important; } 
+        .suit-green { color: #198754 !important; font-family: Arial, sans-serif !important; }
+        
         .rng-desktop { position: absolute; right: -50px; top: 15px; width: 40px; height: 40px; background: #6f42c1; border: 2px solid #fff; border-radius: 50%; color: white; font-weight: bold; font-size: 16px; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.6); }
         .rng-hint-box { text-align: center; color: #888; font-size: 13px; font-family: monospace; margin-top: 60px; margin-bottom: 10px; background: #2b2b2b; padding: 5px; border-radius: 6px; border: 1px solid #444; width: 100%; }
         
@@ -149,8 +154,11 @@ def show():
         st.warning("⚠️ No spots selected. Check menu on the left.")
         st.stop()
 
-    if 'combo' not in st.session_state: st.session_state.combo = 0
-    if 'shields' not in st.session_state: st.session_state.shields = 0
+    # ИНИЦИАЛИЗАЦИЯ И СИНХРОНИЗАЦИЯ КОМБО С БАЗОЙ
+    stats_data_init = utils.load_user_stats()
+    if 'combo' not in st.session_state: st.session_state.combo = stats_data_init.get("combo", 0)
+    if 'shields' not in st.session_state: st.session_state.shields = stats_data_init.get("shields", 0)
+
     if 'shield_break_anim' not in st.session_state: st.session_state.shield_break_anim = False
     if 'session_hands' not in st.session_state: st.session_state.session_hands = 0
     if 'session_correct' not in st.session_state: st.session_state.session_correct = 0
@@ -165,9 +173,9 @@ def show():
     if 'hand' not in st.session_state: st.session_state.hand = None
     if 'rng' not in st.session_state: st.session_state.rng = 0
     if 'suits' not in st.session_state: st.session_state.suits = None
-    if 'current_spot_key' not in st.session_state: st.session_state.current_spot_key = None
+    if 'current_spot_key' not in st.session_state: st.session_state.current_spot_key = None 
     if 'last_error' not in st.session_state: st.session_state.last_error = False
-    
+
     if st.session_state.hand is None or st.session_state.current_spot_key is None or st.session_state.current_spot_key not in pool:
         chosen = random.choice(pool)
         st.session_state.current_spot_key = chosen
@@ -178,7 +186,6 @@ def show():
         poss = utils.parse_range_to_list(t_range)
         srs = utils.load_srs_data()
         w = [srs.get(f"{src}_{sc}_{sp}_{h}".replace(" ","_"), 100) for h in poss]
-        
         if sum(w) == 0: w = [100]*len(poss)
             
         st.session_state.hand = random.choices(poss, weights=w, k=1)[0]
@@ -200,7 +207,6 @@ def show():
     is_3bet_pot = setup.get("is_3bet_pot", False)
 
     is_defense = bool(villain_pos is not None or "call" in r_data or "Call" in r_data)
-
     rng = st.session_state.rng
     correct_act = "FOLD"
     r_call = r_data.get("call", r_data.get("Call", ""))
@@ -217,13 +223,8 @@ def show():
         if rng < w: correct_act = "RAISE"
 
     h_val = st.session_state.hand; s1, s2 = st.session_state.suits
-    
-    mapping = {'h': '♥', 'd': '♦', 'c': '♣', 's': '♠'}
-    s1_icon = mapping.get(s1.lower(), s1)
-    s2_icon = mapping.get(s2.lower(), s2)
-    
-    c1 = "suit-red" if '♥' in s1_icon else "suit-blue" if '♦' in s1_icon else "suit-green" if '♣' in s1_icon else "suit-black"
-    c2 = "suit-red" if '♥' in s2_icon else "suit-blue" if '♦' in s2_icon else "suit-green" if '♣' in s2_icon else "suit-black"
+    c1 = "suit-red" if s1 == '♥' else "suit-blue" if s1 == '♦' else "suit-green" if s1 == '♣' else "suit-black"
+    c2 = "suit-red" if s2 == '♥' else "suit-blue" if s2 == '♦' else "suit-green" if s2 == '♣' else "suit-black"
 
     stats_data = utils.load_user_stats()
     rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
@@ -234,7 +235,8 @@ def show():
     scorr = st.session_state.session_correct
     wr = int((scorr / sh * 100)) if sh > 0 else 0
     wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
-    
+
+    # ОПРЕДЕЛЯЕМ ЦВЕТ КОМБО ДО ГЕНЕРАЦИИ HTML
     glow_color = '#00ff00' if c >= 1000 else '#ff00ff' if c >= 500 else '#00e5ff' if c >= 200 else '#6f42c1' if c >= 100 else '#dc3545' if c >= 50 else '#fd7e14' if c >= 25 else '#ffc107' if c >= 10 else '#0dcaf0' if c >= 5 else '#888'
 
     try:
@@ -325,7 +327,7 @@ def show():
     shield_display = f'<span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span>'
     combo_badge = f'<div style="flex:1; display:flex; justify-content:center; align-items:center;"><div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center;"><span style="font-size:22px; font-weight:900; color:{glow_color}; text-shadow: 0 0 {10 if c>=5 else 0}px {glow_color};">🔥 {c}</span>{shield_display}</div></div>'
 
-    header_html = f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;"><div style="height: 4px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">${stats_data["xp"]} / ${next_xp}</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Winrate: {wr}% | Hands: {sh}</div></div></div></div>'
+    header_html = f'<div style="background:#111; border-radius:12px; margin-bottom:20px; border:1px solid #333; max-width:700px; margin-left:auto; margin-right:auto; overflow:hidden;"><div style="height: 4px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;"><div style="flex:1;"><div style="font-size:15px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:6px; border-radius:3px; margin-top:4px; width:80%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:3px;"></div></div><div style="font-size:11px; color:#aaa; margin-top:2px;">${stats_data["xp"]} / ${next_xp}</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:16px; font-weight:bold; color:#17a2b8;">📅 {stats_data.get("streak", 1)} Days</div><div style="font-size:11px; color:#aaa;">Winrate / Hands: {wr}% / {sh}</div></div></div></div>'
     
     rage_bar_html = f'''
     <div class="rage-bar-container {is_flashing}">
@@ -409,7 +411,7 @@ def show():
             hero_bs = get_btn_style(0)
             chips_html += f'<div class="dealer-button" style="{hero_bs}">D</div>'
 
-        html = f'<div class="game-area {combo_cls}">{shatter_html}<div class="crest-left">{mastery.get("svg","")}</div><div class="crest-right">{mastery.get("svg","")}</div><div class="mastery-glow" style="box-shadow: inset 0 0 35px {mastery.get("color","#888")};"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{mastery.get("is_rusty",False)}" style="color: {mastery.get("color")}; border-color: {mastery.get("color")};">{mastery.get("icon")} {mastery.get("name")}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {mastery.get("prog_pct",0)}%; background: {mastery.get("color")};"></div></div></div>{opp_html}{chips_html}<div class="hero-panel"><div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1_icon}</div><div class="cent {c1}">{s1_icon}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2_icon}</div><div class="cent {c2}">{s2_icon}</div></div><div class="rng-desktop">{rng}</div></div></div>'
+        html = f'<div class="game-area {combo_cls}" style="background: {table_bg}; border-color: {table_border};">{shatter_html}<div class="crest-left">{m_svg}</div><div class="crest-right">{m_svg}</div><div class="mastery-glow"></div><div class="table-info"><div class="info-src">{sc}</div><div class="info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%; background: {m_color};"></div></div><div class="hands-left">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-panel" style="background: {hero_bg}; border-color: {hero_border}; box-shadow: {hero_shadow};">{anim_html}<div style="display:flex;flex-direction:column;align-items:center;"><span style="color:#ffc107;font-weight:bold;font-size:12px;">HERO</span></div><div class="card"><div class="tl {c1}">{h_val[0]}<br>{s1}</div><div class="cent {c1}">{s1}</div></div><div class="card"><div class="tl {c2}">{h_val[1]}<br>{s2}</div><div class="cent {c2}">{s2}</div></div><div class="rng-desktop">{rng}</div></div></div>'
         
         st.markdown(html, unsafe_allow_html=True)
         
@@ -420,6 +422,15 @@ def show():
         def handle_action(action):
             corr = (correct_act == action)
             st.session_state.session_hands += 1
+            
+            c_old = st.session_state.combo
+            old_mult = 1.0
+            if c_old >= 500: old_mult = 10.0
+            elif c_old >= 250: old_mult = 5.0
+            elif c_old >= 100: old_mult = 4.0
+            elif c_old >= 50: old_mult = 3.0
+            elif c_old >= 25: old_mult = 2.0
+            elif c_old >= 10: old_mult = 1.5
             
             k = f"{src}_{sc}_{sp}".replace(" ","_")
             utils.update_srs_auto(k, st.session_state.hand, corr)
@@ -490,6 +501,15 @@ def show():
                 if alerts: st.session_state.toast_msgs.extend(alerts)
             except Exception: pass
             
+            # СОХРАНЕНИЕ КОМБО И ЩИТОВ В ОБЛАКО
+            try:
+                curr_settings = utils.load_user_settings()
+                if "stats" not in curr_settings: curr_settings["stats"] = {}
+                curr_settings["stats"]["combo"] = st.session_state.combo
+                curr_settings["stats"]["shields"] = st.session_state.shields
+                utils.save_user_settings(curr_settings)
+            except Exception: pass
+            
             st.rerun()
 
         if st.session_state.last_error:
@@ -511,7 +531,7 @@ def show():
         else:
             if is_defense:
                 st.markdown("""<style>
-                    div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #495057, #343a40) !important; color: #adb5bd !important; box-shadow: 0 4px 0 #1d2124, 0 6px 10px rgba(0,0,0,0.3) !important; }
+                    div[data-testid="column"]:nth-of-type(1) button { background: linear-gradient(180deg, #6c757d, #495057) !important; box-shadow: 0 4px 0 #1d2124, 0 6px 10px rgba(0,0,0,0.3) !important; }
                     div[data-testid="column"]:nth-of-type(2) button { background: linear-gradient(180deg, #20c997, #198754) !important; color: #fff !important; box-shadow: 0 4px 0 #0f5132, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
                     div[data-testid="column"]:nth-of-type(3) button { background: linear-gradient(180deg, #e83e8c, #d63384) !important; color: #fff !important; box-shadow: 0 4px 0 #a02561, 0 6px 10px rgba(0,0,0,0.3) !important; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
                 </style>""", unsafe_allow_html=True)
