@@ -29,8 +29,8 @@
         "training": "JJ,TT,99,88,77,66,AQ,AJs,ATs,A9s,A5s,A4s,KQs,KJs,KTs,K9s,QJs,QTs,Q9s,JTs,J9s,T9s"
       }
     },
-    "SB def vs 4bet BB": {
-      "setup": { "hero_pos": "SB", "villain_pos": "BB", "btn_pos": "BTN", "active_players": ["SB", "BB"], "table_bets": {"BB": 22.0, "SB": 9.0}, "hero_bet": 9.0, "is_3bet_pot": true },
+    "BB def vs 4bet SB": {
+      "setup": { "hero_pos": "BB", "villain_pos": "SB", "btn_pos": "BTN", "active_players": ["SB", "BB"], "table_bets": {"BB": 9.0, "SB": 22.0}, "hero_bet": 9.0, "is_3bet_pot": true },
       "stats": {  "5bet": "2.9%", "Call": "6.2%", "Fold": "42%" },
       "ranges": {
         "call": "AA,KK:0.5,JJ:0.5,TT:0.5,99,88:0.5,AKs:0.5,AQs,AQo:0.75,AJs,AJo:0.25,ATs:0.5,A5s:0.5,A4s:0.5,KQs,KJs:0.5,KTs:0.5,QJs:0.5,JTs,T9s,98s,87s,76s,65s,54s",
