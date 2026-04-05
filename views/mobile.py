@@ -65,7 +65,7 @@ def show():
           z-index: 0 !important;
         }
 
-        /* Скрываем старые элементы */
+        /* Скрываем старые элементы, не вписывающиеся в дизайн */
         .glass-shatter,
         .mastery-glow,
         .crest-left-mob,
@@ -136,14 +136,12 @@ def show():
           flex-direction: column !important;
           align-items: center !important;
           gap: 3px !important;
-          width: 50px !important;
-          height: 50px !important;
         }
         .seat::before {
           content: '' !important;
           display: block !important;
-          width: 42px !important;
-          height: 42px !important;
+          width: 36px !important;
+          height: 36px !important;
           border-radius: 50% !important;
           background: radial-gradient(circle at 38% 30%, #203d2e 0%, #0e2018 60%, #080f0e 100%) !important;
           border: 1.5px solid rgba(0,240,110,0.2) !important;
@@ -155,11 +153,11 @@ def show():
         .seat::after {
           content: '' !important;
           position: absolute !important;
-          top: 8px !important;
+          top: 7px !important;
           left: 50% !important;
           transform: translateX(-50%) !important;
-          width: 16px !important;
-          height: 16px !important;
+          width: 14px !important;
+          height: 14px !important;
           border-radius: 50% !important;
           background: rgba(255,255,255,0.07) !important;
           box-shadow: 0 8px 0 rgba(255,255,255,0.05) !important;
@@ -181,36 +179,35 @@ def show():
         }
 
         .seat-folded::before {
-          border-color: rgba(80,80,80,0.3) !important;
-          opacity: 0.6 !important;
+          border-color: rgba(80,80,80,0.15) !important;
+          opacity: 0.3 !important;
           box-shadow: none !important;
           animation: none !important;
         }
-        .seat-folded::after { opacity: 0.6 !important; }
-        .seat-folded .opp-cards-mob { opacity: 0.5 !important; }
+        .seat-folded::after { opacity: 0.3 !important; }
+        .seat-folded .opp-cards-mob { opacity: 0.2 !important; }
 
         .seat-label {
-          font-size: 9px !important;
+          font-size: 8px !important;
           font-weight: 700 !important;
           letter-spacing: 0.14em !important;
           text-transform: uppercase !important;
           color: rgba(160,210,180,0.5) !important;
           text-shadow: 0 0 4px rgba(0,220,100,0.25), 0 1px 3px rgba(0,0,0,0.98) !important;
-          margin-top: -2px !important;
         }
 
         /* КАРТЫ ОППОНЕНТОВ */
         .opp-cards-mob {
           position: absolute !important;
-          top: -16px !important;
+          top: -18px !important;
           left: 50% !important;
           transform: translateX(-50%) !important;
           display: flex !important;
           align-items: flex-end !important;
         }
         .opp-card-mob {
-          width: 15px !important;
-          height: 22px !important;
+          width: 14px !important;
+          height: 20px !important;
           border-radius: 3px !important;
           position: relative !important;
           background:
@@ -239,8 +236,8 @@ def show():
         .dealer-mob {
           position: absolute !important;
           z-index: 30 !important;
-          width: 18px !important;
-          height: 18px !important;
+          width: 20px !important;
+          height: 20px !important;
           border-radius: 50% !important;
           display: flex !important;
           align-items: center !important;
@@ -266,33 +263,34 @@ def show():
           gap: 3px !important;
         }
         .chip-mob, .chip-3bet {
-          width: 16px !important;
-          height: 16px !important;
+          width: 22px !important;
+          height: 22px !important;
           border-radius: 50% !important;
           position: relative !important;
           background:
-            repeating-conic-gradient(rgba(255,255,255,0.15) 0deg 18deg, transparent 18deg 36deg),
-            radial-gradient(circle at 36% 30%, #1e3a8a, #0c1844) !important;
-          border: 2px solid rgba(255,255,255,0.2) !important;
+            repeating-conic-gradient(rgba(255,255,255,0.13) 0deg 18deg, transparent 18deg 36deg),
+            radial-gradient(circle at 36% 30%, #d43030, #7a0a0a) !important;
+          border: 2.5px solid rgba(255,255,255,0.22) !important;
           box-shadow:
-            0 0 0 1px rgba(0,0,0,0.7),
-            0 2px 5px rgba(0,0,0,0.8),
-            inset 0 1px 2px rgba(255,255,255,0.2) !important;
+            0 0 0 1.5px rgba(0,0,0,0.7),
+            0 3px 10px rgba(0,0,0,0.8),
+            0 0 8px rgba(212,48,48,0.3),
+            inset 0 1px 3px rgba(255,255,255,0.22) !important;
         }
-        .chip-3bet { background: radial-gradient(circle at 36% 30%, #3b82f6, #172554) !important; }
+        .chip-3bet { background: radial-gradient(circle at 36% 30%, #ff5722, #9e3211) !important; }
         
         .chip-mob::before, .chip-3bet::before {
           content: '' !important;
           position: absolute !important;
-          inset: 4px !important;
+          inset: 5px !important;
           border-radius: 50% !important;
           border: 1px solid rgba(255,255,255,0.12) !important;
         }
         .chip-mob::after, .chip-3bet::after {
           content: '' !important;
           position: absolute !important;
-          top: 2px !important; left: 2px !important;
-          width: 6px !important; height: 4px !important;
+          top: 3px !important; left: 3px !important;
+          width: 8px !important; height: 5px !important;
           border-radius: 50% !important;
           background: rgba(255,255,255,0.22) !important;
           filter: blur(1px) !important;
@@ -306,7 +304,7 @@ def show():
           white-space: nowrap !important;
         }
 
-        /* КАРТЫ ГЕРОЯ */
+        /* КАРТЫ ГЕРОЯ (Выглядывают снизу) */
         .hero-mob {
           position: absolute !important;
           bottom: -55px !important;
@@ -337,8 +335,8 @@ def show():
         }
 
         .card-mob {
-          width: 50px !important;
-          height: 70px !important;
+          width: 54px !important;
+          height: 78px !important;
           border-radius: 8px !important;
           position: relative !important;
           background: #f8faff !important;
@@ -352,7 +350,6 @@ def show():
           flex-direction: column !important;
           align-items: flex-start !important;
           overflow: hidden !important;
-          font-family: Arial, sans-serif !important;
         }
         .card-mob::after {
           content: '' !important;
@@ -364,22 +361,20 @@ def show():
           border-radius: 8px 0 0 0 !important;
         }
         .tl-mob {
-          position: absolute !important;
-          top: 2px !important; 
-          left: 4px !important;
-          font-weight: bold !important; 
-          font-size: 15px !important; 
+          padding: 5px 0 0 5px !important;
+          font-size: 15px !important;
+          font-weight: 900 !important;
           line-height: 1.1 !important;
+          letter-spacing: -0.04em !important;
           z-index: 2 !important;
+          position: relative !important;
         }
         .c-mob {
           position: absolute !important;
-          top: 55% !important; 
-          left: 50% !important; 
-          transform: translate(-50%, -50%) !important;
-          font-size: 26px !important;
-          opacity: 1 !important;
+          bottom: 6px !important; right: 6px !important;
+          font-size: 24px !important;
           line-height: 1 !important;
+          opacity: 0.11 !important;
         }
         .suit-red   { color: #c00a0a !important; }
         .suit-black { color: #0a0a0a !important; }
@@ -418,7 +413,7 @@ def show():
         .rage-flash { animation: whiteFlash 0.6s ease-out; }
         @keyframes whiteFlash { 0% { box-shadow: 0 0 50px #fff, inset 0 0 50px #fff; background: #fff; border-color: #fff; } 100% { box-shadow: 0 0 0 transparent; } }
 
-        /* ЭФФЕКТЫ GLOW */
+        /* ЭФФЕКТЫ GLOW (добавляем в конец, чтобы перебивали базовую тень) */
         .combo-glow-5 { border-color: #0dcaf0 !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.4), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-10 { border-color: #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.5), 0 4px 15px rgba(0,0,0,0.8) !important; }
         .combo-glow-25 { border-color: #fd7e14 !important; box-shadow: 0 0 20px rgba(253, 126, 20, 0.6), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-slow 2s infinite; }
@@ -429,24 +424,10 @@ def show():
         .combo-glow-1000 { border-color: #00ff00 !important; box-shadow: 0 0 80px rgba(0, 255, 0, 1.0), 0 4px 15px rgba(0,0,0,0.8) !important; animation: pulse-god 0.5s infinite alternate; }
         
         .rng-hint { text-align: center; color: #6c757d; font-size: 11px; font-family: 'Roboto', sans-serif; font-weight: 500; margin-bottom: 8px; letter-spacing: 0.5px; }
-        
-        .glass-shatter { position: absolute; top:0; left:0; right:0; bottom:0; z-index:999; pointer-events: none; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 12px), repeating-linear-gradient(-45deg, transparent, transparent 15px, rgba(255,255,255,0.3) 15px, rgba(255,255,255,0.3) 18px); animation: shatterAnim 0.8s ease-out forwards; }
-        @keyframes shatterAnim { 0% {opacity:1; transform: scale(1);} 100% {opacity:0; transform: scale(1.1);} }
         </style>
     """, unsafe_allow_html=True)
 
-    try:
-        if hasattr(utils, 'load_ranges'):
-            ranges_db = utils.load_ranges()
-        elif hasattr(utils, 'load_preflop_ranges'):
-            ranges_db = utils.load_preflop_ranges()
-        else:
-            st.error("Функция загрузки ренджей не найдена в poker_utils.py")
-            return
-    except Exception as e:
-        st.error(f"Ошибка загрузки базы: {e}")
-        return
-
+    ranges_db = utils.load_ranges()
     if not ranges_db: st.error("Ranges database is empty."); return
 
     scenario_map = {}
@@ -493,17 +474,15 @@ def show():
         st.warning("⚠️ No spots selected.")
         st.stop()
 
-    stats_data_init = utils.load_user_stats()
-    if 'combo' not in st.session_state: st.session_state.combo = stats_data_init.get("combo", 0)
-    if 'shields' not in st.session_state: st.session_state.shields = stats_data_init.get("shields", 0)
-    if 'shield_break_anim' not in st.session_state: st.session_state.shield_break_anim = False
+    if 'combo' not in st.session_state: st.session_state.combo = 0
+    if 'shields' not in st.session_state: st.session_state.shields = 0
     if 'session_hands' not in st.session_state: st.session_state.session_hands = 0
     if 'session_correct' not in st.session_state: st.session_state.session_correct = 0
     
     if 'toast_msgs' not in st.session_state: st.session_state.toast_msgs = []
     if st.session_state.toast_msgs:
         for msg in st.session_state.toast_msgs:
-            st.toast(str(msg), icon="🔥" if "Combo" in str(msg) else "🎯")
+            st.toast(msg, icon="🔥" if "Combo" in msg else "🎯")
         st.session_state.toast_msgs = []
 
     if 'hand' not in st.session_state: st.session_state.hand = None
@@ -563,7 +542,7 @@ def show():
     c2 = "suit-red" if s2 == '♥' else "suit-blue" if s2 == '♦' else "suit-green" if s2 == '♣' else "suit-black"
 
     stats_data = utils.load_user_stats()
-    rank_name, next_xp = utils.get_rank_info(stats_data.get("xp", 0))
+    rank_name, next_xp = utils.get_rank_info(stats_data["xp"])
     c = st.session_state.combo
     
     sh = st.session_state.session_hands
@@ -572,13 +551,8 @@ def show():
     wr_color = '#28a745' if wr >= 90 else '#ffc107' if wr >= 80 else '#dc3545'
 
     try:
-        spot_mastery_dict = stats_data.get("spot_mastery", {})
-        if isinstance(spot_mastery_dict, dict):
-            spot_data_mastery = spot_mastery_dict.get(st.session_state.current_spot_key, {})
-        else:
-            spot_data_mastery = {}
-        mastery = utils.get_spot_mastery_info(spot_data_mastery)
-    except Exception:
+        mastery = utils.get_spot_mastery_info(stats_data.get("spot_mastery", {}).get(st.session_state.current_spot_key, {}))
+    except Exception as e:
         mastery = {"rank": 0, "name": "Sandbox", "icon": "⚪", "color": "#6c757d", "is_rusty": False, "prog_pct": 0, "total": 0, "next": 100, "svg": ""}
         
     m_color = mastery['color']
@@ -596,27 +570,6 @@ def show():
     else:
         h_left = max(0, m_next - m_total)
         hands_left_text = f"Remaining: {h_left} hands"
-
-    if m_rank <= 1:
-        table_bg = "radial-gradient(ellipse at center, #4b6b50 0%, #2a3c2d 100%)"
-        table_border = "#3b3b3b"
-        hero_bg = "#495057"
-        hero_border = "#6c757d"
-        hero_shadow = "none"
-    elif m_rank <= 4:
-        table_bg = "radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 100%)"
-        table_border = "#4a1c1c"
-        hero_bg = "#212529"
-        hero_border = "#adb5bd"
-        hero_shadow = "0 0 10px #adb5bd"
-    else:
-        table_bg = "radial-gradient(ellipse at center, #2b1b3d 0%, #11081a 100%)"
-        table_border = "#1a1a1a"
-        hero_bg = "#111"
-        hero_border = "#ffc107"
-        hero_shadow = "0 0 25px #ffc107, inset 0 0 15px #ffc107"
-
-    st.markdown(f"<style>.mobile-game-area {{ background: {table_bg} !important; border-color: {table_border} !important; }} .hero-mob {{ background: {hero_bg} !important; border: 2px solid {hero_border} !important; box-shadow: {hero_shadow} !important; }}</style>", unsafe_allow_html=True)
 
     combo_cls = ""
     if c >= 1000: combo_cls = "combo-glow-1000"
@@ -659,7 +612,7 @@ def show():
     elif curr_mult == 5.0: grad = "linear-gradient(90deg, #dc3545, #6f42c1)"
     else: grad = "linear-gradient(90deg, #6f42c1, #ff00ff)"
 
-    header_html = f'<div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 3px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:6px 12px 0 12px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="font-size:10px; color:#aaa; margin-top:2px; font-weight:bold;">${stats_data.get("xp", 0)} / ${next_xp}</div></div><div style="flex:1; text-align:center;"><span style="font-size:18px; font-weight:900; color:#fff;">🔥 {c}</span><span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span></div><div style="flex:1; text-align:right;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Winrate | Hands</div><div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}% <span style="color:#aaa;">|</span> <span style="color:#fff;">{sh}</span></div></div></div></div>'
+    header_html = f'<div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 3px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:6px 12px 0 12px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="font-size:10px; color:#aaa; margin-top:2px; font-weight:bold;">${stats_data["xp"]} / ${next_xp}</div></div><div style="flex:1; text-align:center;"><span style="font-size:18px; font-weight:900; color:#fff;">🔥 {c}</span><span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span></div><div style="flex:1; text-align:right;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Winrate | Hands</div><div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}% <span style="color:#aaa;">|</span> <span style="color:#fff;">{sh}</span></div></div></div></div>'
     
     rage_bar_html = f'''
     <div class="rage-bar-container {is_flashing}">
@@ -755,7 +708,7 @@ def show():
         hero_bs = get_btn_style(0)
         chips_html += f'<div class="dealer-mob" style="{hero_bs}">D</div>'
 
-    html = f'<div class="mobile-game-area {combo_cls}">{shatter_html}<div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%;"></div></div><div class="hands-left-mob">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob">{anim_html}<div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
+    html = f'<div class="mobile-game-area {combo_cls}">{shatter_html}<div class="crest-left-mob">{m_svg}</div><div class="crest-right-mob">{m_svg}</div><div class="mastery-glow"></div><div class="mob-info"><div class="mob-info-spot">{sp}</div><div class="mastery-badge rusty-{m_rust}">{m_icon} {m_name}</div><div class="mastery-bar-bg"><div class="mastery-bar-fill" style="width: {m_pct}%;"></div></div><div class="hands-left-mob">{hands_left_text}</div></div>{opp_html}{chips_html}<div class="hero-mob">{anim_html}<div class="card-mob"><div class="tl-mob {c1}">{h_val[0]}<br>{s1}</div><div class="c-mob {c1}">{s1}</div></div><div class="card-mob"><div class="tl-mob {c2}">{h_val[1]}<br>{s2}</div><div class="c-mob {c2}">{s2}</div></div><div class="rng-badge">{rng}</div></div></div>'
     
     st.markdown(html, unsafe_allow_html=True)
 
@@ -821,29 +774,9 @@ def show():
             st.session_state.just_leveled_up = True
 
         try:
-            import inspect
-            sig = inspect.signature(utils.process_gamification)
-            if 'shield_used' in sig.parameters:
-                res = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key, shield_used=shield_used)
-            else:
-                res = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key)
-            
-            if isinstance(res, tuple):
-                alerts = res[0]
-                st.session_state.anim_reward = res[1]
-            else:
-                alerts = res
-                
+            alerts, reward_val = utils.process_gamification(corr, st.session_state.combo, st.session_state.session_hands, st.session_state.current_spot_key, shield_used=shield_used)
+            st.session_state.anim_reward = reward_val
             if alerts: st.session_state.toast_msgs.extend(alerts)
-        except Exception: pass
-        
-        # Сохранение комбо и щитов
-        try:
-            curr_settings = utils.load_user_settings()
-            if "stats" not in curr_settings: curr_settings["stats"] = {}
-            curr_settings["stats"]["combo"] = st.session_state.combo
-            curr_settings["stats"]["shields"] = st.session_state.shields
-            utils.save_user_settings(curr_settings)
         except Exception: pass
         
         st.rerun()
