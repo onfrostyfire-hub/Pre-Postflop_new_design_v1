@@ -71,8 +71,8 @@ def main():
     st.markdown('<div class="compact-tabs"></div>', unsafe_allow_html=True)
     nav_mode = st.radio(
         "Nav", 
-        ["🎮 Preflop", "🃏 Postflop", "🔬 Range Lab", "📊 Stats"], 
-        index=["🎮 Preflop", "🃏 Postflop", "🔬 Range Lab", "📊 Stats"].index(st.session_state.actual_app_mode),
+      ["Preflop", "Postflop", "Ranges", "Stats"], 
+        index=["Preflop", "Postflop", "Ranges", "Stats"].index(st.session_state.actual_app_mode),
         horizontal=True, 
         label_visibility="collapsed"
     )
