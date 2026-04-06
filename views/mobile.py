@@ -10,6 +10,11 @@ def show():
 
         .block-container { padding-top: 1.5rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
         [data-testid="stExpander"] { margin-top: -10px !important; margin-bottom: -5px !important; }
+
+        /* Сжимаем высоту плашки фильтров и размер текста */
+        [data-testid="stExpander"] summary { padding-top: 5px !important; padding-bottom: 5px !important; min-height: 2rem !important; }
+        [data-testid="stExpander"] summary p { font-size: 13px !important; }
+        div[data-testid="stExpanderDetails"] { padding-top: 0 !important; }
         
         div[data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(10px, 1fr)) !important; gap: 8px !important; width: 100% !important; }
         div[data-testid="column"] { width: 100% !important; min-width: 0 !important; max-width: 100% !important; margin-bottom: 0 !important; }
