@@ -9,7 +9,7 @@ def show():
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
         .block-container { padding-top: 1.5rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
-        [data-testid="stExpander"] { margin-top: -5px !important; margin-bottom: 5px !important; }
+        [data-testid="stExpander"] { margin-top: -10px !important; margin-bottom: -5px !important; }
         
         div[data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(10px, 1fr)) !important; gap: 8px !important; width: 100% !important; }
         div[data-testid="column"] { width: 100% !important; min-width: 0 !important; max-width: 100% !important; margin-bottom: 0 !important; }
@@ -150,7 +150,7 @@ def show():
           50%      { box-shadow: 0 0 0 3px rgba(0,0,0,0.65), 0 0 26px rgba(0,240,110,0.7), 0 0 44px rgba(0,240,110,0.25), inset 0 1px 3px rgba(255,255,255,0.09); }
         }
 
-        .seat-folded::before { border-color: rgba(80,80,80,0.15) !important; opacity: 0.7 !important; box-shadow: none !important; animation: none !important; }
+        .seat-folded::before { border-color: rgba(80,80,80,0.15) !important; opacity: 0.6 !important; box-shadow: none !important; animation: none !important; }
         .seat-folded::after { opacity: 0.5 !important; }
         .seat-folded .opp-cards-mob { opacity: 0.5 !important; }
         .seat-label { font-size: 8px !important; font-weight: 700 !important; letter-spacing: 0.14em !important; text-transform: uppercase !important; color: rgba(160,210,180,0.5) !important; text-shadow: 0 0 4px rgba(0,220,100,0.25), 0 1px 3px rgba(0,0,0,0.98) !important; }
@@ -244,14 +244,14 @@ def show():
           z-index: 40 !important;
         }
 
-        .rage-bar-container { width: 100%; max-width: 700px; margin: 0 auto 15px auto; background: rgba(0,0,0,0.6); border: 2px solid #333; border-radius: 20px; padding: 4px; display: flex; align-items: center; position: relative; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); height: 32px; }
+        .rage-bar-container { width: 100%; max-width: 700px; margin: 0 auto 8px auto; background: rgba(0,0,0,0.6); border: 2px solid #333; border-radius: 20px; padding: 3px; display: flex; align-items: center; position: relative; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); height: 24px; }
         .rage-bar-fill { height: 100%; border-radius: 16px; transition: width 0.3s ease-out; position: relative; overflow: hidden; box-shadow: inset 0 2px 5px rgba(255,255,255,0.3), inset 0 -2px 5px rgba(0,0,0,0.4); }
         .rage-bar-fill::before, .rage-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 2px), radial-gradient(circle, rgba(255,255,255,0.5) 2px, transparent 3px), radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 2px); z-index: 1; pointer-events: none; }
         .rage-bar-fill::before { background-size: 20px 25px, 35px 40px, 15px 20px; animation: bubbleRise1 1.2s infinite linear; }
         .rage-bar-fill::after { background-size: 25px 30px, 45px 50px, 22px 28px; animation: bubbleRise2 1.7s infinite linear; opacity: 0.6; }
         @keyframes bubbleRise1 { 0% { background-position: 0px 25px, 0px 40px, 0px 20px; } 50% { background-position: 5px 12.5px, -5px 20px, 3px 10px; } 100% { background-position: 0px 0px, 0px 0px, 0px 0px; } }
         @keyframes bubbleRise2 { 0% { background-position: 0px 30px, 0px 50px, 0px 28px; } 50% { background-position: -6px 15px, 6px 25px, -4px 14px; } 100% { background-position: 0px 0px, 0px 0px, 0px 0px; } }
-        .rage-labels { position: absolute; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; font-weight: 900; font-size: 14px; color: #fff; text-shadow: 0 1px 3px #000, 0 0 5px #000; pointer-events: none; z-index: 2; top: 50%; transform: translateY(-50%); }
+        .rage-labels { position: absolute; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; font-weight: 900; font-size: 12px; color: #fff; text-shadow: 0 1px 3px #000, 0 0 5px #000; pointer-events: none; z-index: 2; top: 50%; transform: translateY(-50%); }
         .rage-pulse { animation: ragePulse 0.4s infinite alternate; }
         @keyframes ragePulse { 0% { filter: brightness(1); box-shadow: 0 0 5px #dc3545; } 100% { filter: brightness(1.3); box-shadow: 0 0 25px #dc3545, inset 0 0 10px #fff; } }
         .rage-flash { animation: whiteFlash 0.6s ease-out; }
@@ -585,10 +585,10 @@ def show():
 
     progress_pct = int((stats_data.get("xp", 0) / next_xp) * 100) if next_xp != "MAX" else 100
 
-    shield_display = f'<span style="font-size:14px; margin-left:8px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span>'
-    combo_badge = f'<div style="flex:1; display:flex; justify-content:center; align-items:center;"><div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center;"><span style="font-size:18px; font-weight:900; color:#fff;">🔥 {c}</span>{shield_display}</div></div>'
+    shield_display = f'<span style="font-size:12px; margin-left:6px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span>'
+    combo_badge = f'<div style="flex:1; display:flex; justify-content:center; align-items:center;"><div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center;"><span style="font-size:15px; font-weight:900; color:#fff;">🔥 {c}</span>{shield_display}</div></div>'
 
-    header_html = f'<div style="background:#111; border-radius:10px; margin-bottom:10px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 3px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:6px 12px 0 12px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:13px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:4px; border-radius:2px; margin-top:3px; width:100%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div></div></div><div style="font-size:10px; color:#aaa; margin-left:10px; font-weight:bold;">${stats_data.get("xp", 0)} / ${next_xp}</div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:6px 12px;"><div style="flex:1;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Winrate</div><div style="font-size:13px; font-weight:bold; color:{wr_color};">{wr}%</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:11px; font-weight:bold; color:#aaa;">Hands</div><div style="font-size:13px; font-weight:bold; color:#fff;">{sh}</div></div></div></div>'
+    header_html = f'<div style="background:#111; border-radius:8px; margin-top:-5px; margin-bottom:5px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 2px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:4px 10px 0 10px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:12px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:4px; border-radius:2px; margin-top:2px; width:100%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div></div></div><div style="font-size:9px; color:#aaa; margin-left:10px; font-weight:bold;">${stats_data.get("xp", 0)} / ${next_xp}</div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:2px 10px 4px 10px;"><div style="flex:1;"><div style="font-size:10px; font-weight:bold; color:#aaa;">Winrate</div><div style="font-size:12px; font-weight:bold; color:{wr_color};">{wr}%</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:10px; font-weight:bold; color:#aaa;">Hands</div><div style="font-size:12px; font-weight:bold; color:#fff;">{sh}</div></div></div></div>'
     
     rage_bar_html = f'''
     <div class="rage-bar-container {is_flashing}">
