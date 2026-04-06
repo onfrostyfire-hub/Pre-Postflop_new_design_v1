@@ -14,9 +14,13 @@ def show():
         div[data-testid="stVerticalBlock"] > div { padding-top: 0 !important; padding-bottom: 0 !important; margin-bottom: 0 !important; }
 
         /* 2. СЖИМАЕМ МЕНЮ ИЗ app.py СТРОГО В ОДНУ СТРОКУ */
-        div[role="radiogroup"] { flex-wrap: nowrap !important; gap: 2px !important; justify-content: center !important; margin-bottom: -5px !important; }
+        div[role="radiogroup"] { flex-wrap: nowrap !important; gap: 2px !important; justify-content: center !important; margin-bottom: -15px !important; }
         div[role="radiogroup"] label { padding: 4px 8px !important; min-height: 20px !important; }
         div[role="radiogroup"] label p { font-size: 12px !important; white-space: nowrap !important; }
+
+        /* 3. СЖИМАЕМ ЭКСПАНДЕР (Spot Filters) И ОТСТУПЫ ВОКРУГ НЕГО */
+        div[data-testid="stExpander"] { margin-top: -10px !important; margin-bottom: -15px !important; }
+        details[data-testid="stExpanderDetails"] { margin-bottom: 0 !important; }
 
         /* 4. КНОПКИ ДЕЙСТВИЙ */
         div[data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(10px, 1fr)) !important; gap: 8px !important; width: 100% !important; }
@@ -35,7 +39,7 @@ def show():
           width: 100% !important;
           max-width: 390px !important;
           height: 250px !important;
-          margin: 45px auto 55px auto !important; /* УБРАЛ ПУСТОТУ НАД СТОЛОМ ТУТ */
+          margin: 30px auto 45px auto !important; /* ЕЩЕ СИЛЬНЕЕ УБРАЛ ПУСТОТУ НАД СТОЛОМ */
           border-radius: 125px !important;
           overflow: visible !important;
           background:
@@ -252,7 +256,7 @@ def show():
           z-index: 40 !important;
         }
 
-        .rage-bar-container { width: 100%; max-width: 700px; margin: 0 auto 8px auto; background: rgba(0,0,0,0.6); border: 2px solid #333; border-radius: 20px; padding: 3px; display: flex; align-items: center; position: relative; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); height: 24px; }
+        .rage-bar-container { width: 100%; max-width: 700px; margin: 0 auto 4px auto; background: rgba(0,0,0,0.6); border: 2px solid #333; border-radius: 20px; padding: 3px; display: flex; align-items: center; position: relative; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); height: 24px; }
         .rage-bar-fill { height: 100%; border-radius: 16px; transition: width 0.3s ease-out; position: relative; overflow: hidden; box-shadow: inset 0 2px 5px rgba(255,255,255,0.3), inset 0 -2px 5px rgba(0,0,0,0.4); }
         .rage-bar-fill::before, .rage-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 2px), radial-gradient(circle, rgba(255,255,255,0.5) 2px, transparent 3px), radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 2px); z-index: 1; pointer-events: none; }
         .rage-bar-fill::before { background-size: 20px 25px, 35px 40px, 15px 20px; animation: bubbleRise1 1.2s infinite linear; }
@@ -596,7 +600,8 @@ def show():
     shield_display = f'<span style="font-size:12px; margin-left:6px; filter:drop-shadow(0 0 5px #0dcaf0); display:{"inline-flex" if st.session_state.shields > 0 else "none"};">🛡️x{st.session_state.shields}</span>'
     combo_badge = f'<div style="flex:1; display:flex; justify-content:center; align-items:center;"><div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 15px; display: inline-flex; align-items: center; justify-content: center;"><span style="font-size:15px; font-weight:900; color:#fff;">🔥 {c}</span>{shield_display}</div></div>'
 
-    header_html = f'<div style="background:#111; border-radius:8px; margin-bottom:1px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 2px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:4px 10px 0 10px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:12px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:4px; border-radius:2px; margin-top:2px; width:100%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div></div></div><div style="font-size:9px; color:#aaa; margin-left:10px; font-weight:bold;">${stats_data.get("xp", 0)} / ${next_xp}</div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:2px 10px 4px 10px;"><div style="flex:1;"><div style="font-size:10px; font-weight:bold; color:#aaa;">Winrate</div><div style="font-size:12px; font-weight:bold; color:{wr_color};">{wr}%</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:10px; font-weight:bold; color:#aaa;">Hands</div><div style="font-size:12px; font-weight:bold; color:#fff;">{sh}</div></div></div></div>'
+    # Прибил этот блок выше за счет margin-top: -15px
+    header_html = f'<div style="margin-top:-15px; background:#111; border-radius:8px; margin-bottom:1px; border:1px solid #333; overflow:hidden; font-family:sans-serif;"><div style="height: 2px; width: 100%; background: #222;"><div style="height: 100%; width: {wr if sh > 0 else 100}%; background: {wr_color if sh > 0 else "#444"}; transition: width 0.3s;"></div></div><div style="padding:4px 10px 0 10px; display:flex; justify-content:space-between; align-items:center;"><div style="flex:1;"><div style="font-size:12px; font-weight:bold; color:#ffc107;">{rank_name}</div><div style="background:#333; height:4px; border-radius:2px; margin-top:2px; width:100%;"><div style="background:#28a745; height:100%; width:{progress_pct}%; border-radius:2px;"></div></div></div><div style="font-size:9px; color:#aaa; margin-left:10px; font-weight:bold;">${stats_data.get("xp", 0)} / ${next_xp}</div></div><div style="display:flex; justify-content:space-between; align-items:center; padding:2px 10px 4px 10px;"><div style="flex:1;"><div style="font-size:10px; font-weight:bold; color:#aaa;">Winrate</div><div style="font-size:12px; font-weight:bold; color:{wr_color};">{wr}%</div></div>{combo_badge}<div style="flex:1; text-align:right;"><div style="font-size:10px; font-weight:bold; color:#aaa;">Hands</div><div style="font-size:12px; font-weight:bold; color:#fff;">{sh}</div></div></div></div>'
     
     rage_bar_html = f'''
     <div class="rage-bar-container {is_flashing}">
