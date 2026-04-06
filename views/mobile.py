@@ -35,7 +35,7 @@ def show():
           width: 100% !important;
           max-width: 390px !important;
           height: 250px !important;
-          margin: 35px auto 55px auto !important; /* УБРАЛ ПУСТОТУ НАД СТОЛОМ ТУТ */
+          margin: 40px auto 55px auto !important; /* УБРАЛ ПУСТОТУ НАД СТОЛОМ ТУТ */
           border-radius: 125px !important;
           overflow: visible !important;
           background:
