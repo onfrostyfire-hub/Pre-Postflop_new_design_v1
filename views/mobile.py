@@ -19,7 +19,7 @@ def show():
         div[role="radiogroup"] label p { font-size: 12px !important; white-space: nowrap !important; }
 
         /* 3. СЖИМАЕМ ЭКСПАНДЕР (Spot Filters) И ОТСТУПЫ ВОКРУГ НЕГО */
-        div[data-testid="stExpander"] { margin-top: -10px !important; margin-bottom: -15px !important; }
+        div[data-testid="stExpander"] { margin-top: -10px !important; margin-bottom: -5px !important; }
         details[data-testid="stExpanderDetails"] { margin-bottom: 0 !important; }
 
         /* 4. КНОПКИ ДЕЙСТВИЙ */
