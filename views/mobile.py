@@ -18,12 +18,6 @@ def show():
         div[role="radiogroup"] label { padding: 4px 8px !important; min-height: 20px !important; }
         div[role="radiogroup"] label p { font-size: 12px !important; white-space: nowrap !important; }
 
-        /* 3. СЖИМАЕМ ПЛАШКУ ФИЛЬТРОВ И ОПУСКАЕМ ТЕКСТ */
-        [data-testid="stExpander"] { margin-top: 0 !important; margin-bottom: 5px !important; }
-        [data-testid="stExpander"] summary { padding-top: 2px !important; padding-bottom: 2px !important; min-height: 2rem !important; }
-        [data-testid="stExpander"] summary p { font-size: 13px !important; margin-bottom: 0 !important; }
-        div[data-testid="stExpanderDetails"] { padding-top: 0 !important; }
-
         /* 4. КНОПКИ ДЕЙСТВИЙ */
         div[data-testid="stHorizontalBlock"] { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(10px, 1fr)) !important; gap: 8px !important; width: 100% !important; }
         div[data-testid="column"] { width: 100% !important; min-width: 0 !important; max-width: 100% !important; margin-bottom: 0 !important; }
