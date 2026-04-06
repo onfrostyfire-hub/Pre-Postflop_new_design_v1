@@ -8,8 +8,18 @@ def show():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap');
 
-        .block-container { padding-top: 1.5rem !important; padding-bottom: 1rem !important; max-width: 100% !important; overflow-x: hidden !important; }
-        [data-testid="stExpander"] { margin-top: -10px !important; margin-bottom: -5px !important; }
+    /* Поднимаем всё приложение к самому верху экрана */
+        .block-container { padding-top: 0.2rem !important; padding-bottom: 0.5rem !important; max-width: 100% !important; overflow-x: hidden !important; }
+        
+        /* Сжимаем плашку фильтров и текст */
+        [data-testid="stExpander"] { margin-top: 0 !important; margin-bottom: 0 !important; }
+        [data-testid="stExpander"] summary { padding-top: 2px !important; padding-bottom: 2px !important; min-height: 2rem !important; }
+        [data-testid="stExpander"] summary p { font-size: 13px !important; margin-bottom: 0 !important; }
+        div[data-testid="stExpanderDetails"] { padding-top: 0 !important; }
+
+        /* ЖЕСТКО УБИВАЕМ СКРЫТЫЕ ОТСТУПЫ STREAMLIT МЕЖДУ ВСЕМИ БЛОКАМИ */
+        div[data-testid="stVerticalBlock"] > div { padding-top: 0 !important; padding-bottom: 0 !important; margin-bottom: 0 !important; }
+        div.element-container { margin-bottom: 0 !important; }
 
         /* Сжимаем высоту плашки фильтров и размер текста */
         [data-testid="stExpander"] summary { padding-top: 5px !important; padding-bottom: 5px !important; min-height: 2rem !important; }
